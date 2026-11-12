@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Rotapple: A Dark Fantasy</title>
 <style>
+html,body,*{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 :root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;margin:0;background:#060509;color:#cfe9c4;font-family:"Courier New",monospace;overflow:hidden;-webkit-user-select:none;user-select:none}
 body{display:flex;flex-direction:column}
@@ -34,6 +35,14 @@ body{display:flex;flex-direction:column}
 <div id="joy"><div id="knob"></div></div>
 <div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button></div>
 </div>
+<script>
+/* Block double-tap / pinch zoom (iOS Safari ignores user-scalable=no) */
+(()=>{const o={passive:false};
+document.addEventListener("dblclick",e=>e.preventDefault(),o);
+["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),o));
+document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault()},o);
+document.addEventListener("contextmenu",e=>e.preventDefault());})();
+</script>
 <script>
 const C=document.getElementById("c"),X=C.getContext("2d"),CW=320,H=240;let HW=427;C.width=HW;C.height=H;
 const K={},Pr={};let JX=0,JY=0,camYaw=0,lastDrag=-9;const PITCH0=.3745;let camPitch=PITCH0,mapZoom=0;const wrapPi=a=>{while(a>Math.PI)a-=6.2832;while(a<-Math.PI)a+=6.2832;return a};const PMIN=-.1,PMAX=1.25,clampP=a=>Math.max(PMIN,Math.min(PMAX,a));
