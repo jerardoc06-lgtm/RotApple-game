@@ -33,7 +33,7 @@ body{display:flex;flex-direction:column}
 <div class="ov" id="menu"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><div id="mb"></div></div></div></div>
 <div id="rot">Please rotate your phone to landscape to play Rotapple.</div><div id="ctl">
 <div id="joy"><div id="knob"></div></div>
-<div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button></div>
+<div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="q">Guard</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button></div>
 </div>
 <script>
 /* Block double-tap / pinch zoom (iOS Safari ignores user-scalable=no) */
@@ -108,7 +108,7 @@ const Z=[
  win:[]}
 ];
 
-const D={s:{v:0,e:0,m:0,r:0,w:0,q:0,rw:0,pip:0,own:[1,0,0,0,0,0,0,0,0,0,0],inv:{herb:1},taken:{},seenI:{}}};
+const D={s:{v:0,e:0,m:0,r:0,w:0,q:0,rw:0,pip:0,sh:0,own:[1,0,0,0,0,0,0,0,0,0,0],inv:{herb:1},taken:{},seenI:{}}};
 const W=[{n:"Bare Fists",d:-6,r:14,len:0,col:0,p:0},{n:"Pilgrim’s Blade",d:0,r:20,len:1,col:0xcfd8e0,p:0},{n:"Orchard Hatchet",d:5,r:17,len:.7,col:0x9a9a8a,p:110},{n:"Iron Falchion",d:9,r:22,len:1.05,col:0xb8c4d0,p:240},{n:"Bone Saber",d:8,r:24,len:1.15,col:0xe8e0c8,p:200},{n:"Vesper’s Fang",d:14,r:23,len:1.1,col:0xb070ff,p:420,fx:1},{n:"Emberbrand",d:12,r:21,len:1.1,col:0xff7a30,p:380,fx:1},{n:"Harebone Greatsword",d:22,r:30,len:1.6,col:0xaab8c8,p:650},
 {n:"Blood-Apple Cleaver",d:11,r:19,len:.9,col:0xd01428,p:0,fx:1,em:0xa00010,ab:"leech",ad:"Bloodletter: every hit heals you for 18% of the damage dealt."},
 {n:"Nightfall Scythe",d:13,r:24,len:1.25,col:0x9a60ff,p:0,fx:1,em:0x5a20c0,ab:"wave",ad:"Umbral Crescent: each swing looses a piercing dark crescent. Heavy attacks fire three."},
@@ -148,7 +148,7 @@ function updOgre(m,dt){
  if(d>230||P.dead){m.ag=0;m.s=0;m.st=0;return}
  m.cd-=dt;
  if(m.st==1){m.t-=dt;if(m.t<=0){if(m.k=="charge"){m.st=2;m.t=.55}else{m.st=3;m.t=.7/sp;m.s=0;shake=7}}}
- else if(m.st==2){m.t-=dt;mv(m,m.cx*150*sp*dt,m.cy*150*sp*dt,10);if(!m.hit&&Math.hypot(P.x-m.x,P.y-m.y)<18){m.hit=1;hurt(22)}if(m.t<=0){m.st=3;m.t=.9;m.s=0}}
+ else if(m.st==2){m.t-=dt;mv(m,m.cx*150*sp*dt,m.cy*150*sp*dt,10);if(!m.hit&&Math.hypot(P.x-m.x,P.y-m.y)<18){m.hit=1;hurt(22,1)}if(m.t<=0){m.st=3;m.t=.9;m.s=0}}
  else if(m.st==3){m.t-=dt;if(m.t<=0){m.st=0;m.cd=.5/sp}}
  else{m.s=0;if(d>26)mv(m,dx/d*26*sp*dt,dy/d*26*sp*dt,10);
   if(m.cd<=0){const k=d<44?"stomp":d<75?"slam":d>90&&Math.random()<.4?"charge":null;
@@ -527,6 +527,7 @@ const WI=[
  {id:"p01",k:"pick",x:742,y:842,it:"herb"},{id:"p02",k:"pick",x:690,y:590,it:"herb"},{id:"p03",k:"pick",x:960,y:900,it:"herb"},
  {id:"p04",k:"pick",x:540,y:760,it:"herb"},{id:"p05",k:"pick",x:1180,y:830,it:"herb"},{id:"p06",k:"pick",x:760,y:1110,it:"herb"},{id:"p07",k:"pick",x:1060,y:380,it:"herb"},
  {id:"p08",k:"pick",x:900,y:560,it:"shard"},{id:"p09",k:"pick",x:1220,y:1110,it:"shard"},{id:"p10",k:"pick",x:380,y:930,it:"shard"},{id:"p11",k:"pick",x:1150,y:1250,it:"shard"},
+ {id:"g_shield",k:"gear",x:1205,y:768,gear:"shield",lab:"Take the Kite Shield"},
  {id:"p12",k:"pick",x:1100,y:700,it:"tonic"},{id:"p13",k:"pick",x:620,y:1000,it:"tonic"},{id:"p14",k:"pick",x:330,y:420,it:"emberflask"},{id:"p15",k:"pick",x:780,y:722,it:"prayer"}];
 function freeSpot(x,y,r){const B=BND();for(let k=0;k<80;k++){const a=k*2.4,d=k*3,e={x:Math.max(B.x0+10,Math.min(B.x1-10,x+Math.cos(a)*d)),y:Math.max(B.y0+10,Math.min(B.y1-10,y+Math.sin(a)*d))},o={x:e.x,y:e.y};push(o,r);if(Math.abs(o.x-e.x)<.01&&Math.abs(o.y-e.y)<.01)return[e.x,e.y]}return[x,y]}
 function openLid(it){if(it.lid){it.lid.position.set(0,9.6,-3.8);it.lid.rotation.x=-1.25}}
@@ -535,6 +536,12 @@ function mkItemMesh(it){const g=new THREE.Group();g.position.set(it.x,0,it.y);
  if(it.k=="chest"){const b=new THREE.Mesh(BX(12,6,8),MT(it.gold?0xc8a030:0x5a3a1a));b.position.y=3;b.castShadow=true;g.add(b);
   const l=new THREE.Mesh(BX(12.4,3,8.4),MT(it.gold?0xa88020:0x3a2410));l.position.y=7.5;l.castShadow=true;g.add(l);it.lid=l;
   const s=new THREE.Mesh(BX(2,9,8.8),MT(0xc8a030,0x302008));s.position.y=4.2;g.add(s);if(!it.done)glow(it.gold?0xffd060:0xe8a030,30,6);else openLid(it)}
+ else if(it.k=="gear"){g.rotation.y=.55;
+  const rim=new THREE.Mesh(BX(5,6.7,.35),MT(0x6b7280));rim.position.y=4.2;g.add(rim);
+  const face=new THREE.Mesh(BX(4.4,6.1,.42),MT(0x1b2140));face.position.set(0,4.2,.2);g.add(face);
+  const bar=new THREE.Mesh(BX(3.2,.75,.3),MT(0x98a0ac));bar.position.set(0,5.7,.44);g.add(bar);
+  const bar2=new THREE.Mesh(BX(.75,4.9,.3),MT(0x98a0ac));bar2.position.set(0,4.2,.44);g.add(bar2);
+  g.children.forEach(m=>m.castShadow=true);glow(0xbcd8ff,60,5)}
  else{const c=it.k=="drop"?W[it.w].col:IT[it.it].c,o=new THREE.Mesh(new THREE.OctahedronGeometry(it.k=="drop"?4.5:2.2),new THREE.MeshBasicMaterial({color:c}));o.position.y=6;g.add(o);it.orb=o;glow(c,it.k=="drop"?90:30,6);
   if(it.k=="drop"){const bm=new THREE.Mesh(new THREE.CylinderGeometry(3,6,200,10,1,true),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.25,fog:false,depthWrite:false,blending:THREE.AdditiveBlending,side:2}));bm.position.y=100;g.add(bm)}}
  world.add(g);it.m=g}
@@ -545,6 +552,8 @@ function addDrop(z,x,y){if(G.items.some(i=>i.id=="drop"+z))return;const w=8+z,it
 function nearItem(){let b=null,bd=24;for(const it of G.items){if(it.done)continue;const d=dist(P,it);if(d<bd){bd=d;b=it}}return b}
 function itemLabel(it){return it.lab+(it.req&&!have(it.req)?" (locked)":"")}
 function openItem(it){
+ if(it.k=="gear"){S.sh=1;S.taken[it.id]=1;it.done=1;world.remove(it.m);G.banner={t:3,x:"OBTAINED: KITE SHIELD"};
+  say(["A knight's kite shield, rimed with frost and orchard dust.","(Hold Q to raise it. It turns aside blades and arrows — but a charging ogre will go straight through it.)"]);return}
  if(it.k=="drop"){S.own[it.w]=1;S.w=it.w;it.done=1;world.remove(it.m);G.banner={t:3,x:"OBTAINED: "+W[it.w].n.toUpperCase()};say(["The hollow lord’s relic still burns: "+W[it.w].n+".","(Equipped. Swap weapons from your Bag or at a bonfire.)",W[it.w].ad]);return}
  if(it.req){if(!have(it.req)){say(["The reliquary is sealed with a bone lock.","Something carved from a drowned man’s rib might fit."]);return}S.inv[it.req]--;if(!S.inv[it.req])delete S.inv[it.req]}
  const got=[];for(const l of it.loot||[[it.it,1]]){if(l[0]=="runes"){S.r+=l[1];got.push(l[1]+" runes")}else{give(l[0],l[1]);got.push(IT[l[0]].n+(l[1]>1?" ×"+l[1]:""))}}
@@ -578,7 +587,14 @@ function loadZone(z,fresh){G.z=z;BF=z==3?{x:800,y:800}:{x:DUN[z].bf[0],y:DUN[z].
  if(fresh){if(z==3){P.x=BF.x;P.y=BF.y+44}else{P.x=DUN[z].sp[0];P.y=DUN[z].sp[1]}}}
 function spawn(){G.mobs=[];const Zd=Z[G.z];if(G.z==3&&!S.ogre)spawnOgre();if(G.z<3)spawnDun(Zd);else for(let i=0;i<Zd.cnt;i++){const hp={g:30,b:22,s:45}[Zd.mob];G.mobs.push({x:rnd(40,280),y:rnd(90,170),hp,max:hp,s:0,t:0,cd:rnd(0,1),kx:0,ky:0,fl:0,type:Zd.mob,ph:rnd(0,6)})}}
 
-function hurt(d){if(P.inv>0||P.dead)return;P.hp-=d;P.inv=.55;shake=5;G.nums.push({x:P.x,y:P.y,v:Math.round(d),t:.8,p:1});flash=.15;if(P.act=="flask")P.act=null;
+function hurt(d,tag){if(P.inv>0||P.dead)return;
+ if(P.blk&&!tag){
+  const cost=d*1.7;
+  if(P.st>=cost){P.st-=cost;P.hp-=d*.12;P.inv=.4;shake=2.2;flash=.05;spark(P.x,P.y,0xcfe8ff,12);G.nums.push({x:P.x,y:P.y,v:"BLOCK",t:.6,p:0});
+   if(P.hp<=0){P.dead=true;P.dt=2.8;P.act=null;if(S.r>0)G.stain={z:G.z,x:P.x,y:P.y,a:S.r};S.r=0}
+   return}
+  P.st=0;P.blk=0;P.inv=.3;shake=9;G.nums.push({x:P.x,y:P.y,v:"GUARD BROKEN",t:1.1,p:1});d*=1.2}
+ P.hp-=d;P.inv=.55;shake=5;G.nums.push({x:P.x,y:P.y,v:Math.round(d),t:.8,p:1});flash=.15;if(P.act=="flask")P.act=null;
  if(P.hp<=0){P.dead=true;P.dt=2.8;P.act=null;if(S.r>0)G.stain={z:G.z,x:P.x,y:P.y,a:S.r};S.r=0}}
 function respawn(){P=newPlayer();for(let i=0;i<3;i++)if(!G.defeated[i]);loadZone(G.z,true)}
 function tele(x,y,r,t,d){G.tele.push({x:Math.max(12,Math.min(CW-12,x)),y:Math.max(60,Math.min(H-14,y)),r,t,t0:t,d})}
@@ -595,9 +611,11 @@ function strike(range,mul){const tg=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>
 function updP(dt){
  if(P.dead){P.dt-=dt;if(P.dt<=0)respawn();return}
  P.inv-=dt;P.sd-=dt;
+ P.blk=!!(S.sh&&K.q&&!P.dead&&P.st>2&&!P.act);
+ if(P.blk)P.st=Math.max(0,P.st-5*dt);
  const ix=(K.d?1:0)-(K.a?1:0)+JX,iy=(K.s?1:0)-(K.w?1:0)+JY,il=Math.hypot(ix,iy)||1,cl=Math.min(1,il),cc=Math.cos(camYaw),sn=Math.sin(camYaw),mx=(cc*ix+sn*iy)/il*cl,my=(-sn*ix+cc*iy)/il*cl,ml=Math.hypot(mx,my);
  if(!P.act){
-  if(ml){P.fx=mx/ml;P.fy=my/ml;mv(P,P.fx*80*dt,P.fy*80*dt,PR)}
+  if(ml){P.fx=mx/ml;P.fy=my/ml;const sp=P.blk?34:80;mv(P,P.fx*sp*dt,P.fy*sp*dt,PR)}
   if(Pr.k&&P.st>=18){P.act="roll";P.at=0;P.st-=18;P.sd=.7;P.inv=.32;P.rx=ml?mx/ml:P.fx;P.ry=ml?my/ml:P.fy}
   else if(Pr.j&&P.st>=14){P.act="light";P.at=0;P.st-=14;P.sd=.6;P.hit.clear();P.wv=0}
   else if(Pr.l&&P.st>=30){P.act="heavy";P.at=0;P.st-=30;P.sd=.8;P.hit.clear();P.wv=0}
@@ -610,7 +628,7 @@ function updP(dt){
   else if(P.act=="heavy"){if(a>.62&&a<.84){strike(W[S.w].r+6,2.3);fireWave(2)}if(a>1.12)P.act=null}
   else if(P.act=="flask"){if(a>.45&&!P.fh){P.fh=1;P.fl--;P.hp=Math.min(mhp(),P.hp+mhp()*.6)}if(a>.7)P.act=null}
  }
- if(P.sd<=0&&P.act!="light"&&P.act!="heavy")P.st=Math.min(mst(),P.st+42*dt*(G.tonic>0?1.6:1));
+ if(P.sd<=0&&!P.blk&&P.act!="light"&&P.act!="heavy")P.st=Math.min(mst(),P.st+42*dt*(G.tonic>0?1.6:1));
  {const B=BND();P.x=Math.max(B.x0,Math.min(B.x1,P.x));P.y=Math.max(B.y0,Math.min(B.y1,P.y))}
  const st=G.stain;if(st&&st.z==G.z&&dist(P,st)<14){S.r+=st.a;G.stain=null}
  for(const q of PT[G.z]||[])if(pAct(q)&&dist(P,q)<16){loadZone(q.to,true);if(q.to==3){P.x=q.sx;P.y=q.sy}G.banner={t:3,x:Z[q.to].n.toUpperCase()};if(!G.seen[q.to]){G.seen[q.to]=true;say(Z[q.to].arr)}break}
@@ -639,7 +657,7 @@ function updBoss(b,dt){
  b.a+=dt;const m=b.mv,a=b.a;
  if(m=="spray"&&!b.f&&a>.6/sp){b.f=1;const n=3+ph,base=Math.atan2(dy,dx);for(let i=0;i<n;i++){const g=base+(i-(n-1)/2)*.28;G.proj.push({x:b.x,y:b.y,vx:Math.cos(g)*70,vy:Math.sin(g)*70,l:3,c:b.proj})}}
  if(m=="dash"){if(!b.f&&a>.6/sp){b.f=1;b.vx=dx/d*190;b.vy=dy/d*190}
-  if(b.f&&a<.6/sp+.4){mv(b,b.vx*dt,b.vy*dt,bossR(b));if(Math.hypot(P.x-b.x,P.y-b.y)<b.sz+6)hurt(14)}}
+  if(b.f&&a<.6/sp+.4){mv(b,b.vx*dt,b.vy*dt,bossR(b));if(Math.hypot(P.x-b.x,P.y-b.y)<b.sz+6)hurt(14,1)}}
  b.x=Math.max(16,Math.min(CW-16,b.x));b.y=Math.max(70,Math.min(H-18,b.y));
  if(a>{slam:1.4,spray:1,dash:1.3,bolt:1.5}[m]/sp){b.mv=null;b.t=rnd(1.3,2.1)/sp}}
 
@@ -651,7 +669,7 @@ function update(dt){
  updP(dt);if(!P.dead){G.mobs.forEach(m=>updMob(m,dt));const b=G.boss;
   if(b&&!b.on&&b.hp>0&&!G.intro&&dist(P,b)<125){G.intro=1;sealBoss();say(Z[G.z].intro,()=>{b.on=true})}
   if(b)updBoss(b,dt)}bodies();
- for(const t of G.tele){t.t-=dt;if(t.t<=0){flash=.08;ring(t.x,t.y,t.r);if(!P.dead&&dist(P,t)<t.r)hurt(t.d);t.dead=1}}G.tele=G.tele.filter(t=>!t.dead);
+ for(const t of G.tele){t.t-=dt;if(t.t<=0){flash=.08;ring(t.x,t.y,t.r);if(!P.dead&&dist(P,t)<t.r)hurt(t.d,1);t.dead=1}}G.tele=G.tele.filter(t=>!t.dead);
  for(const p of G.proj){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;if(dist(p,P)<6&&!P.dead&&P.inv<=0){hurt(9);p.l=0}}G.proj=G.proj.filter(p=>p.l>0);
  if(G.z==3){const nb=bio(P.x,P.y);if(G.bio==null)G.bio=nb;else if(nb!==G.bio){G.bioT=(G.bioT||0)+dt;if(G.bioT>.7){G.bio=nb;G.bioT=0;G.banner={t:3.2,x:BIOME[nb].n}}}else G.bioT=0}
  for(const k in Pr)delete Pr[k]}
@@ -718,6 +736,8 @@ function playerPose(p,mv){
   const br=Math.sin(t*1.5);
   rx+=-.025+br*.022; re+=-.02+br*.018; lx+=br*.01; by=br*.05;
  }
+ // ---- guard: shield up across the chest, body turned into it
+ if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
  // ---- light attack: wind back, snap across, settle
  if(p.act==="light"){
   const w=E(a/.14), s2=E((a-.14)/.15), r2=EO((a-.37)/.15), s2e=E((a-.19)/.15);
@@ -759,6 +779,7 @@ function playerPose(p,mv){
  // ---- death: fall forward
  if(p.dead){ bx=-1.30; by=-.4; rx=.45; re=-.1; lx=.45; le=-.1; tuck=.2 }
  A.l.rotation.set(lx,0,lz);A.l.el.rotation.x=le;
+ if(U.shield)U.shield.rotation.set(p.blk&&!p.act?.05-lx*.95:.05,.24,p.blk&&!p.act?-.05-lz*.95:-.05);
  A.r.rotation.set(rx,0,rz);A.r.el.rotation.x=re;
  U.boots[0].rotation.x=walking?legA:tuck*1.15;
  U.boots[1].rotation.x=walking?legB:tuck*.55;
@@ -909,7 +930,7 @@ function buildPlayer2(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=ne
  part(m,BX(3.2,.4,2.4),SD,0,20.3,-.1);
  U.sig=part(m,SP(.34),0x4a6ad8,0,14.2,2.45,0x1a2a80);
  // smaller kite shield angled off the body
- const SH=new THREE.Group();SH.position.set(-0.35,-3.7,2.75);SH.rotation.set(.05,.24,-.05);U.arm.l.add(SH);U.shield=SH;
+ const SH=new THREE.Group();SH.position.set(-0.35,-3.7,2.75);SH.rotation.set(.05,.24,-.05);U.arm.l.add(SH);U.shield=SH;SH.visible=false;
  part(SH,BX(4.9,6.7,.42),0x0f1526,0,.15,-.3);
  part(SH,BX(4.5,6.4,.5),NV,0,.25,0);
  part(SH,BX(.72,5.2,.34),LT,0,.2,.34);part(SH,BX(3.1,.72,.34),LT,0,1.9,.34);
@@ -1118,6 +1139,7 @@ function bigMap(){
 function draw(){
  const p=P,mv=K.w||K.a||K.s||K.d||JX||JY,dt=Math.max(0,Math.min(.05,G.t-spT));spT=G.t;
  const gy=groundAt(p.x,p.y).y;pl.position.set(p.x,gy-FOOT_Y,p.y);pl.rotation.y+=da(pl.rotation.y,Math.atan2(p.fx,p.fy))*.4;
+ pl.userData.shield.visible=!!S.sh;pl.userData.arm.l.hand.forEach(h=>h.visible=!S.sh);
  const ml=pl.userData.ml;ml.rotation.set(0,0,0);ml.position.y=0;ml.scale.y=1;flk.visible=p.act=="flask";setWp();
  if(mv&&!p.act&&!p.dead)ml.position.y=Math.abs(Math.sin(G.t*10.6))*1.1;
  if(p.act=="roll"){ml.rotation.x=p.at/.38*6.28;ml.position.y=4;ml.scale.y=.7}
