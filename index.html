@@ -33,7 +33,7 @@ body{display:flex;flex-direction:column}
 <div class="ov" id="menu"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><div id="mb"></div></div></div></div>
 <div id="rot">Please rotate your phone to landscape to play Rotapple.</div><div id="ctl">
 <div id="joy"><div id="knob"></div></div>
-<div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="q">Guard</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button></div>
+<div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="g">Guard</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button><button class="b" data-k="tab">Lock</button></div>
 </div>
 <script>
 /* Block double-tap / pinch zoom (iOS Safari ignores user-scalable=no) */
@@ -50,7 +50,7 @@ const C=document.getElementById("c"),X=C.getContext("2d"),CW=320,H=240;let HW=42
 const K={},Pr={};let JX=0,JY=0,camYaw=0,lastDrag=-9;const PITCH0=.3745;let camPitch=PITCH0,mapZoom=0;const wrapPi=a=>{while(a>Math.PI)a-=6.2832;while(a<-Math.PI)a+=6.2832;return a};const PMIN=-.1,PMAX=1.25,clampP=a=>Math.max(PMIN,Math.min(PMAX,a));
 function press(k){if(!K[k])Pr[k]=1;K[k]=1}
 const AL={arrowleft:"a",arrowright:"d",arrowup:"w",arrowdown:"s"," ":"k",enter:"e"};
-addEventListener("keydown",e=>{let k=e.key.toLowerCase();k=AL[k]||k;if(k=="m"||(k=="escape"&&G.bigmap)){if(!e.repeat)G.bigmap^=1;return}if(k=="n"){mapZoom^=1;return}if(k=="c"){camPitch=PITCH0;return}if(k=="i"&&G.invOpen){closeMenu();return}if(G.dlg&&(k=="e"||k=="j")){dlg.onclick();return}press(k);if(k==" "||e.key.startsWith("Arrow"))e.preventDefault()});
+addEventListener("keydown",e=>{let k=e.key.toLowerCase();k=AL[k]||k;if(k=="m"||(k=="escape"&&G.bigmap)){if(!e.repeat)G.bigmap^=1;return}if(k=="n"){mapZoom^=1;return}if(k=="c"){camPitch=PITCH0;return}if(k=="i"&&G.invOpen){closeMenu();return}if(G.dlg&&(k=="e"||k=="j")){dlg.onclick();return}press(k);if(k==" "||k=="tab"||e.key.startsWith("Arrow"))e.preventDefault()});
 addEventListener("keyup",e=>{let k=e.key.toLowerCase();K[AL[k]||k]=0});
 document.querySelectorAll(".b").forEach(b=>{const k=b.dataset.k;b.addEventListener("pointerdown",e=>{e.preventDefault();press(k)});["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>K[k]=0))});
 const joy=document.getElementById("joy"),knob=document.getElementById("knob");let jid=null;
@@ -553,7 +553,7 @@ function nearItem(){let b=null,bd=24;for(const it of G.items){if(it.done)continu
 function itemLabel(it){return it.lab+(it.req&&!have(it.req)?" (locked)":"")}
 function openItem(it){
  if(it.k=="gear"){S.sh=1;S.taken[it.id]=1;it.done=1;world.remove(it.m);G.banner={t:3,x:"OBTAINED: KITE SHIELD"};
-  say(["A knight's kite shield, rimed with frost and orchard dust.","(Hold Q to raise it. It turns aside blades and arrows — but a charging ogre will go straight through it.)"]);return}
+  say(["A knight's kite shield, rimed with frost and orchard dust.","(Hold G to raise it. It turns aside blades and arrows — but a charging ogre will go straight through it.)"]);return}
  if(it.k=="drop"){S.own[it.w]=1;S.w=it.w;it.done=1;world.remove(it.m);G.banner={t:3,x:"OBTAINED: "+W[it.w].n.toUpperCase()};say(["The hollow lord’s relic still burns: "+W[it.w].n+".","(Equipped. Swap weapons from your Bag or at a bonfire.)",W[it.w].ad]);return}
  if(it.req){if(!have(it.req)){say(["The reliquary is sealed with a bone lock.","Something carved from a drowned man’s rib might fit."]);return}S.inv[it.req]--;if(!S.inv[it.req])delete S.inv[it.req]}
  const got=[];for(const l of it.loot||[[it.it,1]]){if(l[0]=="runes"){S.r+=l[1];got.push(l[1]+" runes")}else{give(l[0],l[1]);got.push(IT[l[0]].n+(l[1]>1?" ×"+l[1]:""))}}
@@ -580,8 +580,10 @@ function menu(t,p,btns){const m=$("menu");G.pause=1;m.style.display="flex";$("mt
  btns.forEach(b=>{if(b.h){const h=document.createElement("div");h.textContent=b.h;h.style.cssText="margin:8px 0 2px;color:#8a7a50;font-size:11px;letter-spacing:2px;text-transform:uppercase";mb.appendChild(h);return}const e=document.createElement("button");e.textContent=typeof b.l=="function"?b.l():b.l;e.onclick=()=>{b.f(e);if(typeof b.l=="function")e.textContent=b.l()};mb.appendChild(e)})}
 function closeMenu(){$("menu").style.display="none";G.pause=0;G.invOpen=0}
 
-function newPlayer(){return{x:160,y:210,hp:mhp(),st:mst(),fl:3,fx:0,fy:-1,act:null,at:0,inv:0,sd:0,hit:new Set(),dead:false,dt:0,fh:0}}
-function loadZone(z,fresh){G.z=z;BF=z==3?{x:800,y:800}:{x:DUN[z].bf[0],y:DUN[z].bf[1]};const Zd=Z[z];G.tele=[];G.proj=[];G.pw=[];G.mobs=[];spawn();
+function newPlayer(){return{x:160,y:210,hp:mhp(),st:mst(),fl:3,fx:0,fy:-1,act:null,at:0,inv:0,sd:0,hit:new Set(),dead:false,dt:0,fh:0,lock:null}}
+function lockCands(){const l=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>0)l.push(G.boss);return l.filter(m=>m.hp>0&&dist(m,P)<210)}
+function toggleLock(){if(P.lock){P.lock=null;return}const c=lockCands();if(!c.length){G.banner={t:1.2,x:"NO TARGET"};return}c.sort((a,b)=>dist(a,P)-dist(b,P));P.lock=c[0]}
+function loadZone(z,fresh){G.z=z;if(P)P.lock=null;BF=z==3?{x:800,y:800}:{x:DUN[z].bf[0],y:DUN[z].bf[1]};const Zd=Z[z];G.tele=[];G.proj=[];G.pw=[];G.mobs=[];spawn();
  const b=Zd.B;G.boss=G.defeated[z]||!b?null:{x:160,y:100,hp:b.hp,max:b.hp,on:false,mv:null,t:1.2,a:0,f:0,sz:b.sz,spd:b.spd,mvs:b.mv,proj:b.proj,run:b.run,col:b.col,fl:0,vx:0,vy:0};
  G.intro=0;G.seal=0;G.gate=G.gateM=null;buildScene(z);if(z==3)ogreLair();mkPortals();mkItems();seed=[];let s=z*97+7;for(let i=0;i<130;i++){s=(s*1103515245+12345)&0x7fffffff;seed.push([s%CW,56+(s>>8)%184,(s>>16)%3])}
  if(fresh){if(z==3){P.x=BF.x;P.y=BF.y+44}else{P.x=DUN[z].sp[0];P.y=DUN[z].sp[1]}}}
@@ -611,11 +613,14 @@ function strike(range,mul){const tg=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>
 function updP(dt){
  if(P.dead){P.dt-=dt;if(P.dt<=0)respawn();return}
  P.inv-=dt;P.sd-=dt;
- P.blk=!!(S.sh&&K.q&&!P.dead&&P.st>2&&!P.act);
+ if(Pr.tab){delete Pr.tab;toggleLock()}
+ if(P.lock&&(P.lock.hp<=0||dist(P.lock,P)>320))P.lock=null;
+ P.blk=!!(S.sh&&K.g&&!P.dead&&P.st>2&&!P.act);
  if(P.blk)P.st=Math.max(0,P.st-5*dt);
  const ix=(K.d?1:0)-(K.a?1:0)+JX,iy=(K.s?1:0)-(K.w?1:0)+JY,il=Math.hypot(ix,iy)||1,cl=Math.min(1,il),cc=Math.cos(camYaw),sn=Math.sin(camYaw),mx=(cc*ix+sn*iy)/il*cl,my=(-sn*ix+cc*iy)/il*cl,ml=Math.hypot(mx,my);
  if(!P.act){
-  if(ml){P.fx=mx/ml;P.fy=my/ml;const sp=P.blk?34:80;mv(P,P.fx*sp*dt,P.fy*sp*dt,PR)}
+  if(ml){const sp=P.blk?34:80;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml}
+  if(P.lock){const lx2=P.lock.x-P.x,ly2=P.lock.y-P.y,ld=Math.hypot(lx2,ly2)||1;P.fx=lx2/ld;P.fy=ly2/ld}
   if(Pr.k&&P.st>=18){P.act="roll";P.at=0;P.st-=18;P.sd=.7;P.inv=.32;P.rx=ml?mx/ml:P.fx;P.ry=ml?my/ml:P.fy}
   else if(Pr.j&&P.st>=14){P.act="light";P.at=0;P.st-=14;P.sd=.6;P.hit.clear();P.wv=0}
   else if(Pr.l&&P.st>=30){P.act="heavy";P.at=0;P.st-=30;P.sd=.8;P.hit.clear();P.wv=0}
@@ -735,6 +740,13 @@ function playerPose(p,mv){
  }else{
   const br=Math.sin(t*1.5);
   rx+=-.025+br*.022; re+=-.02+br*.018; lx+=br*.01; by=br*.05;
+ }
+ // without a shield the left arm is just an arm: mirror the sword arm, opposite phase
+ if(!S.sh){
+  const br=Math.sin(t*1.5), lf=Math.sin(ph-.72);
+  if(walking){lx=-.16+sf*.46; le=-.22-Math.max(0,lf)*.78;}
+  else{lx=-.16+br*.01; le=-.22-.02+br*.018;}
+  lz=-.15;
  }
  // ---- guard: shield up across the chest, body turned into it
  if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
@@ -1176,6 +1188,7 @@ function draw(){
 if(G.z==3)for(const g of hubTrees)g.visible=Math.abs(g.position.x-P.x)<460&&Math.abs(g.position.z-P.y)<460;
  if(motes){const a=motes.geometry.attributes.position;for(let i=0;i<140;i++){a.array[i*3+1]=motes.base[i*3+1]+Math.sin(G.t*.8+i)*4;a.array[i*3]=motes.base[i*3]+Math.sin(G.t*.3+i*2)*6}a.needsUpdate=true}
  camYaw+=((K.r?1:0)-(K.q?1:0))*2.2*dt*(Math.cos(camPitch)<0?-1:1);camPitch=clampP(camPitch+((K.x?1:0)-(K.z?1:0))*1.8*dt);if(K.r||K.q||K.x||K.z)lastDrag=G.t;
+ if(P.lock&&!p.dead&&!P.act){const dx=P.lock.x-p.x,dz=P.lock.y-p.y;camYaw+=da(camYaw,Math.atan2(-dx,-dz)+(Math.cos(camPitch)<0?Math.PI:0))*Math.min(1,dt*7);lastDrag=G.t}
  const bs=G.boss;if(bs&&bs.on&&bs.hp>0&&G.t-lastDrag>1.2&&!p.dead){const dx=bs.x-p.x,dz=bs.y-p.y;if(Math.hypot(dx,dz)>20)if(Math.abs(Math.cos(camPitch))>.3)camYaw+=da(camYaw,Math.atan2(-dx,-dz)+(Math.cos(camPitch)<0?Math.PI:0))*Math.min(1,dt*2.5)}
  camT.x+=(p.x-camT.x)*.25;camT.z+=(p.y-camT.z)*.25;const sh=shake*.35,sy=Math.sin(camYaw),cy=Math.cos(camYaw);
  {const cP=Math.cos(camPitch),sP=Math.sin(camPitch),qx=camT.x-sy*12*cP,qz=camT.z-cy*12*cP,D0=72;let D=D0;
@@ -1188,12 +1201,15 @@ if(G.z==3)for(const g of hubTrees)g.visible=Math.abs(g.position.x-P.x)<460&&Math
  ren.render(scene,cam);
  X.clearRect(0,0,HW,H);const vg=X.createRadialGradient(HW/2,H/2,H*.4,HW/2,H/2,HW*.55);vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.55)");X.fillStyle=vg;X.fillRect(0,0,HW,H);X.save();X.translate((HW-CW)/2,0);hud();
  if(dist(P,BF)<26&&!P.dead){X.font="8px monospace";X.fillStyle="#e8d36a";X.textAlign="center";X.fillText("[Use] Rest at bonfire",CW/2,H-34);X.textAlign="left"}const nn=NN(),pq=(PT[G.z]||[]).find(q=>pAct(q)&&dist(P,q)<40);if((nn||pq)&&!P.dead){X.font="8px monospace";X.fillStyle="#e8d36a";X.textAlign="center";X.fillText(nn?"[Use] Talk: "+nn.n:"Walk in to travel: "+pq.l,CW/2,H-44);X.textAlign="left"}
- {const ni=nearItem();if(ni&&!P.dead&&!NN()){X.font="8px monospace";X.fillStyle="#e8d36a";X.textAlign="center";X.fillText("[Use] "+itemLabel(ni),CW/2,H-54);X.textAlign="left"}}X.restore();minimap();if(G.z==3)for(const n of N)if(dist(P,n)<70){const v=new THREE.Vector3(n.x,26,n.y).project(cam);X.textAlign="center";X.font="bold 8px monospace";X.fillStyle="#e6dcc0";if(v.z<1)X.fillText(n.n,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}for(const q of PT[G.z]||[])if(pAct(q)&&dist(P,q)<80){const v=new THREE.Vector3(q.x,40,q.y).project(cam);X.textAlign="center";X.font="bold 9px monospace";X.fillStyle="#e8d36a";if(v.z<1)X.fillText(q.l,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}X.textAlign="left";G.nums=G.nums.filter(n=>(n.t-=dt)>0);X.textAlign="center";X.font="bold 11px monospace";for(const n of G.nums){const v=new THREE.Vector3(n.x,16+(1-n.t/.8)*16,n.y).project(cam);X.globalAlpha=Math.min(1,n.t*2.5);X.fillStyle=n.p?"#ff5050":"#ffe27a";if(v.z<1)X.fillText(n.v,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}X.globalAlpha=1;X.textAlign="left";
+ {const ni=nearItem();if(ni&&!P.dead&&!NN()){X.font="8px monospace";X.fillStyle="#e8d36a";X.textAlign="center";X.fillText("[Use] "+itemLabel(ni),CW/2,H-54);X.textAlign="left"}}X.restore();
+ if(P.lock&&!P.dead){const t=P.lock,hy2=(t.sz?t.sz+8:(t.rad?t.rad+9:14)),v=new THREE.Vector3(t.x,hy2,t.y).project(cam);
+  if(v.z<1){const qx=(v.x*.5+.5)*HW,qy=(-v.y*.5+.5)*H;X.strokeStyle="#e8d36a";X.lineWidth=1.2;X.beginPath();X.arc(qx,qy,4.5,0,6.283);X.stroke();X.beginPath();X.moveTo(qx-9,qy);X.lineTo(qx-5.5,qy);X.moveTo(qx+5.5,qy);X.lineTo(qx+9,qy);X.moveTo(qx,qy-9);X.lineTo(qx,qy-5.5);X.moveTo(qx,qy+5.5);X.lineTo(qx,qy+9);X.stroke()}}
+ minimap();if(G.z==3)for(const n of N)if(dist(P,n)<70){const v=new THREE.Vector3(n.x,26,n.y).project(cam);X.textAlign="center";X.font="bold 8px monospace";X.fillStyle="#e6dcc0";if(v.z<1)X.fillText(n.n,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}for(const q of PT[G.z]||[])if(pAct(q)&&dist(P,q)<80){const v=new THREE.Vector3(q.x,40,q.y).project(cam);X.textAlign="center";X.font="bold 9px monospace";X.fillStyle="#e8d36a";if(v.z<1)X.fillText(q.l,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}X.textAlign="left";G.nums=G.nums.filter(n=>(n.t-=dt)>0);X.textAlign="center";X.font="bold 11px monospace";for(const n of G.nums){const v=new THREE.Vector3(n.x,16+(1-n.t/.8)*16,n.y).project(cam);X.globalAlpha=Math.min(1,n.t*2.5);X.fillStyle=n.p?"#ff5050":"#ffe27a";if(v.z<1)X.fillText(n.v,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}X.globalAlpha=1;X.textAlign="left";
  if(P.dead){X.globalAlpha=Math.min(.7,(2.8-P.dt)*.8);R(0,0,HW,H,"#000");X.globalAlpha=1;if(P.dt<2.4){X.textAlign="center";X.font="bold 26px monospace";X.fillStyle="#a01020";X.fillText("YOU DIED",HW/2,H/2+6);X.textAlign="left"}}}
 const wrap=$("wrap"),stage=$("stage");function fit(){const w=wrap.clientWidth,h=wrap.clientHeight,as=w/h;stage.style.width=w+"px";stage.style.height=h+"px";ren.setSize(Math.round(RHq*as),RHq,false);cam.aspect=as;cam.updateProjectionMatrix();HW=Math.round(240*as);C.width=HW;C.height=H}
 addEventListener("pointerdown",()=>{try{screen.orientation.lock("landscape").catch(()=>{})}catch(e){}},{once:true});
 addEventListener("resize",fit);fit();
 let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}update(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
 P=newPlayer();loadZone(3,true);requestAnimationFrame(loop);
-menu("ROTAPPLE","A dark fantasy of red fruit and black tides. Slash, smash, roll through danger, and rest at the bonfire. Drag to orbit the camera (Z/X tilt, Q/R turn, C or double-tap to reset). I opens your bag, E interacts, M or a tap on the minimap opens the full map.",[{l:"Begin",f:()=>{closeMenu();G.seen[3]=true;say(Z[3].arr)}}]);
+menu("ROTAPPLE","A dark fantasy of red fruit and black tides. Slash, smash, roll through danger, and rest at the bonfire. Drag to orbit the camera (Z/X tilt, Q/R turn, C or double-tap to reset, Tab locks onto the nearest foe). I opens your bag, E interacts, M or a tap on the minimap opens the full map.",[{l:"Begin",f:()=>{closeMenu();G.seen[3]=true;say(Z[3].arr)}}]);
 </script></body></html>
