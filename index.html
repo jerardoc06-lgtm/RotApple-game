@@ -606,8 +606,8 @@ function updP(dt){
  }else{
   P.at+=dt;const a=P.at;
   if(P.act=="roll"){mv(P,P.rx*150*dt,P.ry*150*dt,PR);if(a>.38)P.act=null}
-  else if(P.act=="light"){if(a>.08&&a<.22){strike(W[S.w].r,1);fireWave(1)}if(a>.34)P.act=null}
-  else if(P.act=="heavy"){if(a>.4&&a<.55){strike(W[S.w].r+6,2.3);fireWave(2)}if(a>.75)P.act=null}
+  else if(P.act=="light"){if(a>.17&&a<.36){strike(W[S.w].r,1);fireWave(1)}if(a>.52)P.act=null}
+  else if(P.act=="heavy"){if(a>.62&&a<.84){strike(W[S.w].r+6,2.3);fireWave(2)}if(a>1.12)P.act=null}
   else if(P.act=="flask"){if(a>.45&&!P.fh){P.fh=1;P.fl--;P.hp=Math.min(mhp(),P.hp+mhp()*.6)}if(a>.7)P.act=null}
  }
  if(P.sd<=0&&P.act!="light"&&P.act!="heavy")P.st=Math.min(mst(),P.st+42*dt*(G.tonic>0?1.6:1));
@@ -697,18 +697,20 @@ function apple(g,x,y,z){const a=new THREE.Group();a.position.set(x,y,z);g.add(a)
 function arm(g,x,y,z,len,sl,cu,gl,e,un,fl){fl=fl||1;const A=new THREE.Group();A.position.set(x,y,z);g.add(A);
  part(A,SP(1.7*fl),sl,0,0,0,e);part(A,CY(1.45*fl,1.15*fl,len,14),sl,0,-len/2,0,e);part(A,SP(1.2*fl),sl,0,-len,0,e);
  const El=new THREE.Group();El.position.y=-len;A.add(El);A.el=El;
+ part(A,BX(.5,1.25,1.45),cu,(x<0?-1:1)*1.12,-len,0);
  part(El,CY(1.15,1.05*fl,len,14),sl,0,-len/2,0,e);part(El,CY(1.1*fl+.08,1.1*fl+.08,.7,14),un,0,-len+.5,0);part(El,CY(1.18*fl+.1,1.18*fl+.1,.5,14),cu,0,-len+.95,0,e);
  const HD=A.hand=[];const pm=part(El,SP(1),gl,0,-len-.5,0,0x120a06);pm.scale.set(1,1.15,.8);HD.push(pm);for(let i=-1;i<2;i++)HD.push(part(El,CY(.2,.15,1.3,6),gl,i*.38,-len-1.3,.15));HD.push(part(El,CY(.22,.16,1,6),gl,x<0?-.85:.85,-len-.6,.4).rotation.z=x<0?.6:-.6);return A}
 function playerPose(p,mv){
  const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
  const CL=v=>v<0?0:v>1?1:v, E=v=>{v=CL(v);return v*v*(3-2*v)}, EO=v=>{v=CL(v);return 1-Math.pow(1-v,3)};
- const walking=mv&&!p.act, ph=t*9.4, sf=Math.sin(ph), cf=Math.cos(ph);
+ const walking=mv&&!p.act, ph=t*7.6, sf=Math.sin(ph), cf=Math.cos(ph);
  // ---- rest pose: sword arm hanging, shield arm set out from the body
  let lx=-.30,lz=-.15,le=-.80, rx=-.16,rz=.15,re=-.22, by=0,bx=0,bz=0,my=0,tuck=0,legA=0,legB=0;
  if(walking){
   legA=sf*.62; legB=-sf*.62;
-  rx=-.16-sf*.50; re=-.22-Math.max(0,sf)*.62;
-  lx=-.30+sf*.26; le=-.80-Math.max(0,-sf)*.14;
+  const wf1=Math.sin(ph-.55), wf2=Math.sin(ph-.82);
+  rx=-.16-sf*.46; re=-.22-Math.max(0,wf2)*.78;
+  lx=-.30+sf*.24; le=-.80-Math.max(0,-wf1)*.26;
   my=sf*.10; bz=cf*.028;
   by=(Math.abs(cf)-1)*.15;
   bx=.05+Math.abs(sf)*.02;
@@ -718,10 +720,10 @@ function playerPose(p,mv){
  }
  // ---- light attack: wind back, snap across, settle
  if(p.act==="light"){
-  const w=E(a/.09), s2=E((a-.09)/.10), r2=E((a-.20)/.14);
+  const w=E(a/.14), s2=E((a-.14)/.15), r2=E((a-.29)/.22), s2e=E((a-.19)/.15);
   rx=-.16-w*1.40+s2*2.45-r2*1.05;
   rz=-.12-w*.30+s2*.72-r2*.42;
-  re=-.22-w*1.10+s2*1.00-r2*.32;
+  re=-.22-w*1.10+s2e*1.15-r2*.32;
   lx=-.30-w*.20+s2*.42-r2*.22; le=-.80+s2*.18;
   my=.52*w-s2*1.10+r2*.58;
   bx=-.03-w*.12+s2*.16-r2*.10;
@@ -729,13 +731,13 @@ function playerPose(p,mv){
  }
  // ---- heavy attack: big overhead raise, heavy slam, long settle
  if(p.act==="heavy"){
-  const w=E(a/.34), s2=E((a-.34)/.13), r2=E((a-.47)/.28);
+  const w=E(a/.50), s2=E((a-.50)/.20), r2=E((a-.70)/.42), s2e=E((a-.57)/.20);
   rx=-.16-w*2.30+s2*3.30-r2*1.16;
   rz=-.12-w*.38+s2*.70-r2*.40;
-  re=-.22-w*.85+s2*1.05-r2*.32;
+  re=-.22-w*.85+s2e*1.20-r2*.32;
   lx=-.30-w*.50+s2*.85-r2*.45; le=-.80-w*.28+s2*.2;
   my=.58*w-s2*.85+r2*.30;
-  bx=-.06-w*.30+s2*.52-r2*.22; by=-E(a/.34)*.30+E((a-.34)/.3)*.22;
+  bx=-.06-w*.30+s2*.52-r2*.22; by=-E(a/.50)*.30+E((a-.50)/.42)*.22;
   tuck=w*.55-s2*.30;
  }
  // ---- flask: raise to the helm, tip back, lower
@@ -872,7 +874,11 @@ function buildPlayer2(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=ne
   const K=new THREE.Group();K.position.set(0,-4.3,0);L.add(K);U.knees.push(K);
   part(K,SP(1.05),SD,0,0,.15);part(K,CY(1.2,.6,2.9,12),ST,0,-1.3,0);
   const AN=new THREE.Group();AN.position.set(0,-3.3,0);K.add(AN);U.ankles.push(AN);
-  part(AN,BX(2.5,3.0,4.2),LE,0,.35,1);part(AN,CY(1.15,1.15,.45,12),ST,0,-.05,0)});
+  part(AN,CY(1.18,1.0,2.3,12),LE,0,.58,0);part(AN,CY(1.22,1.2,.26,12),0x241a12,0,1.62,0);
+  part(AN,BX(1.95,1.25,2.7),LE,0,-.3,.28);part(AN,BX(1.72,.85,1.6),LE,0,-.6,1.32);
+  part(AN,BX(1.36,.62,.75),LE,0,-.74,1.68);part(AN,BX(1.7,1.15,1.15),LE,0,-.55,-1.53);
+  part(AN,BX(2.02,.3,1.7),0x15100c,0,-1,-1.14);part(AN,BX(2.1,.3,2.4),0x15100c,0,-1,.82);part(AN,BX(1.2,.2,.42),0x3a3a3e,0,-.78,1.72);
+  part(AN,BX(.4,.6,.22),0x8a7250,q*1.12,-.12,.45)});
  // hip plate, hanging tabard strip front and back, steel tassets
  U.robe=part(m,CY(2.1,2.6,3,12),NV,0,9.5,0,E);U.robe.scale.set(1.02,1,.9);
  part(m,BX(1.95,6.4,.28),NV,0,8.3,2.25);part(m,BX(.42,5.4,.06),0x59617a,0,8.4,2.4);
@@ -1111,7 +1117,7 @@ function draw(){
  const p=P,mv=K.w||K.a||K.s||K.d||JX||JY,dt=Math.max(0,Math.min(.05,G.t-spT));spT=G.t;
  const gy=groundAt(p.x,p.y).y;pl.position.set(p.x,gy-FOOT_Y,p.y);pl.rotation.y+=da(pl.rotation.y,Math.atan2(p.fx,p.fy))*.4;
  const ml=pl.userData.ml;ml.rotation.set(0,0,0);ml.position.y=0;ml.scale.y=1;flk.visible=p.act=="flask";setWp();
- if(mv&&!p.act&&!p.dead)ml.position.y=Math.abs(Math.sin(G.t*13))*1.1;
+ if(mv&&!p.act&&!p.dead)ml.position.y=Math.abs(Math.sin(G.t*10.6))*1.1;
  if(p.act=="roll"){ml.rotation.x=p.at/.38*6.28;ml.position.y=4;ml.scale.y=.7}
  playerPose(p,mv);playerFx(p,mv);
  {const U=pl.userData;pl.updateMatrixWorld(true);
@@ -1152,7 +1158,7 @@ if(G.z==3)for(const g of hubTrees)g.visible=Math.abs(g.position.x-P.x)<460&&Math
  for(let d=12;d<D0;d+=5){const xx=qx+sy*cP*d,zz=qz+cy*cP*d;let hit=0;for(const c of COL){if(c.r!=null)continue;if(xx>c.x0-5&&xx<c.x1+5&&zz>c.y0-5&&zz<c.y1+5){hit=1;break}}if(hit){D=Math.max(20,d-7);break}}
  cam.position.set(qx+sy*cP*D+(Math.random()-.5)*sh,13+sP*D+(Math.random()-.5)*sh,qz+cy*cP*D);cam.up.set(-sP*sy,cP,-sP*cy);cam.lookAt(qx,13,qz)}
  const ma=G.tod*6.2832;moon.position.set(p.x+Math.cos(ma)*95,70+Math.max(0,Math.sin(ma))*110,p.y+Math.sin(ma*.9)*85);moon.target.position.set(p.x,0,p.y);moon.target.updateMatrixWorld();
- {const a=p.at,l=p.act=="light",h=p.act=="heavy";let o=0;if(l&&a>.06&&a<.3)o=1-(a-.06)/.24;if(h&&a>.38&&a<.65)o=1-(a-.38)/.27;TRL.material.opacity=o*.8;if(o>0){TRL.position.set(p.x,8,p.y);TRL.rotation.y=Math.atan2(-p.fy,p.fx)+(l?.4-(a-.06)/.24*.8:0);TRL.scale.setScalar(h?1.35:1);TRL.material.color.setHex(W[S.w].ab?W[S.w].col:(h?0xffa040:0xcfe8ff))}}
+ {const a=p.at,l=p.act=="light",h=p.act=="heavy";let o=0;if(l&&a>.13&&a<.47)o=1-(a-.13)/.34;if(h&&a>.55&&a<1.01)o=1-(a-.55)/.46;TRL.material.opacity=o*.8;if(o>0){TRL.position.set(p.x,8,p.y);TRL.rotation.y=Math.atan2(-p.fy,p.fx)+(l?.4-(a-.06)/.24*.8:0);TRL.scale.setScalar(h?1.35:1);TRL.material.color.setHex(W[S.w].ab?W[S.w].col:(h?0xffa040:0xcfe8ff))}}
  cam.fov+=((p.act=="roll"?58:p.act=="heavy"?49:52)-cam.fov)*.15;cam.updateProjectionMatrix();
  if(G.z==3)for(const n of N)if(n.g){n.g.rotation.y+=da(n.g.rotation.y,dist(P,n)<55?Math.atan2(P.x-n.x,P.y-n.y):0)*.1;n.g.userData.b.position.y=Math.sin(G.t*1.6+n.x)*.25;n.g.userData.b.rotation.z=Math.sin(G.t*.9+n.y)*.03}
  ren.render(scene,cam);
