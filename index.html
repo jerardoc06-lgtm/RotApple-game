@@ -232,7 +232,7 @@ function skyCycle(dt){
  G.dayF=day;
  _skyC.copy(_skyNight).lerp(_skyDay,day).lerp(_skyDusk,hor*.42);
  if(scene.background&&scene.background.isColor)scene.background.copy(_skyC);
- if(scene.fog){scene.fog.color.copy(_skyC).lerp(_bioC.setHex(BIOME_FOG[bio(P.x,P.y)]),.22);scene.fog.near=42+day*22;scene.fog.far=300+day*80}
+ if(scene.fog){scene.fog.color.copy(_skyC).lerp(_bioC.setHex(BIOME_FOG[bio(P.x,P.y)]),.22);scene.fog.near=76+day*8;scene.fog.far=165+day*50}
  amb.intensity=.24+.5*day;amb.color.setHex(day>.45?0x9aa892:0x7a86b8);
  moon.intensity=.22+.9*night;moon.color.setHex(day>.45?0xc8d0e0:0x9aa8d8);
  hemi.intensity=.14+.42*day;
@@ -1037,7 +1037,7 @@ function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
  if(world)scene.remove(world);world=new THREE.Group();scene.add(world);em.clear();tm.clear();pm.clear();sparks=[];decor=[];if(rain)scene.remove(rain);rain=null;
  if(!pl)buildPlayer2();camT.x=P.x;camT.z=P.y;
  const T=[[0x0a2624,"#1d2a1e","#34452e",0x6a8a7a,.6],[0x241a3a,"#241e30","#3a3248",0x8a70c0,.55],[0x0a1518,"#2a1d14","#3d2a1c",0x7a98a8,.5],[0x08161a,"#1b2f19","#2d4a26",0x8aa890,.62]][z];
- scene.background=new THREE.Color(T[0]);scene.fog=new THREE.Fog(T[0],z==3?45:70,z==3?330:300);amb.color.setHex(T[3]);amb.intensity=T[4];
+ scene.background=new THREE.Color(T[0]);scene.fog=new THREE.Fog(T[0],z==3?76:62,z==3?170:120);amb.color.setHex(T[3]);amb.intensity=T[4];
  const fl=new THREE.Mesh(new THREE.PlaneGeometry(z==3?WS+320:1200,z==3?WS+320:1200),new THREE.MeshLambertMaterial({map:z==3?groundTex():stoneTex(T[1],T[2],60,60,z==2)}));fl.receiveShadow=true;fl.rotation.x=-1.5708;FLM=fl;fl.position.set(z==3?WS/2:160,0,z==3?WS/2:520);world.add(fl);
  const tree=(x,zz)=>{add(CY(2,3.5,44,5),0x1a140e,x,22,zz);add(BX(2,2,22),0x1a140e,x+6,36,zz).rotation.y=.6;add(BX(2,2,18),0x1a140e,x-6,30,zz).rotation.y=-.7};
  if(z==0){for(let i=0;i<6;i++){const x=-10+i*68;add(BX(56,44,36),0x4a5048,x,22,26);add(CN(42,24,4),0x1b1d22,x,56,26).rotation.y=.785;add(BX(8,12,1),0x050607,x-12,26,44.5);add(BX(8,12,1),0x050607,x+12,26,44.5);add(BX(12,18,1),0x2f8a3a,x+4+(i%2)*8,12,44.8);add(SP(1.5),0xd01428,x+8,18,45.5,0x500008)}
@@ -1205,7 +1205,7 @@ if(G.z==3)for(const g of hubTrees)g.visible=Math.abs(g.position.x-P.x)<460&&Math
  if(P.lock&&!P.dead){const t=P.lock,hy2=(t.sz?t.sz+8:(t.rad?t.rad+9:14)),v=new THREE.Vector3(t.x,hy2,t.y).project(cam);
   if(v.z<1){const qx=(v.x*.5+.5)*HW,qy=(-v.y*.5+.5)*H;X.strokeStyle="#e8d36a";X.lineWidth=1.2;X.beginPath();X.arc(qx,qy,4.5,0,6.283);X.stroke();X.beginPath();X.moveTo(qx-9,qy);X.lineTo(qx-5.5,qy);X.moveTo(qx+5.5,qy);X.lineTo(qx+9,qy);X.moveTo(qx,qy-9);X.lineTo(qx,qy-5.5);X.moveTo(qx,qy+5.5);X.lineTo(qx,qy+9);X.stroke()}}
  minimap();if(G.z==3)for(const n of N)if(dist(P,n)<70){const v=new THREE.Vector3(n.x,26,n.y).project(cam);X.textAlign="center";X.font="bold 8px monospace";X.fillStyle="#e6dcc0";if(v.z<1)X.fillText(n.n,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}for(const q of PT[G.z]||[])if(pAct(q)&&dist(P,q)<80){const v=new THREE.Vector3(q.x,40,q.y).project(cam);X.textAlign="center";X.font="bold 9px monospace";X.fillStyle="#e8d36a";if(v.z<1)X.fillText(q.l,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}X.textAlign="left";G.nums=G.nums.filter(n=>(n.t-=dt)>0);X.textAlign="center";X.font="bold 11px monospace";for(const n of G.nums){const v=new THREE.Vector3(n.x,16+(1-n.t/.8)*16,n.y).project(cam);X.globalAlpha=Math.min(1,n.t*2.5);X.fillStyle=n.p?"#ff5050":"#ffe27a";if(v.z<1)X.fillText(n.v,(v.x*.5+.5)*HW,(-v.y*.5+.5)*H)}X.globalAlpha=1;X.textAlign="left";
- if(P.dead){X.globalAlpha=Math.min(.7,(2.8-P.dt)*.8);R(0,0,HW,H,"#000");X.globalAlpha=1;if(P.dt<2.4){X.textAlign="center";X.font="bold 26px monospace";X.fillStyle="#a01020";X.fillText("YOU DIED",HW/2,H/2+6);X.textAlign="left"}}}
+ if(P.dead){X.globalAlpha=Math.min(.7,(2.8-P.dt)*.8);R(0,0,HW,H,"#000");X.globalAlpha=1;if(P.dt<2.4){X.textAlign="center";X.font="bold 10px monospace";X.fillStyle="#6a0c14";X.fillText("YOU HAVE RETURNED",HW/2,H/2-10);X.font="bold 14px monospace";X.fillStyle="#a01020";X.fillText("TO THE ROT",HW/2,H/2+6);X.textAlign="left"}}}
 const wrap=$("wrap"),stage=$("stage");function fit(){const w=wrap.clientWidth,h=wrap.clientHeight,as=w/h;stage.style.width=w+"px";stage.style.height=h+"px";ren.setSize(Math.round(RHq*as),RHq,false);cam.aspect=as;cam.updateProjectionMatrix();HW=Math.round(240*as);C.width=HW;C.height=H}
 addEventListener("pointerdown",()=>{try{screen.orientation.lock("landscape").catch(()=>{})}catch(e){}},{once:true});
 addEventListener("resize",fit);fit();
