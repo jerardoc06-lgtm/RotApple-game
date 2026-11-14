@@ -695,14 +695,66 @@ function arm(g,x,y,z,len,sl,cu,gl,e,un,fl){fl=fl||1;const A=new THREE.Group();A.
  const El=new THREE.Group();El.position.y=-len;A.add(El);A.el=El;
  part(El,CY(1.15,1.05*fl,len,14),sl,0,-len/2,0,e);part(El,CY(1.1*fl+.08,1.1*fl+.08,.7,14),un,0,-len+.5,0);part(El,CY(1.18*fl+.1,1.18*fl+.1,.5,14),cu,0,-len+.95,0,e);
  const HD=A.hand=[];const pm=part(El,SP(1),gl,0,-len-.5,0,0x120a06);pm.scale.set(1,1.15,.8);HD.push(pm);for(let i=-1;i<2;i++)HD.push(part(El,CY(.2,.15,1.3,6),gl,i*.38,-len-1.3,.15));HD.push(part(El,CY(.22,.16,1,6),gl,x<0?-.85:.85,-len-.6,.4).rotation.z=x<0?.6:-.6);return A}
-function playerPose(p,mv){const U=pl.userData,A=U.arm,t=G.t,m=U.ml,mw=mv&&!p.act,sw=mw?Math.sin(t*13):0,a=p.at,k=Math.max(0,Math.min(1,(a-.04)/.2));
- A.l.rotation.set(-.35-sw*.22,0,.12);A.l.el.rotation.x=-.9;A.r.rotation.set(-.16+sw*.3,0,-.12);A.r.el.rotation.x=-.22;
- U.boots[0].rotation.x=sw*.8;U.boots[1].rotation.x=-sw*.8;U.robe.rotation.set(mw?.08:0,0,Math.sin(t*2)*.015);U.robe.scale.y=1+Math.sin(t*2)*.012;
- if(p.act=="light"){A.r.rotation.set(-1.45,0,-.2);A.r.el.rotation.x=-.4;A.l.rotation.x=-.8;m.rotation.y=.9-k*1.8}
- if(p.act=="heavy"){const w=Math.min(1,a/.4),s2=Math.max(0,Math.min(1,(a-.4)/.1));A.r.rotation.set(-1.4-w*1.5+s2*2.2,0,-.15);A.r.el.rotation.x=-.3;A.l.rotation.x=-1.2;m.rotation.x=.3*s2-.1*w}
- if(p.act=="flask"){A.l.rotation.x=-2.1;A.l.el.rotation.x=-2.3;A.r.rotation.x=-.3;m.rotation.x=-.12}
- if(p.act=="roll"){A.l.rotation.x=A.r.rotation.x=-1.3;A.l.el.rotation.x=A.r.el.rotation.x=-1.8}
- if(p.dead){A.l.rotation.x=A.r.rotation.x=.3;A.l.el.rotation.x=A.r.el.rotation.x=-.2}}
+function playerPose(p,mv){
+ const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
+ const CL=v=>v<0?0:v>1?1:v, E=v=>{v=CL(v);return v*v*(3-2*v)}, EO=v=>{v=CL(v);return 1-Math.pow(1-v,3)};
+ const walking=mv&&!p.act, sw=walking?Math.sin(t*11):0, sw2=walking?Math.sin(t*11+Math.PI):0;
+ // ---- rest pose: sword arm hanging, shield arm set out from the body
+ let lx=-.30,lz=.10,le=-.80, rx=-.16,rz=-.12,re=-.22, by=0,bx=0,by2=0,my=0,tuck=0;
+ if(walking){
+  rx=-.16+sw2*.40; re=-.22-Math.abs(sw2)*.28;
+  lx=-.30-sw*.15; le=-.80-Math.abs(sw)*.07;
+  my=sw*.045; by=Math.abs(sw)*.09;
+ }else{
+  const br=Math.sin(t*1.5);
+  rx+=-.025+br*.022; re+=-.02+br*.018; lx+=br*.01; by=br*.05;
+ }
+ // ---- light attack: wind back, snap across, settle
+ if(p.act==="light"){
+  const w=E(a/.09), s2=E((a-.09)/.10), r2=E((a-.20)/.14);
+  rx=-.16-w*1.40+s2*2.45-r2*1.05;
+  rz=-.12-w*.30+s2*.72-r2*.42;
+  re=-.22-w*1.10+s2*1.00-r2*.32;
+  lx=-.30-w*.20+s2*.42-r2*.22; le=-.80+s2*.18;
+  my=.52*w-s2*1.10+r2*.58;
+  bx=-.03-w*.12+s2*.16-r2*.10;
+  tuck=w*.35-s2*.18;
+ }
+ // ---- heavy attack: big overhead raise, heavy slam, long settle
+ if(p.act==="heavy"){
+  const w=E(a/.34), s2=E((a-.34)/.13), r2=E((a-.47)/.28);
+  rx=-.16-w*2.30+s2*3.30-r2*1.16;
+  rz=-.12-w*.38+s2*.70-r2*.40;
+  re=-.22-w*.85+s2*1.05-r2*.32;
+  lx=-.30-w*.50+s2*.85-r2*.45; le=-.80-w*.28+s2*.2;
+  my=.58*w-s2*.85+r2*.30;
+  bx=-.06-w*.30+s2*.52-r2*.22; by=-E(a/.34)*.30+E((a-.34)/.3)*.22;
+  tuck=w*.55-s2*.30;
+ }
+ // ---- flask: raise to the helm, tip back, lower
+ if(p.act==="flask"){
+  const w=E(a/.20), r2=E((a-.46)/.22);
+  rx=-.16-w*1.60+r2*1.60; rz=-.12-w*.30+r2*.30;
+  re=-.22-w*1.65+r2*1.65;
+  bx=-.14*w+r2*.14; my=-.10*w;
+ }
+ // ---- roll: tuck low and spring back
+ if(p.act==="roll"){
+  const u=CL(a/.38), inT=E(u/.22), out=E((u-.68)/.32);
+  tuck=(1-out)*inT;
+  bx=.6*tuck; by=-.9*tuck;
+  lx=-.95*tuck; le=-1.7*tuck; rx=-.95*tuck; re=-1.7*tuck;
+ }
+ // ---- death: fall forward
+ if(p.dead){ bx=-1.30; by=-.4; rx=.45; re=-.1; lx=.45; le=-.1; tuck=.2 }
+ A.l.rotation.set(lx,0,lz);A.l.el.rotation.x=le;
+ A.r.rotation.set(rx,0,rz);A.r.el.rotation.x=re;
+ U.boots[0].rotation.x=walking?sw*.78:tuck*1.15;
+ U.boots[1].rotation.x=walking?-sw*.78:tuck*.55;
+ m.rotation.set(bx,my,0);m.position.set(0,by,0);
+ U.robe.rotation.set(walking?.05:0,0,Math.sin(t*1.2)*.012);
+ U.robe.scale.y=1+Math.sin(t*1.6)*.01;
+}
 function pose(g,o){const A=g.userData.arm;if(!A)return;const t=G.t,b=!!o.sz,ph=o.ph||0,w=b?(o.mv&&o.a<.6):o.s==1,idle=b?!o.mv:o.s==0,sw=Math.sin(t*(b?4:8)+ph)*(idle?.45:.1),l=A.l,r=A.r;
  let x=-.4,e=-.9,zs=.1;if(o.type=="g"){x=-1.4;e=-.15}
  if(b&&idle&&G.z==1){x=-.3;zs=.9}
