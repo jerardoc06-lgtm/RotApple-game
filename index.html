@@ -762,8 +762,12 @@ function playerPose(p,mv){
  U.knees[0].rotation.x=kA;U.knees[1].rotation.x=kB;
  const hA=walking?legA:tuck*1.15, hB=walking?legB:tuck*.55;
  const ank=(h,k,e)=>-(h+k)*(walking?1:.55)+(walking?e:0);
- U.ankles[0].rotation.x=ank(hA,kA,.34*Math.max(0,sf)-.15*Math.max(0,-sf));
- U.ankles[1].rotation.x=ank(hB,kB,.34*Math.max(0,-sf)-.15*Math.max(0,sf));
+ const sl=bootSlope();
+ U.ankles[0].rotation.x=ank(hA,kA,.34*Math.max(0,sf)-.15*Math.max(0,-sf))+sl[0];U.ankles[0].rotation.z=-sl[1];
+ U.ankles[1].rotation.x=ank(hB,kB,.34*Math.max(0,-sf)-.15*Math.max(0,sf))+sl[0];U.ankles[1].rotation.z=-sl[1];
+ const dip=(t)=>1.15*Math.cos(t)+2.1*Math.abs(Math.sin(t))-1.15;
+ U.ankles[0].position.y=-3.3+dip(hA+kA+U.ankles[0].rotation.x);
+ U.ankles[1].position.y=-3.3+dip(hB+kB+U.ankles[1].rotation.x);
  m.rotation.set(bx,my,bz);m.position.set(0,by,0);
  U.robe.rotation.set(walking?.05:0,0,Math.sin(t*1.2)*.012);
  U.robe.scale.y=1+Math.sin(t*1.6)*.01;
@@ -971,6 +975,10 @@ function mkBossOld(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const B=
  shade(g,o.sz*.9);HQ=0;return g}
 
 let motes;
+let FLM=null;const FOOT_Y=.69,GRAY=new THREE.Raycaster();GRAY.far=90;
+function groundAt(x,z){GRAY.set(new THREE.Vector3(x,34,z),new THREE.Vector3(0,-1,0));const h=FLM?GRAY.intersectObject(FLM,false)[0]:null;if(!h)return{y:0,n:new THREE.Vector3(0,1,0)};const n=h.face.normal.clone().applyMatrix3(new THREE.Matrix3().getNormalMatrix(FLM.matrixWorld)).normalize();if(n.y<0)n.negate();return{y:h.point.y,n:n}}
+const GROUND_BOX=new THREE.Box3();
+function bootSlope(){const g=groundAt(pl.position.x,pl.position.z),c=Math.cos(pl.rotation.y),q=Math.sin(pl.rotation.y);return[Math.atan2(g.n.x*q+g.n.z*c,g.n.y),Math.atan2(g.n.x*c-g.n.z*q,g.n.y)]}
 function extras(z){if(z==3)hamlet();if(z<3)arena(z);glowSprite(BF.x,12,BF.y,0xff7a20,70);if(z==0)[[30,72],[290,72],[30,205],[290,205]].forEach(p=>glowSprite(p[0],29,p[1],0xffb040,40));if(z==2)for(let i=0;i<6;i++)glowSprite(30+i*52,10,50,0xffa030,34);if(z==1)[10,310].forEach(x=>glowSprite(x,8,150,0x40ff60,90));
  for(let i=0;i<(z==3?0:2);i++){const f=add(new THREE.PlaneGeometry(700,700).rotateX(-1.5708),z==1?0x4a3a7a:0x2a4a40,160,3+i*4,150);f.material.map=null;f.material.transparent=true;f.material.opacity=.07;f.castShadow=f.receiveShadow=false}
  const E=[8,312];
@@ -989,7 +997,7 @@ function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
  if(!pl)buildPlayer2();camT.x=P.x;camT.z=P.y;
  const T=[[0x0a2624,"#1d2a1e","#34452e",0x6a8a7a,.6],[0x241a3a,"#241e30","#3a3248",0x8a70c0,.55],[0x0a1518,"#2a1d14","#3d2a1c",0x7a98a8,.5],[0x08161a,"#1b2f19","#2d4a26",0x8aa890,.62]][z];
  scene.background=new THREE.Color(T[0]);scene.fog=new THREE.Fog(T[0],z==3?45:70,z==3?330:300);amb.color.setHex(T[3]);amb.intensity=T[4];
- const fl=new THREE.Mesh(new THREE.PlaneGeometry(z==3?WS+320:1200,z==3?WS+320:1200),new THREE.MeshLambertMaterial({map:z==3?groundTex():stoneTex(T[1],T[2],60,60,z==2)}));fl.receiveShadow=true;fl.rotation.x=-1.5708;fl.position.set(z==3?WS/2:160,0,z==3?WS/2:520);world.add(fl);
+ const fl=new THREE.Mesh(new THREE.PlaneGeometry(z==3?WS+320:1200,z==3?WS+320:1200),new THREE.MeshLambertMaterial({map:z==3?groundTex():stoneTex(T[1],T[2],60,60,z==2)}));fl.receiveShadow=true;fl.rotation.x=-1.5708;FLM=fl;fl.position.set(z==3?WS/2:160,0,z==3?WS/2:520);world.add(fl);
  const tree=(x,zz)=>{add(CY(2,3.5,44,5),0x1a140e,x,22,zz);add(BX(2,2,22),0x1a140e,x+6,36,zz).rotation.y=.6;add(BX(2,2,18),0x1a140e,x-6,30,zz).rotation.y=-.7};
  if(z==0){for(let i=0;i<6;i++){const x=-10+i*68;add(BX(56,44,36),0x4a5048,x,22,26);add(CN(42,24,4),0x1b1d22,x,56,26).rotation.y=.785;add(BX(8,12,1),0x050607,x-12,26,44.5);add(BX(8,12,1),0x050607,x+12,26,44.5);add(BX(12,18,1),0x2f8a3a,x+4+(i%2)*8,12,44.8);add(SP(1.5),0xd01428,x+8,18,45.5,0x500008)}
   [90,170].forEach(q=>{[-34,354].forEach(x=>{add(BX(30,40,56),0x4a5048,x,20,q);add(CN(34,20,4),0x1b1d22,x,50,q).rotation.y=.785})});
@@ -1101,11 +1109,14 @@ function bigMap(){
  lb("Tap anywhere to close",8,H-8,"#8a7a50");X.restore()}
 function draw(){
  const p=P,mv=K.w||K.a||K.s||K.d||JX||JY,dt=Math.max(0,Math.min(.05,G.t-spT));spT=G.t;
- pl.position.set(p.x,0,p.y);pl.rotation.y+=da(pl.rotation.y,Math.atan2(p.fx,p.fy))*.4;
+ const gy=groundAt(p.x,p.y).y;pl.position.set(p.x,gy-FOOT_Y,p.y);pl.rotation.y+=da(pl.rotation.y,Math.atan2(p.fx,p.fy))*.4;
  const ml=pl.userData.ml;ml.rotation.set(0,0,0);ml.position.y=0;ml.scale.y=1;flk.visible=p.act=="flask";setWp();
  if(mv&&!p.act&&!p.dead)ml.position.y=Math.abs(Math.sin(G.t*13))*1.1;
  if(p.act=="roll"){ml.rotation.x=p.at/.38*6.28;ml.position.y=4;ml.scale.y=.7}
  playerPose(p,mv);playerFx(p,mv);
+ {const U=pl.userData;pl.updateMatrixWorld(true);
+  const y0=GROUND_BOX.setFromObject(U.ankles[0]).min.y,y1=GROUND_BOX.setFromObject(U.ankles[1]).min.y;
+  const pen=Math.min(y0,y1);if(pen<0)pl.position.y-=pen;}
  if(p.dead){ml.rotation.x=-1.45;ml.position.y=2}
  pl.visible=!(p.inv>.05&&((G.t*30)|0)%2&&p.act!="roll");if(p.inv>.52)spark(p.x,p.y,0xc01020);
  torch.position.set(p.x,36,p.y+12);fire.position.set(BF.x,18,BF.y);fire.intensity=1.4+Math.random()*.6;flames.forEach((f,i)=>{f.scale.set(1,.8+Math.random()*.5,1)});
