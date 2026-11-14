@@ -392,9 +392,11 @@ function talk(n){const nd=G.defeated.slice(0,3).filter(Boolean).length;
 function mkNPC(c,hc,k){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const b=new THREE.Group();g.add(b);g.userData.b=b;
  const SK=0xc0a082,E=0x050507,LE=0x2a1c12,GD=0xc9a54c;
  // identical chassis to the player knight: hip 9.4, long legs, narrow waist
- g.userData.leg=[];
+ g.userData.leg=[];g.userData.knee=[];
  [-1,1].forEach(q=>{const L=new THREE.Group();L.position.set(q*1.55,9.4,0);b.add(L);g.userData.leg.push(L);
-  part(L,CY(1.35,1.15,4.4,12),0x2b303a,0,-2.4,0);part(L,SP(1.05),0x363642,0,-4.8,.15);part(L,CY(1.2,1,3.8,12),LE,0,-6.7,0);part(L,BX(2.2,2,4),0x1a120c,0,-8.2,1)});
+  part(L,CY(1.35,1.15,4.4,12),0x2b303a,0,-2.2,0);
+  const K=new THREE.Group();K.position.set(0,-4.3,0);L.add(K);g.userData.knee.push(K);
+  part(K,SP(1.05),0x363642,0,0,.15);part(K,CY(1.2,1,3.8,12),LE,0,-1.75,0);part(K,BX(2.1,2,4),0x1a120c,0,-3.2,1)});
  g.userData.robe=part(b,CY(2.6,3.2,3.4,12),c,0,9.4,0,E);g.userData.robe.scale.set(1.05,1,.92);
  part(b,BX(3,6.6,.45),hc,0,8.8,2.5);part(b,BX(3,5.4,.45),hc,0,9.1,-2.5);
  part(b,BX(1.4,4,.55),c,-2.4,9.9,1.35).rotation.z=.12;part(b,BX(1.4,4,.55),c,2.4,9.9,1.35).rotation.z=-.12;
@@ -754,6 +756,8 @@ function playerPose(p,mv){
  A.r.rotation.set(rx,0,rz);A.r.el.rotation.x=re;
  U.boots[0].rotation.x=walking?legA:tuck*1.15;
  U.boots[1].rotation.x=walking?legB:tuck*.55;
+ U.knees[0].rotation.x=walking?Math.max(0,sf)*1.05:tuck*1.5;
+ U.knees[1].rotation.x=walking?Math.max(0,-sf)*1.05:tuck*1.5;
  m.rotation.set(bx,my,bz);m.position.set(0,by,0);
  U.robe.rotation.set(walking?.05:0,0,Math.sin(t*1.2)*.012);
  U.robe.scale.y=1+Math.sin(t*1.6)*.01;
@@ -850,11 +854,13 @@ function mkMobOld(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const b=n
  if(o.type=="s"){const T=0x2a3c4a,E=0x060a10;part(b,CY(2.8,4.3,10,8),T,0,5,0,E);part(b,SP(2.6),0xd8e4e8,0,12.4,0,0x202428).scale.set(1,1.1,1);part(b,SP(.7),0x000000,-1,12.6,2.1);part(b,SP(.7),0x000000,1,12.6,2.1);part(b,BX(2.2,.8,.5),0x1a1a1a,0,10.8,2.2);part(b,CY(2.8,3,1.3,8),0x101820,0,14.3,0);part(b,BX(.7,7,.3),0x1a4a2a,-2,6,2.6);part(b,BX(.7,6,.3),0x1a4a2a,2.4,5,2.4);
   g.userData.arm={};[-1,1].forEach(q=>{g.userData.arm[q<0?"l":"r"]=arm(b,q*3.4,9.2,0,3,T,0x1a1a1a,0xc8d0d4,E,0x6a7a6a)});part(g.userData.arm.r.el,BX(.5,.3,8),0xb8c0c8,0,-8,0,0x101820).rotation.x=1.5708}
  shade(g,5);HQ=0;return g}
-function buildPlayer2(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);const U=pl.userData;U.ml=m;U.boots=[];U.arm={};
+function buildPlayer2(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);const U=pl.userData;U.ml=m;U.boots=[];U.knees=[];U.arm={};
  const ST=0x6b7280,SD=0x464c56,LT=0x98a0ac,NV=0x1b2140,NV2=0x2b3660,GLV=0x14100d,LE=0x28190f,GD=0xb9993f,E=0x050507;
  // long legs: hip at 9.4 of 22 -> thigh, knee, greave, boot
  [-1,1].forEach(q=>{const L=new THREE.Group();L.position.set(q*1.55,9.4,0);m.add(L);U.boots.push(L);
-  part(L,CY(1.35,1.15,4.4,12),0x2b303a,0,-2.4,0);part(L,SP(1.05),SD,0,-4.8,.15);part(L,CY(1.2,1,3.8,12),ST,0,-6.7,0);part(L,BX(2.05,2.4,4),LE,0,-8,1);part(L,CY(1.3,1.3,.5,12),SD,0,-3.6,0)});
+  part(L,CY(1.35,1.15,4.4,12),0x2b303a,0,-2.2,0);part(L,CY(1.3,1.3,.5,12),SD,0,-3.4,0);
+  const K=new THREE.Group();K.position.set(0,-4.3,0);L.add(K);U.knees.push(K);
+  part(K,SP(1.05),SD,0,0,.15);part(K,CY(1.2,1,3.8,12),ST,0,-1.75,0);part(K,BX(2.05,2.4,4),LE,0,-3.15,1);part(K,CY(1.15,1.15,.45,12),ST,0,-3.35,0)});
  // hip plate, hanging tabard strip front and back, steel tassets
  U.robe=part(m,CY(2.1,2.6,3,12),NV,0,9.5,0,E);U.robe.scale.set(1.02,1,.9);
  part(m,BX(1.95,6.4,.28),NV,0,8.3,2.25);part(m,BX(.42,5.4,.06),0x59617a,0,8.4,2.4);
