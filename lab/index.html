@@ -33,7 +33,7 @@ body{display:flex;flex-direction:column}
 <div class="ov" id="menu"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><div id="mb"></div></div></div></div>
 <div id="rot">Please rotate your phone to landscape to play Rotapple.</div><div id="ctl">
 <div id="joy"><div id="knob"></div></div>
-<div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="g">Guard</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button><button class="b" data-k="tab">Lock</button></div>
+<div class="g" id="ac"><button class="b" data-k="j">Slash</button><button class="b" data-k="l">Smash</button><button class="b" data-k="k">Roll</button><button class="b" data-k="g">Guard</button><button class="b" data-k="f">Flask</button><button class="b" data-k="e">Use</button><button class="b" data-k="i">Bag</button><button class="b" data-k="tab">Lock</button><button class="b" data-k="snd" id="sndb">Sound</button></div>
 </div>
 <script>
 /* Block double-tap / pinch zoom (iOS Safari ignores user-scalable=no) */
@@ -1398,6 +1398,7 @@ function initAudio(){
  if(AC){if(AC.state==="suspended")AC.resume();return}
  const Ctor=window.AudioContext||window.webkitAudioContext;if(!Ctor)return;
  try{AC=new Ctor()}catch(e){return}
+ try{if(AC.state!=="running")AC.resume()}catch(e){}          /* Safari starts suspended */
  BUS=AC.createGain();BUS.gain.value=.9;BUS.connect(AC.destination);
  AM=AC.createGain();AM.gain.value=.0001;AM.connect(BUS);
  const len=Math.floor(AC.sampleRate*4),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
@@ -1438,7 +1439,8 @@ function sfxTone(f0,dur,gain,type,slope){
  o.connect(g);g.connect(BUS);o.start(t);o.stop(t+dur+.03);
 }
 function sfx(k){
- if(!AC||AC.state!=="running"||!BUS)return;
+ if(!AC||!BUS||G.mute)return;
+ if(AC.state!=="running"){try{AC.resume()}catch(e){}if(AC.state!=="running")return}
  try{
   if(k=="swing")sfxNoise(.16,2600,.10,1.4,.45);
   else if(k=="heavy"){sfxNoise(.30,1700,.13,1.1,.35);sfxTone(155,.22,.045,"triangle",.6)}
@@ -1449,8 +1451,16 @@ function sfx(k){
   else if(k=="pick"){sfxTone(660,.18,.045,"triangle",1);sfxTone(880,.25,.03,"sine",1)}
  }catch(e){}
 }
-function ambTick(dt){if(!AC||AC.state!=="running")return;bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
-["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,initAudio,{passive:true})});
+function ambTick(dt){if(!AC||G.mute)return;if(AC.state!=="running"){try{AC.resume()}catch(e){}if(AC.state!=="running")return}bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
+function unlockAudio(){try{if(!AC)initAudio();if(AC&&AC.state!=="running")AC.resume()}catch(e){}}
+function toggleMute(){unlockAudio();G.mute=!G.mute;
+ try{if(BUS&&AC)BUS.gain.setTargetAtTime(G.mute?0:.9,AC.currentTime,.04)}catch(e){}
+ if(!G.mute)sfx("pick");
+ const b=document.getElementById("sndb");if(b)b.textContent=G.mute?"Muted":"Sound"}
+["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,unlockAudio,{passive:true})});
+document.addEventListener("visibilitychange",function(){if(!document.hidden)unlockAudio()});
+addEventListener("focus",unlockAudio);
+(function(){const b=document.getElementById("sndb");if(b)b.addEventListener("pointerdown",function(e){e.preventDefault();toggleMute()})})();
 let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}if(Math.abs(C.width-Math.round(240*(wrap.clientWidth/Math.max(1,wrap.clientHeight))))>2)fit();update(dt);ambTick(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
 P=newPlayer();
 {const sv=loadSave();
