@@ -586,6 +586,7 @@ function mkItemMesh(it){const g=new THREE.Group();g.position.set(it.x,0,it.y);
  world.add(g);it.m=g}
 function mkItems(){G.items=[];const z=G.z;pwm.clear();
  for(const w of z==3?WI:DL[z]){const done=!!S.taken[w.id];if(done&&w.k!="chest")continue;const it=Object.assign({},w),p=freeSpot(w.x,w.y,w.k=="chest"?10:7);it.x=p[0];it.y=p[1];it.done=done;if(it.k=="pick")it.lab="Pick up "+IT[w.it].n;if(it.k=="chest")cBox("b",it.x,it.y,12,8);G.items.push(it);mkItemMesh(it)}
+ if(z==3&&GRAVE&&!S.taken.grave1){const g={id:"grave1",k:"pick",x:GRAVE.x+6,y:GRAVE.y+2,it:"whet",lab:"Search the shallow grave",loot:[["runes",180],["whet",1]]};G.items.push(g);mkItemMesh(g)}
  if(z<3&&G.defeated[z]&&!S.own[8+z])addDrop(z,160,105);if(z==3&&S.ogre&&!S.own[11])addDropO(OGL.x,OGL.y)}
 function addDrop(z,x,y){if(G.items.some(i=>i.id=="drop"+z))return;const w=8+z,it={id:"drop"+z,k:"drop",x,y,w,lab:"Take "+W[w].n};G.items.push(it);mkItemMesh(it)}
 function nearItem(){let b=null,bd=24;for(const it of G.items){if(it.done)continue;const d=dist(P,it);if(d<bd){bd=d;b=it}}return b}
@@ -622,9 +623,85 @@ function closeMenu(){$("menu").style.display="none";G.pause=0;G.invOpen=0}
 function newPlayer(){return{x:160,y:210,hp:mhp(),st:mst(),fl:3,fx:0,fy:-1,act:null,at:0,inv:0,sd:0,hit:new Set(),dead:false,dt:0,fh:0,lock:null}}
 function lockCands(){const l=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>0)l.push(G.boss);return l.filter(m=>m.hp>0&&dist(m,P)<210)}
 function toggleLock(){if(P.lock){P.lock=null;return}const c=lockCands();if(!c.length){G.banner={t:1.2,x:"NO TARGET"};return}c.sort((a,b)=>dist(a,P)-dist(b,P));P.lock=c[0]}
-function loadZone(z,fresh){G.z=z;if(P)P.lock=null;BF=z==3?{x:800,y:800}:{x:DUN[z].bf[0],y:DUN[z].bf[1]};const Zd=Z[z];G.tele=[];G.proj=[];G.pw=[];G.mobs=[];spawn();
+let GRAVE=null;                      /* where the blood trail ends */
+function storyProps(){
+ const put=(g,c,x,y,z,ry)=>{const m=new THREE.Mesh(g,cm(c));m.position.set(x,y,z);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;world.add(m);return m};
+ /* find open ground near the landmark rather than bury the prop in a wall */
+ const at=(i,dx,dy)=>{
+  const L=LM[i%Math.max(1,LM.length)]||{x:800,y:800},b0={x:L.x+(dx||0),y:L.y+(dy||0)};
+  for(let k=0;k<14;k++){const a=k*.5236,r=k*12,x=b0.x+Math.cos(a)*r,y=b0.y+Math.sin(a)*r;
+   if(!solidAt(x,y,13)&&!inPond(x,y))return{x,y}}
+  return null};
+ /* a knight who did not make it: bones, a planted sword, a dropped shield */
+ let s=at(0,-95,70);
+ if(s){
+  put(BX(4,2.6,30),0xd6cdb6,s.x,1.3,s.y,.5);           /* spine and legs */
+  put(BX(4,2.6,16),0xd6cdb6,s.x-6,1.3,s.y+12,-.55);
+  [[0,0],[1,1],[2,1]].forEach((q,i)=>put(BX(17,2.2,4),0xd6cdb6,s.x+3+i*4,1.3,s.y-4-i*3,i*.28));  /* ribs */
+  put(BX(11,3,9),0xbfb6a0,s.x+13,1.6,s.y+3,.3);          /* pelvis */
+  put(SP(4.6),0xdcd3bd,s.x+18,4.2,s.y+7);                /* skull */
+  put(BX(7,4,7),0x8a8578,s.x+18,7.4,s.y+7,.6);           /* helm, still on it */
+  const sw=put(BX(1.8,24,1.2),0x6b6f74,s.x-13,12,s.y+9,.3);sw.rotation.z=.17;
+  put(BX(9,1.4,1.6),0x4a4e50,s.x-14,23.5,s.y+9,.3);
+  put(BX(2,6,2),0x6a4a30,s.x-15,28,s.y+9,.3);
+  put(BX(15,1.6,11),0x5a2a26,s.x-22,1.1,s.y+15,.75);
+ }
+ /* a shrine of candles, most of them out */
+ s=at(1,70,-55);
+ if(s){
+  put(BX(8,5,7),0x3a3430,s.x,2.5,s.y);
+  for(let i=0;i<9;i++){const a=i*.698,r=15+(i%3)*4,cx=s.x+Math.cos(a)*r,cy=s.y+Math.sin(a)*r,h=3+(i%3)*1.3;
+   put(CY(.55,.75,h,5),0xd8ccae,cx,h/2,cy);
+   if(i%4!==0)glowSprite(cx,h+.7,cy,0xffb45a,9);
+   else put(CY(.5,.7,1.4,5),0x211d18,cx,h+.7,cy)}
+  const gl=new THREE.PointLight(0xffa040,1.05,95);gl.position.set(s.x,9,s.y);world.add(gl);
+ }
+ /* a statue that faces away from the road */
+ s=at(2,55,75);
+ if(s){
+  put(BX(15,6,15),0x4a4640,s.x,3,s.y);
+  const fig=new THREE.Group();fig.position.set(s.x,0,s.y);fig.rotation.y=3.14159;world.add(fig);
+  [[CY(4.5,5.5,26,7),18,0,0],[BX(17,3,4),27,0,0],[SP(5.2),33,0,0],[BX(6,5,6),37,0,1.5]].forEach(q=>{
+   const m=new THREE.Mesh(q[0],cm(0x59554d));m.position.set(q[2],q[1],q[3]);m.castShadow=true;fig.add(m)});
+  cCir("t",s.x,s.y,9);
+ }
+ /* an abandoned camp: tent, cold fire, split logs */
+ s=at(3,-130,-45);
+ if(s){
+  put(CN(21,25,6),0x33281e,s.x,12,s.y);
+  put(BX(4,3,4),0x2f261c,s.x,1.5,s.y-18);
+  for(let i=0;i<9;i++){const a=i*.698;put(SP(2.1),0x35322c,s.x+Math.cos(a)*13,1.2,s.y+Math.sin(a)*13)}
+  put(CY(8,10,.7,7),0x1d1a16,s.x,.5,s.y);
+  put(BX(3,3,15),0x3a2a1a,s.x+9,1.5,s.y+6,.6);
+  put(BX(3,3,13),0x3a2a1a,s.x-9,1.5,s.y-5,-.4);
+ }
+ /* a trail of blood that goes somewhere: it ends at a shallow grave */
+ s=at(4,0,0);
+ const gEnd=at(4,-330,-170);
+ if(s&&gEnd){
+  const bg=new THREE.CircleGeometry(1,7).rotateX(-1.5708),
+        bm=new THREE.MeshBasicMaterial({color:0x360a0a,transparent:true,opacity:.62,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}),
+        dx=gEnd.x-s.x,dy=gEnd.y-s.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+  for(let i=0;i<15;i++){
+   const t=i/14,off=Math.sin(i*1.7)*13,x=s.x+dx*t+nx*off,y=s.y+dy*t+ny*off;
+   if(solidAt(x,y,4)||inPond(x,y))continue;
+   const m=new THREE.Mesh(bg,bm);m.position.set(x,.4,y);m.scale.setScalar(2.2+Math.random()*2.4);m.rotation.y=Math.random()*6.28;world.add(m);
+  }
+  GRAVE={x:gEnd.x,y:gEnd.y};
+  const md=put(SP(10),0x342a1e,gEnd.x,1.2,gEnd.y);md.scale.set(1.15,.42,1);   /* freshly turned earth */
+  put(BX(7,2,6),0x5a4a30,gEnd.x+15,1.2,gEnd.y+9,.6);                          /* earth spilled out of it */
+  put(BX(9,7,15),0x4a3a44,gEnd.x+17,7,gEnd.y-7,.5);                           /* the one who was dragged here */
+  put(SP(4.4),0xbfae98,gEnd.x+23,9.5,gEnd.y+3,.8);
+  put(BX(4,3,13),0x4a3a44,gEnd.x+9,3.5,gEnd.y+7,1.2);
+  put(BX(4,3,11),0x4a3a44,gEnd.x+25,3.5,gEnd.y-13,2.1);
+  put(BX(2,17,2),0x4a3a2a,gEnd.x-15,8.5,gEnd.y-11,.4);                        /* the shovel, left standing */
+  put(BX(7,1.5,9),0x6b6f74,gEnd.x-15,1,gEnd.y-15,.4);
+  for(let i=0;i<3;i++)put(SP(4+i),0x54504a,gEnd.x-12+i*10,3,gEnd.y+17);       /* a small cairn */
+ }
+}
+function loadZone(z,fresh){G.z=z;if(P)P.lock=null;BF=z==3?{x:800,y:800}:{x:DUN[z].bf[0],y:DUN[z].bf[1]};const Zd=Z[z];G.tele=[];G.proj=[];G.pw=[];G.mobs=[];
  const b=Zd.B;G.boss=G.defeated[z]||!b?null:{x:160,y:100,hp:b.hp,max:b.hp,on:false,mv:null,t:1.2,a:0,f:0,sz:b.sz,spd:b.spd,mvs:b.mv,proj:b.proj,run:b.run,col:b.col,fl:0,vx:0,vy:0};
- G.intro=0;G.seal=0;G.gate=G.gateM=null;buildScene(z);if(z==3)ogreLair();mkPortals();mkItems();seed=[];let s=z*97+7;for(let i=0;i<130;i++){s=(s*1103515245+12345)&0x7fffffff;seed.push([s%CW,56+(s>>8)%184,(s>>16)%3])}
+ G.intro=0;G.seal=0;G.gate=G.gateM=null;buildScene(z);if(z==3)ogreLair();if(z==3)storyProps();spawn();mkPortals();mkItems();seed=[];let s=z*97+7;for(let i=0;i<130;i++){s=(s*1103515245+12345)&0x7fffffff;seed.push([s%CW,56+(s>>8)%184,(s>>16)%3])}
  if(fresh){if(z==3){P.x=BF.x;P.y=BF.y+44}else{P.x=DUN[z].sp[0];P.y=DUN[z].sp[1]}}}
 function spawn(){G.mobs=[];const Zd=Z[G.z];if(G.z==3&&!S.ogre)spawnOgre();if(G.z<3)spawnDun(Zd);else{for(let i=0;i<Zd.cnt;i++)hubSpawn(Zd.mob)}}
 
