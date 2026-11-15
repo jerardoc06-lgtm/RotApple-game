@@ -707,7 +707,7 @@ function loadZone(z,fresh){G.z=z;if(P)P.lock=null;BF=z==3?{x:800,y:800}:{x:DUN[z
  if(fresh){if(z==3){P.x=BF.x;P.y=BF.y+44}else{P.x=DUN[z].sp[0];P.y=DUN[z].sp[1]}}}
 function spawn(){G.mobs=[];const Zd=Z[G.z];if(G.z==3&&!S.ogre)spawnOgre();if(G.z<3)spawnDun(Zd);else{for(let i=0;i<Zd.cnt;i++)hubSpawn(Zd.mob)}}
 
-function hurt(d,tag){if(P.inv>0||P.dead)return;sfx("hurt");
+function hurt(d,tag,tp){if(P.inv>0||P.dead)return;sfx("hurt");if(tp)sfx(hitKind(tp),.9);
  if(P.blk&&!tag){
   const cost=d*1.7;
   if(P.st>=cost){P.st-=cost;P.hp-=d*.12;P.inv=.4;shake=2.2;flash=.05;spark(P.x,P.y,0xcfe8ff,12);G.nums.push({x:P.x,y:P.y,v:"BLOCK",t:.6,p:0});
@@ -737,7 +737,7 @@ function strike(range,mul){const tg=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>
  for(const t of tg){if(t.hp<=0||P.hit.has(t))continue;const dx=t.x-P.x,dy=t.y-P.y,d=Math.hypot(dx,dy)||1;
   if(d<range+(t.sz||t.rad||6)&&(dx*P.fx+dy*P.fy)/d>-.1){
    const sneak=!t.sz&&t.type!="o"&&t.ai!==1&&!t.sees&&!(t.st>0),dmg=pdm()*mul*(sneak?3:1);
-   P.hit.add(t);t.hp-=dmg;t.fl=.12;t.hbT=2.4;sfx(sneak?"crit":"hit");shake=sneak?6:3;G.hs=.055;
+   P.hit.add(t);t.hp-=dmg;t.fl=.12;t.hbT=2.4;sfx(sneak?"crit":hitKind(t));shake=sneak?6:3;G.hs=.055;
    G.nums.push({x:t.x,y:t.y,v:Math.round(dmg),t:.8,p:sneak?1:0});
    if(sneak){G.banner={t:1.4,x:"BACKSTAB"};spark(t.x,t.y,0xffd070,22)}
    if(!t.sz&&t.type!="o"){t.kx=P.fx*130;t.ky=P.fy*130;t.s=0;t.cd=.6;t.st=Math.max(t.st||0,.34)}
@@ -830,7 +830,7 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
      G.tele.push({x:m.x+ux2*lead,y:m.y+uy2*lead,r:m.type=="s"?30:24,t:m.t,t0:m.t,d:0,v:1})}}
    else if(m.s==1){m.t-=dt;
     if(m.lg&&!P.dead){const lx=P.x-m.x,ly=P.y-m.y,ld=Math.hypot(lx,ly)||1;if(ld>17)mv(m,lx/ld*190*dt,ly/ld*190*dt,5)}
-    if(m.t<=0){if(dist(m,P)<(m.lg?32:m.type=="b"?34:28))hurt((m.adm||9)+G.z*4);m.rec={g:.22,b:.12,s:.34}[m.type]||.2;m.rl=m.rec;m.s=0;m.cd=(m.acd||1.1);m.lg=0}}
+    if(m.t<=0){if(dist(m,P)<(m.lg?32:m.type=="b"?34:28))hurt((m.adm||9)+G.z*4,0,m);m.rec={g:.22,b:.12,s:.34}[m.type]||.2;m.rl=m.rec;m.s=0;m.cd=(m.acd||1.1);m.lg=0}}
    if(!m.sees&&ad<20&&m.s==0){m.ai=2}
   }
  }
@@ -1543,6 +1543,8 @@ function sfx(k,v){
   else if(k=="stepW"){sfxNoise(.13,520*(.85+Math.random()*.3),.06,1.0,.45)}
   else if(k=="scuff"){sfxNoise(.16,420,.07,1.1,.5)}
   else if(k=="crit"){sfxNoise(.09,1500,.22,1.1,.5);sfxTone(110,.18,.12,"square",.5)}
+  else if(k=="hbat"){sfxNoise(.07,3200,.16,2.6,.5);sfxTone(620,.10,.05,"triangle",.7)}
+  else if(k=="hbrine"){sfxNoise(.16,380,.20,.85,.55);sfxTone(118,.14,.10,"sine",.7);sfxNoise(.06,2600,.05,1.8,.6)}
   else if(k=="roar"){const f=104*(.94+Math.random()*.12);sfxTone(f,1.0,.18,"sawtooth",.66);sfxTone(f*1.5,1.0,.10,"square",.62);sfxNoise(.9,560,.15,1.1,.65)}
  }catch(e){}
 }
@@ -1554,6 +1556,7 @@ function footstep(){
  else sfx("stepG",v);
 }
 function mobCry(m,g0){sndAt(m,m.type=="b"?"chit":m.type=="s"?"gurgle":"growl",g0)}
+function hitKind(t){return !t||t.sz?"hit":t.type=="b"?"hbat":t.type=="s"?"hbrine":"hit"}
 function sndAt(m,k,g0){const d=Math.hypot(m.x-P.x,m.y-P.y);if(d>260)return;
  const v=Math.max(.22,1-d/260);sfx(k,(g0||1)*v)}
 function ambTick(dt){if(!AC||G.mute)return;if(AC.state!=="running"){try{AC.resume()}catch(e){}if(AC.state!=="running")return}bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
