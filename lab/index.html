@@ -742,15 +742,15 @@ function updP(dt){
   if(ml){const sp=P.blk?34:80;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml}
   if(P.lock){const lx2=P.lock.x-P.x,ly2=P.lock.y-P.y,ld=Math.hypot(lx2,ly2)||1;P.fx=lx2/ld;P.fy=ly2/ld}
   if(Pr.k&&P.st>=18){P.act="roll";P.at=0;P.st-=18;P.sd=.7;P.inv=.32;P.rx=ml?mx/ml:P.fx;P.ry=ml?my/ml:P.fy}
-  else if(Pr.j&&P.st>=14){P.act="light";P.at=0;P.st-=14;P.sd=.6;P.hit.clear();P.wv=0;sfx("swing")}
-  else if(Pr.l&&P.st>=30){P.act="heavy";P.at=0;P.st-=30;P.sd=.8;P.hit.clear();P.wv=0;sfx("heavy")}
+  else if(Pr.j&&P.st>=14){P.act="light";P.at=0;P.st-=14;P.sd=.6;P.hit.clear();P.wv=0;P.sf=0}
+  else if(Pr.l&&P.st>=30){P.act="heavy";P.at=0;P.st-=30;P.sd=.8;P.hit.clear();P.wv=0;P.sf=0}
   else if(Pr.f&&P.fl>0&&P.hp<mhp()){P.act="flask";P.at=0;P.fh=0}
   else if(Pr.e)interact();
  }else{
   P.at+=dt;const a=P.at;
   if(P.act=="roll"){mv(P,P.rx*150*dt,P.ry*150*dt,PR);if(a>.38)P.act=null}
-  else if(P.act=="light"){if(a>.17&&a<.36){strike(W[S.w].r,1);fireWave(1)}if(a>.52)P.act=null}
-  else if(P.act=="heavy"){if(a>.62&&a<.84){strike(W[S.w].r+6,2.3);fireWave(2)}if(a>1.12)P.act=null}
+  else if(P.act=="light"){if(!P.sf&&a>.085){P.sf=1;sfx("swing")}if(a>.17&&a<.36){strike(W[S.w].r,1);fireWave(1)}if(a>.52)P.act=null}
+  else if(P.act=="heavy"){if(!P.sf&&a>.44){P.sf=1;sfx("heavy")}if(a>.62&&a<.84){strike(W[S.w].r+6,2.3);fireWave(2)}if(a>1.12)P.act=null}
   else if(P.act=="flask"){if(a>.45&&!P.fh){P.fh=1;P.fl--;P.hp=Math.min(mhp(),P.hp+mhp()*.6)}if(a>.7)P.act=null}
  }
  if(P.sd<=0&&!P.blk&&P.act!="light"&&P.act!="heavy")P.st=Math.min(mst(),P.st+42*dt*(G.tonic>0?1.6:1));
