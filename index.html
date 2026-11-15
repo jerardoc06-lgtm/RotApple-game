@@ -818,14 +818,14 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
     if(m.sees||d<26||ad>18)mv(m,ux2*sp*dt*keep-uy2*sp*dt*tan,uy2*sp*dt*keep+ux2*sp*dt*tan,5);
     const reach2=m.type=="s"?44:m.type=="b"?30:22;
     if(d<reach2){
-     m.s=1;m.t=m.type=="s"?.62:.5;m.lg=m.type=="s"?1:0;
-
+     const atk=m.type=="b"?{w:.38,cd:.85,d:6}:m.type=="s"?{w:.62,cd:1.4,d:14}:{w:.5,cd:1.1,d:9};
+     m.s=1;m.t=atk.w;m.lg=m.type=="s"?1:0;m.adm=atk.d;m.acd=atk.cd;
      const lead=m.lg?Math.min(Math.max(d-10,6),26):0;
      sndAt(m,"wind",.9);
      G.tele.push({x:m.x+ux2*lead,y:m.y+uy2*lead,r:m.type=="s"?30:24,t:m.t,t0:m.t,d:0,v:1})}}
    else if(m.s==1){m.t-=dt;
     if(m.lg&&!P.dead){const lx=P.x-m.x,ly=P.y-m.y,ld=Math.hypot(lx,ly)||1;if(ld>17)mv(m,lx/ld*190*dt,ly/ld*190*dt,5)}
-    if(m.t<=0){if(dist(m,P)<(m.lg?32:m.type=="b"?34:28))hurt(9+G.z*4);m.s=0;m.cd=1.1;m.lg=0}}
+    if(m.t<=0){if(dist(m,P)<(m.lg?32:m.type=="b"?34:28))hurt((m.adm||9)+G.z*4);m.s=0;m.cd=(m.acd||1.1);m.lg=0}}
    if(!m.sees&&ad<20&&m.s==0){m.ai=2}
   }
  }
