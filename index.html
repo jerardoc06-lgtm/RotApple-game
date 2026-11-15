@@ -714,7 +714,11 @@ function hurt(d,tag){if(P.inv>0||P.dead)return;
   P.st=0;P.blk=0;P.inv=.3;shake=9;G.nums.push({x:P.x,y:P.y,v:"GUARD BROKEN",t:1.1,p:1});d*=1.2}
  P.hp-=d;P.inv=.55;shake=5;G.nums.push({x:P.x,y:P.y,v:Math.round(d),t:.8,p:1});flash=.15;if(P.act=="flask")P.act=null;
  if(P.hp<=0){P.dead=true;P.dt=2.8;P.act=null;if(S.r>0)G.stain={z:G.z,x:P.x,y:P.y,a:S.r};S.r=0}}
-function respawn(){P=newPlayer();for(let i=0;i<3;i++)if(!G.defeated[i]);loadZone(G.z,true)}
+const SAVE_KEY="rotapple.save.v1";
+function saveNow(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({s:S,z:G.z,at:{x:Math.round(P.x),y:Math.round(P.y)},defeated:G.defeated}))}catch(e){}}
+function loadSave(){try{const r=localStorage.getItem(SAVE_KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function wipeSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
+function respawn(){P=newPlayer();loadZone(G.z,true);saveNow()}
 function tele(x,y,r,t,d){G.tele.push({x:Math.max(12,Math.min(CW-12,x)),y:Math.max(60,Math.min(H-14,y)),r,t,t0:t,d})}
 
 function kill(t){if(t.sz){G.defeated[G.z]=true;unseal();mkPortals(PT[G.z].filter(q=>q.boss));S.r+=t.run;G.banner={t:3.2,x:"GREAT FOE FELLED"};G.proj=[];G.tele=[];
@@ -763,11 +767,11 @@ function rest(){P.hp=mhp();P.st=mst();P.fl=3;spawn();
   {l:()=>"Weapon: "+W[S.w].n+" (tap to swap)",f:()=>{let i=S.w;do{i=(i+1)%W.length}while(!S.own[i]);S.w=i}}];
  if(Object.keys(S.bf).map(Number).some(z=>z!==G.z))b.push({l:"Travel to another fire…",f:travelMenu});
  b.push({l:"Leave the fire",f:closeMenu});
- menu("Bonfire","",b);upd()}
+ menu("Bonfire","",b);upd();saveNow()}
 function travelMenu(){
  if(!S.bf)S.bf={};
  const zs=Object.keys(S.bf).map(Number).filter(z=>z!==G.z);
- const b=zs.map(z=>({l:Z[z].n,f:()=>{closeMenu();loadZone(z,true);G.seen[z]=true;
+ const b=zs.map(z=>({l:Z[z].n,f:()=>{closeMenu();loadZone(z,true);G.seen[z]=true;saveNow();
    say([Z[z].n+".","The fire here still remembers you."])}}));
  if(!zs.length)b.push({l:"(no other fires are lit)",f:travelMenu});
  b.push({l:"Stay here",f:closeMenu});
@@ -1420,6 +1424,13 @@ function bell(){if(!AC||!BUS)return;const t=AC.currentTime;
 function ambTick(dt){if(!AC||AC.state!=="running")return;bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
 ["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,initAudio,{passive:true})});
 let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}if(Math.abs(C.width-Math.round(240*(wrap.clientWidth/Math.max(1,wrap.clientHeight))))>2)fit();update(dt);ambTick(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
-P=newPlayer();loadZone(3,true);requestAnimationFrame(loop);
-menu("ROTAPPLE","A dark fantasy of red fruit and black tides. Slash, smash, roll through danger, and rest at the bonfire. Drag to orbit the camera (Z/X tilt, Q/R turn, C or double-tap to reset, Tab locks onto the nearest foe). I opens your bag, E interacts, M or a tap on the minimap opens the full map.",[{l:"Begin",f:()=>{closeMenu();G.seen[3]=true;say(Z[3].arr)}}]);
+P=newPlayer();
+{const sv=loadSave();
+ if(sv&&sv.s){Object.assign(S,sv.s);if(sv.defeated)G.defeated=sv.defeated;
+  loadZone(sv.z!=null?sv.z:3,true);if(sv.at){P.x=sv.at.x;P.y=sv.at.y}}
+ else loadZone(3,true)}
+requestAnimationFrame(loop);
+menu("ROTAPPLE","A dark fantasy of red fruit and black tides. Slash, smash, roll through danger, and rest at the bonfire. Drag to orbit the camera (Z/X tilt, Q/R turn, C or double-tap to reset, Tab locks onto the nearest foe). I opens your bag, E interacts, M or a tap on the minimap opens the full map.",[...(loadSave()?[{l:"Continue",f:()=>{closeMenu();G.seen[3]=true}}]:[]),
+{l:"Begin",f:()=>{closeMenu();G.seen[3]=true;say(Z[3].arr)}},
+...(loadSave()?[{l:"Erase save",f:()=>{wipeSave();closeMenu();location.reload()}}]:[])]);
 </script></body></html>
