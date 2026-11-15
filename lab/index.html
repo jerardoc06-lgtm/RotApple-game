@@ -1143,57 +1143,84 @@ function mkMobOld(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const b=n
  if(o.type=="s"){const T=0x2a3c4a,E=0x060a10;part(b,CY(2.8,4.3,10,8),T,0,5,0,E);part(b,SP(2.6),0xd8e4e8,0,12.4,0,0x202428).scale.set(1,1.1,1);part(b,SP(.7),0x000000,-1,12.6,2.1);part(b,SP(.7),0x000000,1,12.6,2.1);part(b,BX(2.2,.8,.5),0x1a1a1a,0,10.8,2.2);part(b,CY(2.8,3,1.3,8),0x101820,0,14.3,0);part(b,BX(.7,7,.3),0x1a4a2a,-2,6,2.6);part(b,BX(.7,6,.3),0x1a4a2a,2.4,5,2.4);
   g.userData.arm={};[-1,1].forEach(q=>{g.userData.arm[q<0?"l":"r"]=arm(b,q*3.4,9.2,0,3,T,0x1a1a1a,0xc8d0d4,E,0x6a7a6a)});part(g.userData.arm.r.el,BX(.5,.3,8),0xb8c0c8,0,-8,0,0x101820).rotation.x=1.5708}
  shade(g,5);HQ=0;return g}
-function buildPlayer2(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);const U=pl.userData;U.ml=m;U.boots=[];U.knees=[];U.ankles=[];U.arm={};
- const ST=0x6b7280,SD=0x464c56,LT=0x98a0ac,NV=0x1b2140,NV2=0x2b3660,GLV=0x14100d,LE=0x28190f,GD=0xb9993f,E=0x050507;
- // long legs: hip at 9.4 of 22 -> thigh, knee, greave, boot
- [-1,1].forEach(q=>{const L=new THREE.Group();L.position.set(q*1.55,9.4,0);m.add(L);U.boots.push(L);
-  part(L,CY(1.35,1.15,4.4,12),0x2b303a,0,-2.2,0);part(L,CY(1.3,1.3,.5,12),SD,0,-3.4,0);
+/* ---- the player: knight in a sugarloaf helm, navy hood and tabard, plate and kite shield.
+   Feet at y=0. Joint heights are fixed by the walk cycle: hip 9.4, knee 5.1, ankle 1.8. */
+const TEXS=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
+ x.fillStyle='#ffffff';x.fillRect(0,0,64,64);
+ for(let i=0;i<240;i++){const g=232+(Math.random()*23|0);x.fillStyle=`rgba(${g},${g},${g+6},.30)`;x.fillRect(Math.random()*64|0,Math.random()*64|0,1+(Math.random()*5|0),1)}
+ for(let i=0;i<90;i++){x.fillStyle='rgba(150,156,168,.22)';x.fillRect(Math.random()*64|0,Math.random()*64|0,1+(Math.random()*3|0),1)}
+ for(let i=0;i<4;i++){x.fillStyle='rgba(168,174,186,.16)';x.fillRect(0,Math.random()*64|0,64,1)}
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);
+ t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.anisotropy=4;return t})();
+const TEXT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
+ x.fillStyle='#ffffff';x.fillRect(0,0,64,64);
+ for(let i=0;i<64;i+=2){x.fillStyle='rgba(206,210,224,.5)';x.fillRect(0,i,64,1);x.fillRect(i,0,1,64)}
+ for(let i=0;i<260;i++){x.fillStyle='rgba(150,156,178,.28)';x.fillRect(Math.random()*64|0,Math.random()*64|0,2,1)}
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(3,3);
+ t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.anisotropy=4;return t})();
+function buildPlayer2(){HQ=1;const OA0=OA;OA=0;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);
+ const U=pl.userData;U.ml=m;U.boots=[];U.knees=[];U.ankles=[];U.arm={};
+ const ST=0x9aa1ac,SD=0x666d79,LT=0x241a12,NV=0x232a4a,NV2=0x39406a,GD=0xa08e46,E=0x05070c;
+ /* ---- legs: slim thigh, knee cap, tapered greave, brown boot ---- */
+ [-1,1].forEach(q=>{
+  const L=new THREE.Group();L.position.set(q*1.5,9.4,0);m.add(L);U.boots.push(L);
+  part(L,LA([[1.02,-4.0],[1.1,-2.6],[1.18,-1.2],[1.12,0]],.04),0x2e3448,0,0,0);
   const K=new THREE.Group();K.position.set(0,-4.3,0);L.add(K);U.knees.push(K);
-  part(K,SP(1.05),SD,0,0,.15);part(K,CY(1.2,.6,2.9,12),ST,0,-1.3,0);
+  part(K,SP(.8),ST,0,0,.16).scale.set(1,.9,1);part(K,LA([[.7,-3.3],[.84,-2.2],[.95,-1.0],[.9,0]],.04),ST,0,0,0);
   const AN=new THREE.Group();AN.position.set(0,-3.3,0);K.add(AN);U.ankles.push(AN);
-  part(AN,CY(1.18,1.0,2.3,12),LE,0,.58,0);part(AN,CY(1.22,1.2,.26,12),0x241a12,0,1.62,0);
-  part(AN,RBX(1.95,1.25,2.7),LE,0,-.3,.28);part(AN,RBX(1.72,.85,1.6),LE,0,-.6,1.32);
-  part(AN,RBX(1.36,.62,.75),LE,0,-.74,1.68);part(AN,RBX(1.7,1.15,1.15),LE,0,-.55,-1.53);
-  part(AN,RBX(2.02,.3,1.7),0x15100c,0,-1,-1.14);part(AN,RBX(2.1,.3,2.4),0x15100c,0,-1,.82);part(AN,RBX(1.2,.2,.42),0x3a3a3e,0,-.78,1.72);
-  part(AN,RBX(.4,.6,.22),0x8a7250,q*1.12,-.12,.45)});
- // hip plate, hanging tabard strip front and back, steel tassets
- U.robe=part(m,CY(2.1,2.6,3,12),NV,0,9.5,0,E);U.robe.scale.set(1.02,1,.9);
- part(m,RBX(1.95,6.4,.28),NV,0,8.3,2.25);part(m,RBX(.42,5.4,.06),0x59617a,0,8.4,2.4);
- part(m,RBX(2.2,5.4,.3),NV,0,8.6,-2.25);
- part(m,RBX(1.5,4.2,.6),ST,-2.5,9.9,1.4).rotation.z=.12;part(m,RBX(1.5,4.2,.6),ST,2.5,9.9,1.4).rotation.z=-.12;
- part(m,CY(2.7,2.7,.9,12),0x1d1a1a,0,11.1,0).scale.set(1.05,1,.95);part(m,RBX(1.3,1.3,.55),GD,0,11.1,2.5,0x403010);
- // cuirass: narrow waist, broad chest
- part(m,CY(2.72,2.02,5.4,14),ST,0,13.8,0,E).scale.set(1.02,1,.9);
- part(m,CY(2.65,2.5,3,12),ST,0,15.05,0,E).scale.set(1.02,1,.86);
- part(m,RBX(.4,3.6,.4),0x7d838c,0,14.1,2.5);part(m,CY(2.6,2.6,.7,12),SD,0,11.5,0).scale.set(1.05,1,.95);
- part(m,RBX(3.8,1,2.4),SD,0,16.2,0);
- // small two-plate pauldrons
- [-1,1].forEach(q=>{part(m,RBX(2.3,1.6,2.8),ST,q*3.05,15.35,0).rotation.z=q*-.30;part(m,RBX(1.9,1.1,2.35),SD,q*3.15,14.35,0).rotation.z=q*-.36});
- // slim arms
- [-1,1].forEach(q=>{const A=arm(m,q*3.5,15.9,0,2.75,ST,SD,GLV,E,SD,.72);A.scale.set(1,1,1);U.arm[q<0?"l":"r"]=A});
- U.arm.l.hand.forEach(h=>h.visible=false);
- // navy cowl and cape tails
- const S=new THREE.Group();S.position.set(0,16.2,-.9);m.add(S);U.scarf=S;
- part(S,CN(2.55,2.2,12),NV,0,-.2,0);part(S,CY(2.1,2.3,.5,12),NV2,0,.85,.1);
- for(let i=0;i<2;i++){const t=part(S,RBX(1.7,.4,5.4+i*1.2),NV,i?-.85:.85,-2.2-i*.5,-1.05-i*.35);t.rotation.x=.3}
- // bucket great helm with T-slit and comb
- part(m,CY(1.5,1.75,1.2,12),0x15171d,0,16.6,0);part(m,CY(1.72,1.95,3.2,14),ST,0,18.35,0);part(m,SP(1.74),ST,0,19.9,0,0x050507).scale.set(1,.8,1);part(m,CY(1.74,1.92,.5,14),SD,0,16.62,0);
- part(m,RBX(1.95,2.25,.38),0x7e8591,0,18.4,1.76);
- part(m,RBX(1.5,.42,.3),0x07070a,0,18.9,1.94);part(m,RBX(.42,1.15,.3),0x07070a,0,18.2,1.94);
- part(m,RBX(2.2,.55,.42),0x646b76,0,17.3,1.83);
- part(m,RBX(2.7,.36,2.1),SD,0,20.1,-.1);
- U.sig=part(m,SP(.34),0x4a6ad8,0,14.2,2.45,0x1a2a80);
- // smaller kite shield angled off the body
- const SH=new THREE.Group();SH.position.set(-0.35,-3.7,2.75);SH.rotation.set(.05,.24,-.05);U.arm.l.add(SH);U.shield=SH;SH.visible=false;
- part(SH,RBX(4.9,6.7,.42),0x0f1526,0,.15,-.3);
- part(SH,RBX(4.5,6.4,.5),NV,0,.25,0);
- part(SH,RBX(.72,5.2,.34),LT,0,.2,.34);part(SH,RBX(3.1,.72,.34),LT,0,1.9,.34);
- part(SH,RBX(4.9,.7,.34),0x2a3350,0,3.35,.1);
- swp=new THREE.Group();swp.position.set(0,-2.7,0);swp.rotation.x=2.55;U.arm.r.el.add(swp);
- part(swp,RBX(.62,.26,8.2),LT,0,0,5.4,0x223344);part(swp,RBX(.24,.34,7),SD,0,0,5.4,0x223344);part(swp,CN(.34,1.4,4),LT,0,0,10.1,0x223344).rotation.x=1.5708;
- part(swp,RBX(3,.42,.6),0x7d838c,0,0,1.1,0x201c08);part(swp,CY(.34,.34,2.8,6),0x241a14,0,0,-.5).rotation.x=1.5708;part(swp,SP(.55),GD,0,0,-2,0x403010);
- flk=part(U.arm.r.el,SP(.8),0x6a2a2a,0,-3.6,1.1,0x2a0808);
- shade(pl,6);scene.add(pl);HQ=0}
+  part(AN,RBX(1.42,.9,2.05),LT,0,-.15,.12);part(AN,RBX(1.3,.55,1.1),LT,0,-.3,1.12);
+  part(AN,RBX(1.16,.42,.6),LT,0,-.46,1.55);part(AN,RBX(1.5,.3,1.5),0x181008,0,-.52,-.55);
+ });
+ /* ---- skirt and tabard ---- */
+ U.robe=part(m,LA([[2.35,4.6],[2.3,6.4],[2.1,8.2],[1.95,9.6]],.05),NV,0,0,0,0,E);
+ part(m,RBX(1.4,5.6,.22),NV,0,7.2,1.92,0x101430);
+ part(m,RBX(1.5,5.2,.22),NV,0,7.4,-2.0,0x101430);
+ /* ---- torso: waist, ribcage, shoulders ---- */
+ part(m,LA([[1.95,9.4],[1.85,10.6],[1.95,11.6]],.04),0x2e3448,0,0,0);
+ part(m,LA([[1.85,11.2],[2.0,12.4],[2.45,13.7],[2.35,14.8],[1.95,15.3]],.04),ST,0,0,0,0x080a10);
+ part(m,RBX(.34,4.0,.46),SD,0,13.1,2.2,0x080a10).rotation.x=-.06;
+ part(m,CY(1.95,2.05,.5,16),0x1a1410,0,10.85,0);part(m,RBX(.72,.6,.28),GD,0,10.85,2.06,0x2a2410);
+ /* ---- navy hood draping over the shoulders ---- */
+ part(m,LA([[2.5,13.35],[2.6,14.1],[2.15,14.8],[1.6,15.3]],.07),NV,0,0,-.08,E);
+ part(m,CY(1.85,2.2,.45,14),NV2,0,15.28,-.05,0x101430);
+ /* ---- angular pauldrons ---- */
+ [-1,1].forEach(q=>{
+  part(m,RBX(2.0,1.3,2.6),ST,q*2.55,14.7,0,0x080a10).rotation.z=q*-.26;
+  part(m,RBX(1.45,.9,2.0),SD,q*2.75,13.9,0,0x080a10).rotation.z=q*-.42;
+ });
+ /* ---- arms ---- */
+ [-1,1].forEach(q=>{const A=arm(m,q*2.55,14.75,0,2.95,ST,SD,LT,E,SD,.66);U.arm[q<0?"l":"r"]=A});
+ /* ---- neck and sugarloaf helm ---- */
+ part(m,CY(.72,.92,.95,12),0x1a1410,0,15.55,0,0x080a10);
+ part(m,LA([[1.26,16.0],[1.36,16.55],[1.41,17.3],[1.29,18.0],[1.03,18.55],[.58,18.9],[.1,19.05]],.035),ST,0,0,0,0x080a10);
+ part(m,RBX(1.85,.28,.4),SD,0,17.85,1.12,0x080a10);
+ part(m,RBX(1.62,.2,.26),0x05060a,0,17.5,1.22,0x000000);
+ part(m,RBX(.2,.5,.24),0x05060a,0,17.15,1.24,0x000000);
+ part(m,RBX(1.45,.55,.45),ST,0,16.5,.95,0x080a10);
+ /* ---- sigil ---- */
+ U.sig=part(m,SP(.3),0x4a6ad8,0,12.4,2.3,0x1a2a80);
+ /* ---- kite shield: navy field, pale cross ---- */
+ const SH=new THREE.Group();SH.position.set(-.15,-3.7,2.15);SH.scale.setScalar(.8);SH.rotation.set(.05,.26,-.05);U.arm.l.add(SH);U.shield=SH;SH.visible=false;
+ const kp=new THREE.Shape();kp.moveTo(0,2.9);kp.quadraticCurveTo(1.95,2.5,1.75,.4);kp.quadraticCurveTo(1.5,-1.7,0,-3.0);
+ kp.quadraticCurveTo(-1.5,-1.7,-1.75,.4);kp.quadraticCurveTo(-1.95,2.5,0,2.9);
+ const kg=new THREE.ExtrudeGeometry(kp,{depth:.28,bevelEnabled:true,bevelSize:.1,bevelThickness:.1,bevelSegments:2,curveSegments:8});kg.clearGroups();
+ part(SH,kg,NV,0,0,-.14,0x101430);
+ part(SH,RBX(2.5,.42,.2),0xb9bfc9,0,.15,.32,0x202430);
+ part(SH,RBX(.42,3.4,.2),0xb9bfc9,0,.15,.32,0x202430);
+ part(SH,TO(1.72,.16,20),0x8d939d,0,.4,.3,0x202430);
+ /* ---- sword: straight blade, crossguard, held low at the side ---- */
+ swp=new THREE.Group();swp.position.set(0,-2.5,0);swp.rotation.x=2.15;U.arm.r.el.add(swp);
+ part(swp,RBX(.5,.14,9.4),0xb7bec9,0,0,5.0,0x2a2f38);
+ part(swp,CN(.3,1.5,4),0xaab1bc,0,0,10.3,0x2a2f38).rotation.x=1.5708;
+ part(swp,RBX(2.1,.24,.34),SD,0,0,.75,0x202430);
+ part(swp,CY(.16,.16,1.5,8),LT,0,0,-.3,0x100a06).rotation.x=1.5708;
+ part(swp,SP(.26),GD,0,0,-1.15,0x2a2410);
+ flk=part(U.arm.l.el,SP(1.5),0xd62828,0,-4.0,0,0x601010);
+ /* ---- surface texture: brushed steel and woven cloth ---- */
+ pl.traverse(o=>{if(!o.isMesh)return;const h=o.material.color.getHex();
+  if(h===ST||h===SD)o.material.map=TEXS;else if(h===NV||h===NV2)o.material.map=TEXT;
+  o.material.needsUpdate=true});
+ OA=OA0;shade(pl,6);scene.add(pl);HQ=0}
 function mkBoss2(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const B=new THREE.Group();B.scale.setScalar(o.sz/(G.z==2?10:8));g.add(B);const U=g.userData;U.b=B;const z=G.z;U.arm={};
  const AR=(q,y,len,sl,cu,gl,e,un,fl)=>{U.arm[q<0?"l":"r"]=arm(B,q*4.5,y,0,len,sl,cu,gl,e,un,fl)};
  const LG=(q,hy,c,fc,w)=>{const L=new THREE.Group();L.position.set(q*w,hy,0);B.add(L);part(L,CY(1.6,1.2,hy*.55,12),c,0,-hy*.28,0);part(L,SP(1.25),c,0,-hy*.56,.1);part(L,CY(1.2,.95,hy*.5,12),c,0,-hy*.8,.2);part(L,RBX(2.2,1.2,3.6),fc,0,-hy+.6,.9);(U.legs=U.legs||[]).push(L)};
