@@ -270,7 +270,7 @@ function skyCycle(dt){
  G.dayF=day;
  _skyC.copy(_skyNight).lerp(_skyDay,day).lerp(_skyDusk,hor*.42);
  if(scene.background&&scene.background.isColor)scene.background.copy(_skyC);
- if(scene.fog){scene.fog.color.copy(_skyC).lerp(_bioC.setHex(BIOME_FOG[bio(P.x,P.y)]),.22);scene.fog.near=76+day*8;scene.fog.far=165+day*50}
+ if(scene.fog){scene.fog.color.copy(_skyC).lerp(_bioC.setHex(BIOME_FOG[bio(P.x,P.y)]),.22);scene.fog.near=98+day*12;scene.fog.far=225+day*65}
  amb.intensity=.085+.635*day;amb.color.setHex(day>.45?0x9aa892:0x6f7ba8);
  moon.intensity=.18+.72*night;moon.color.setHex(day>.45?0xc8d0e0:0x93a2d4);
  hemi.intensity=.14+.42*day;
@@ -1221,7 +1221,7 @@ function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
  if(world)scene.remove(world);world=new THREE.Group();scene.add(world);em.clear();tm.clear();pm.clear();sparks=[];decor=[];if(rain)scene.remove(rain);rain=null;
  if(!pl)buildPlayer2();camT.x=P.x;camT.z=P.y;
  const T=[[0x0a2624,"#1d2a1e","#34452e",0x6a8a7a,.6],[0x241a3a,"#241e30","#3a3248",0x8a70c0,.55],[0x0a1518,"#2a1d14","#3d2a1c",0x7a98a8,.5],[0x08161a,"#1b2f19","#2d4a26",0x8aa890,.62]][z];
- scene.background=new THREE.Color(T[0]);scene.fog=new THREE.Fog(T[0],z==3?76:62,z==3?170:120);amb.color.setHex(T[3]);amb.intensity=T[4];
+ scene.background=new THREE.Color(T[0]);scene.fog=new THREE.Fog(T[0],z==3?98:84,z==3?230:172);amb.color.setHex(T[3]);amb.intensity=T[4];
  const fl=new THREE.Mesh(new THREE.PlaneGeometry(z==3?WS+320:1200,z==3?WS+320:1200),new THREE.MeshLambertMaterial({map:z==3?groundTex():stoneTex(T[1],T[2],60,60,z==2)}));fl.receiveShadow=true;fl.rotation.x=-1.5708;FLM=fl;fl.position.set(z==3?WS/2:160,0,z==3?WS/2:520);world.add(fl);
  const tree=(x,zz)=>{add(CY(2,3.5,44,5),0x1a140e,x,22,zz);add(BX(2,2,22),0x1a140e,x+6,36,zz).rotation.y=.6;add(BX(2,2,18),0x1a140e,x-6,30,zz).rotation.y=-.7};
  if(z==0){for(let i=0;i<6;i++){const x=-10+i*68;add(BX(56,44,36),0x4a5048,x,22,26);add(CN(42,24,4),0x1b1d22,x,56,26).rotation.y=.785;add(BX(8,12,1),0x050607,x-12,26,44.5);add(BX(8,12,1),0x050607,x+12,26,44.5);add(BX(12,18,1),0x2f8a3a,x+4+(i%2)*8,12,44.8);add(SP(1.5),0xd01428,x+8,18,45.5,0x500008)}
