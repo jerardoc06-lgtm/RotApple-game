@@ -1182,7 +1182,7 @@ function buildPlayer2(){HQ=1;const OA0=OA;OA=0;pl=new THREE.Group();ML=pl.userDa
  part(T,RBX(1.5,5.2,.22),NV,0,7.4,-2.0,0x101430);
  /* ---- torso: waist, ribcage, shoulders ---- */
  part(T,LA([[1.95,9.4],[1.85,10.6],[1.95,11.6]],.04),0x2e3448,0,0,0);
- part(T,LA([[1.85,11.2],[2.0,12.4],[2.45,13.7],[2.35,14.8],[1.95,15.3]],.04),ST,0,0,0,0x080a10);
+ part(T,LA([[1.7,11.2],[1.95,12.5],[2.4,13.8],[2.3,14.8],[1.9,15.3]],.04),ST,0,0,0,0x080a10);
  part(T,RBX(.34,4.0,.46),SD,0,13.1,2.2,0x080a10).rotation.x=-.06;
  part(T,CY(1.95,2.05,.5,16),0x1a1410,0,10.85,0);part(T,RBX(.72,.6,.28),GD,0,10.85,2.06,0x2a2410);
  /* ---- navy hood draping over the shoulders ---- */
@@ -1194,14 +1194,24 @@ function buildPlayer2(){HQ=1;const OA0=OA;OA=0;pl=new THREE.Group();ML=pl.userDa
   part(T,RBX(1.45,.9,2.0),SD,q*2.75,13.9,0,0x080a10).rotation.z=q*-.42;
  });
  /* ---- arms ---- */
- [-1,1].forEach(q=>{const A=arm(T,q*2.55,14.75,0,2.95,ST,SD,LT,E,SD,.66);U.arm[q<0?"l":"r"]=A});
+ const parm=q=>{const A=new THREE.Group();A.position.set(q*2.45,14.85,0);T.add(A);
+  part(A,RBX(1.7,1.0,2.1),ST,0,.12,0,0x080a10).rotation.z=q*-.20;
+  part(A,LA([[.6,-2.3],[.7,-1.6],[.84,-.7],[.88,0]],.03),SD,0,0,0,0x080a10);
+  const El=new THREE.Group();El.position.y=-2.35;A.add(El);A.el=El;
+  part(El,SP(.64),ST,0,.04,0,0x080a10).scale.set(1,.82,1.08);
+  part(El,LA([[.48,-2.15],[.6,-1.45],[.76,-.55],[.7,0]],.03),ST,0,0,0,0x080a10);
+  part(El,CY(.74,.78,.28,14),SD,0,-.2,0,0x080a10);
+  const HD=[part(El,RBX(.7,.8,.86),LT,0,-2.45,.05)];
+  part(El,RBX(.64,.32,.5),LT,0,-2.86,.28);
+  A.hand=HD;return A};
+ [-1,1].forEach(q=>{U.arm[q<0?"l":"r"]=parm(q)});
  /* ---- neck and sugarloaf helm ---- */
- part(T,CY(.72,.92,.95,12),0x1a1410,0,15.55,0,0x080a10);
- part(T,LA([[1.26,16.0],[1.36,16.55],[1.41,17.3],[1.29,18.0],[1.03,18.55],[.58,18.9],[.1,19.05]],.035),ST,0,0,0,0x080a10);
- part(T,RBX(1.85,.28,.4),SD,0,17.85,1.12,0x080a10);
- part(T,RBX(1.62,.2,.26),0x05060a,0,17.5,1.22,0x000000);
- part(T,RBX(.2,.5,.24),0x05060a,0,17.15,1.24,0x000000);
- part(T,RBX(1.45,.55,.45),ST,0,16.5,.95,0x080a10);
+ part(T,CY(.62,.82,.8,12),0x1a1410,0,15.6,0,0x080a10);part(T,CY(1.05,1.2,.5,14),SD,0,15.95,0,0x080a10);
+ part(T,LA([[.98,16.05],[1.1,16.6],[1.2,17.25],[1.12,17.9],[.9,18.42],[.55,18.8],[.12,19.0]],.03),ST,0,0,0,0x080a10);part(T,RBX(.2,2.5,.3),SD,0,17.55,1.0,0x080a10);
+ part(T,RBX(1.3,.3,.4),SD,0,17.9,.86,0x080a10);
+ part(T,RBX(1.14,.18,.24),0x05060a,0,17.5,.98,0x000000);
+ part(T,RBX(.18,.46,.22),0x05060a,0,17.16,1.0,0x000000);
+ part(T,RBX(1.16,.55,.45),ST,0,16.5,.78,0x080a10);
  /* ---- sigil ---- */
  U.sig=part(T,SP(.3),0x4a6ad8,0,12.4,2.3,0x1a2a80);
  /* ---- kite shield: navy field, pale cross ---- */
