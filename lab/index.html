@@ -756,9 +756,22 @@ function updP(dt){
 }
 function interact(){const n=NN();if(n){talk(n);return}const it=nearItem();if(it){openItem(it);return}if(dist(P,BF)<26)rest()}
 function rest(){P.hp=mhp();P.st=mst();P.fl=3;spawn();
+ if(!S.bf)S.bf={};S.bf[G.z]=1;                       /* this fire is now known */
  const row=(n,k)=>({l:()=>n+" "+S[k]+"   ("+cost()+" runes)",f:()=>{if(S.r>=cost()){S.r-=cost();S[k]++;P.hp=mhp();P.st=mst();upd()}}});
  const upd=()=>{$("mp").textContent="Runes: "+S.r+"   Level "+lv()};
- menu("Bonfire","",[row("Vigor (health)","v"),row("Endurance (stamina)","e"),row("Might (damage)","m"),{l:()=>"Weapon: "+W[S.w].n+" (tap to swap)",f:()=>{let i=S.w;do{i=(i+1)%W.length}while(!S.own[i]);S.w=i}},{l:"Leave the fire",f:closeMenu}]);upd()}
+ const b=[row("Vigor (health)","v"),row("Endurance (stamina)","e"),row("Might (damage)","m"),
+  {l:()=>"Weapon: "+W[S.w].n+" (tap to swap)",f:()=>{let i=S.w;do{i=(i+1)%W.length}while(!S.own[i]);S.w=i}}];
+ if(Object.keys(S.bf).map(Number).some(z=>z!==G.z))b.push({l:"Travel to another fire…",f:travelMenu});
+ b.push({l:"Leave the fire",f:closeMenu});
+ menu("Bonfire","",b);upd()}
+function travelMenu(){
+ if(!S.bf)S.bf={};
+ const zs=Object.keys(S.bf).map(Number).filter(z=>z!==G.z);
+ const b=zs.map(z=>({l:Z[z].n,f:()=>{closeMenu();loadZone(z,true);G.seen[z]=true;
+   say([Z[z].n+".","The fire here still remembers you."])}}));
+ if(!zs.length)b.push({l:"(no other fires are lit)",f:travelMenu});
+ b.push({l:"Stay here",f:closeMenu});
+ menu("Travel","Where the fire has already been lit:",b)}
 
 function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
  if(m.hp<=0)return;
