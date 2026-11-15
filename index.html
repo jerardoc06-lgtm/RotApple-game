@@ -739,9 +739,12 @@ function updP(dt){
  if(P.blk)P.st=Math.max(0,P.st-5*dt);
  const ix=(K.d?1:0)-(K.a?1:0)+JX,iy=(K.s?1:0)-(K.w?1:0)+JY,il=Math.hypot(ix,iy)||1,cl=Math.min(1,il),cc=Math.cos(camYaw),sn=Math.sin(camYaw),mx=(cc*ix+sn*iy)/il*cl,my=(-sn*ix+cc*iy)/il*cl,ml=Math.hypot(mx,my);
  if(!P.act){
-  if(ml){const sp=P.blk?34:80;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml}
+  if(ml){const sp=P.blk?34:80;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml;
+   P.stp=(P.stp==null?.3:P.stp)-dt*(G.tonic>0?1.15:1);
+   if(P.stp<=0){P.stp=P.blk?.5:.34;footstep()}}
+  else P.stp=.12;
   if(P.lock){const lx2=P.lock.x-P.x,ly2=P.lock.y-P.y,ld=Math.hypot(lx2,ly2)||1;P.fx=lx2/ld;P.fy=ly2/ld}
-  if(Pr.k&&P.st>=18){P.act="roll";P.at=0;P.st-=18;P.sd=.7;P.inv=.32;P.rx=ml?mx/ml:P.fx;P.ry=ml?my/ml:P.fy}
+  if(Pr.k&&P.st>=18){P.act="roll";P.at=0;P.st-=18;P.sd=.7;P.inv=.32;P.rx=ml?mx/ml:P.fx;P.ry=ml?my/ml:P.fy;sfx("scuff")}
   else if(Pr.j&&P.st>=14){P.act="light";P.at=0;P.st-=14;P.sd=.6;P.hit.clear();P.wv=0;P.sf=0}
   else if(Pr.l&&P.st>=30){P.act="heavy";P.at=0;P.st-=30;P.sd=.8;P.hit.clear();P.wv=0;P.sf=0}
   else if(Pr.f&&P.fl>0&&P.hp<mhp()){P.act="flask";P.at=0;P.fh=0}
@@ -1454,8 +1457,19 @@ function sfx(k,v){
   else if(k=="growl"){const f=178*(.9+Math.random()*.2);sfxTone(f,.55,.16,"sawtooth",.66);sfxTone(f*.5,.56,.09,"square",.7);sfxNoise(.5,840,.13,1.5,.6)}
   else if(k=="wind"){sfxNoise(.28,1400,.15,2.2,2.0);sfxTone(250,.24,.07,"triangle",1.4)}
   else if(k=="rattle"){const f=196*(.92+Math.random()*.16);sfxTone(f,.46,.12,"sawtooth",.5);sfxNoise(.44,980,.10,1.4,.5)}
+  else if(k=="stepG"){sfxNoise(.055,780*(.88+Math.random()*.24),.05,1.1,.55)}
+  else if(k=="stepS"){sfxNoise(.05,1900*(.9+Math.random()*.2),.045,1.6,.7)}
+  else if(k=="stepW"){sfxNoise(.13,520*(.85+Math.random()*.3),.06,1.0,.45)}
+  else if(k=="scuff"){sfxNoise(.16,420,.07,1.1,.5)}
   else if(k=="roar"){const f=104*(.94+Math.random()*.12);sfxTone(f,1.0,.18,"sawtooth",.66);sfxTone(f*1.5,1.0,.10,"square",.62);sfxNoise(.9,560,.15,1.1,.65)}
  }catch(e){}
+}
+function footstep(){
+ if(!AC||G.mute||P.dead)return;
+ const v=P.blk?.6:1;
+ if(inPond(P.x,P.y))sfx("stepW",v);
+ else if(/CASTLE|BRIDGE|STONE|VESPER/i.test((Z[G.z]||{}).n||""))sfx("stepS",v);
+ else sfx("stepG",v);
 }
 function sndAt(m,k,g0){const d=Math.hypot(m.x-P.x,m.y-P.y);if(d>260)return;
  const v=Math.max(.22,1-d/260);sfx(k,(g0||1)*v)}
