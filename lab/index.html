@@ -728,7 +728,13 @@ function kill(t){sfx(t.sz||!t.type?"kill":"rattle");if(t.sz){G.defeated[G.z]=tru
  else if(t.type=="o")ogreKill(t);else{S.r+=20*(G.z+1);if(Math.random()<.15){give("herb",1);G.banner={t:1.6,x:"FOUND: ASHEN HERB"}}}}
 function strike(range,mul){const tg=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>0)tg.push(G.boss);
  for(const t of tg){if(t.hp<=0||P.hit.has(t))continue;const dx=t.x-P.x,dy=t.y-P.y,d=Math.hypot(dx,dy)||1;
-  if(d<range+(t.sz||t.rad||6)&&(dx*P.fx+dy*P.fy)/d>-.1){P.hit.add(t);t.hp-=pdm()*mul;t.fl=.12;sfx("hit");shake=3;G.hs=.055;G.nums.push({x:t.x,y:t.y,v:Math.round(pdm()*mul),t:.8});if(!t.sz&&t.type!="o"){t.kx=P.fx*130;t.ky=P.fy*130;t.s=0;t.cd=.6;t.st=Math.max(t.st||0,.34)}if(t.hp<=0)kill(t);abil(t,pdm()*mul,mul)}}}
+  if(d<range+(t.sz||t.rad||6)&&(dx*P.fx+dy*P.fy)/d>-.1){
+   const sneak=!t.sz&&t.type!="o"&&t.ai!==1&&!t.sees&&!(t.st>0),dmg=pdm()*mul*(sneak?3:1);
+   P.hit.add(t);t.hp-=dmg;t.fl=.12;sfx(sneak?"crit":"hit");shake=sneak?6:3;G.hs=.055;
+   G.nums.push({x:t.x,y:t.y,v:Math.round(dmg),t:.8,p:sneak?1:0});
+   if(sneak){G.banner={t:1.4,x:"BACKSTAB"};spark(t.x,t.y,0xffd070,22)}
+   if(!t.sz&&t.type!="o"){t.kx=P.fx*130;t.ky=P.fy*130;t.s=0;t.cd=.6;t.st=Math.max(t.st||0,.34)}
+   if(t.hp<=0)kill(t);abil(t,dmg,mul)}}}
 
 function updP(dt){
  if(P.dead){P.dt-=dt;if(P.dt<=0)respawn();return}
@@ -1461,6 +1467,7 @@ function sfx(k,v){
   else if(k=="stepS"){sfxNoise(.05,1900*(.9+Math.random()*.2),.045,1.6,.7)}
   else if(k=="stepW"){sfxNoise(.13,520*(.85+Math.random()*.3),.06,1.0,.45)}
   else if(k=="scuff"){sfxNoise(.16,420,.07,1.1,.5)}
+  else if(k=="crit"){sfxNoise(.09,1500,.22,1.1,.5);sfxTone(110,.18,.12,"square",.5)}
   else if(k=="roar"){const f=104*(.94+Math.random()*.12);sfxTone(f,1.0,.18,"sawtooth",.66);sfxTone(f*1.5,1.0,.10,"square",.62);sfxNoise(.9,560,.15,1.1,.65)}
  }catch(e){}
 }
