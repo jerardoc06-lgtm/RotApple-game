@@ -728,7 +728,13 @@ function kill(t){sfx(t.sz||!t.type?"kill":"rattle");if(t.sz){G.defeated[G.z]=tru
  else if(t.type=="o")ogreKill(t);else{S.r+=20*(G.z+1);if(Math.random()<.15){give("herb",1);G.banner={t:1.6,x:"FOUND: ASHEN HERB"}}}}
 function strike(range,mul){const tg=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>0)tg.push(G.boss);
  for(const t of tg){if(t.hp<=0||P.hit.has(t))continue;const dx=t.x-P.x,dy=t.y-P.y,d=Math.hypot(dx,dy)||1;
-  if(d<range+(t.sz||t.rad||6)&&(dx*P.fx+dy*P.fy)/d>-.1){P.hit.add(t);t.hp-=pdm()*mul;t.fl=.12;sfx("hit");shake=3;G.hs=.055;G.nums.push({x:t.x,y:t.y,v:Math.round(pdm()*mul),t:.8});if(!t.sz&&t.type!="o"){t.kx=P.fx*130;t.ky=P.fy*130;t.s=0;t.cd=.6;t.st=Math.max(t.st||0,.34)}if(t.hp<=0)kill(t);abil(t,pdm()*mul,mul)}}}
+  if(d<range+(t.sz||t.rad||6)&&(dx*P.fx+dy*P.fy)/d>-.1){
+   const sneak=!t.sz&&t.type!="o"&&t.ai!==1&&!t.sees&&!(t.st>0),dmg=pdm()*mul*(sneak?3:1);
+   P.hit.add(t);t.hp-=dmg;t.fl=.12;sfx(sneak?"crit":"hit");shake=sneak?6:3;G.hs=.055;
+   G.nums.push({x:t.x,y:t.y,v:Math.round(dmg),t:.8,p:sneak?1:0});
+   if(sneak){G.banner={t:1.4,x:"BACKSTAB"};spark(t.x,t.y,0xffd070,22)}
+   if(!t.sz&&t.type!="o"){t.kx=P.fx*130;t.ky=P.fy*130;t.s=0;t.cd=.6;t.st=Math.max(t.st||0,.34)}
+   if(t.hp<=0)kill(t);abil(t,dmg,mul)}}}
 
 function updP(dt){
  if(P.dead){P.dt-=dt;if(P.dt<=0)respawn();return}
@@ -791,7 +797,11 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
  m.losT=(m.losT||0)-dt;
  if(m.losT<=0){m.losT=.22;
   const pd=Math.hypot(P.x-m.hx,P.y-m.hy),reach=m.ai==1?m.terr:m.terr*.85;
-  m.sees=!P.dead&&pd<reach&&(d<26||(d<150&&losClear(m.x,m.y,P.x,P.y,4)))}
+  const quiet=P.blk?.55:1,hear=17*quiet,face=m.fx==null?1:((P.x-m.x)*m.fx+(P.y-m.y)*m.fy)/d;
+  m.saw=!P.dead&&pd<reach&&(d<hear||(d<78*quiet&&face>.22&&losClear(m.x,m.y,P.x,P.y,4)))}
+ m.alert=Math.max(0,(m.alert||0)+(m.saw?dt:-dt*3));
+ if(m.saw&&m.alert<.5&&m.ai!==1){m.fx=(P.x-m.x)/d;m.fy=(P.y-m.y)/d}
+ m.sees=m.saw&&(m.alert>=.5||m.ai==1);
  if(m.st>0){m.x=Math.max(10,Math.min(CW-10,m.x));return}
  if(m.ai==1){                                        /* chase, hunting the last place it saw you */
   if(P.dead||d>m.terr+40||hd>m.terr){m.ai=2;m.sees=false;m.s=0}   /* it will not leave its ground */
@@ -817,7 +827,7 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
   else{
    if(!m.route){m.route=patrolRoute(m.hx,m.hy,m.terr);m.ri=0;m.pt=rnd(0,2)}
    const w=m.route[m.ri]||{x:m.hx,y:m.hy};
-   if(m.pt>0)m.pt-=dt;
+   if(m.pt>0){m.pt-=dt;if(!(m.saw&&m.alert<.5)){const a=G.t*.45+m.ph;m.fx=Math.cos(a);m.fy=Math.sin(a)}}
    else{
     const ax=w.x-m.x,ay=w.y-m.y,ad=Math.hypot(ax,ay)||1;
     if(ad<15){m.ri=(m.ri+1)%m.route.length;m.pt=rnd(1.5,3.5)}
@@ -847,7 +857,8 @@ function update(dt){
  if(G.hs>0){G.hs-=dt;for(const k in Pr)delete Pr[k];return}
  if(Pr.i&&!G.dlg&&!G.pause&&!G.bigmap&&!P.dead){delete Pr.i;invMenu();return}if(G.pause||G.dlg||G.bigmap){for(const k in Pr)delete Pr[k];return}G.whet-=dt;G.tonic-=dt;pwUpd(dt);
  if(G.z<3){const V=G.vz[G.z];DUN[G.z].R.forEach((r,i)=>{if(P.x>=r[0]&&P.x<r[2]&&P.y>=r[1]&&P.y<r[3])V[i]=1})}for(const it of G.items)if(!S.seenI[it.id]&&dist(P,it)<90)S.seenI[it.id]=1;if(G.z==3){if(dist(P,OGL)<170)S.seenI.ogre=1;for(const l of LM)if(dist(P,l)<170)S.seenI["lm_"+l.n]=1}
- updP(dt);if(!P.dead){G.mobs.forEach(m=>updMob(m,dt));const b=G.boss;
+ updP(dt);if(!P.dead){G.mobs.forEach(m=>{const ox=m.x,oy=m.y;updMob(m,dt);
+  const ax=m.x-ox,ay=m.y-oy,al=Math.hypot(ax,ay);if(al>.03){m.fx=ax/al;m.fy=ay/al}});const b=G.boss;
   if(b&&!b.on&&b.hp>0&&!G.intro&&dist(P,b)<125){G.intro=1;sealBoss();say(Z[G.z].intro,()=>{b.on=true})}
   if(b)updBoss(b,dt)}bodies();
  for(const t of G.tele){t.t-=dt;if(t.t<=0){flash=.08;ring(t.x,t.y,t.r);if(!P.dead&&dist(P,t)<t.r)hurt(t.d,1);t.dead=1}}G.tele=G.tele.filter(t=>!t.dead);
@@ -1461,6 +1472,7 @@ function sfx(k,v){
   else if(k=="stepS"){sfxNoise(.05,1900*(.9+Math.random()*.2),.045,1.6,.7)}
   else if(k=="stepW"){sfxNoise(.13,520*(.85+Math.random()*.3),.06,1.0,.45)}
   else if(k=="scuff"){sfxNoise(.16,420,.07,1.1,.5)}
+  else if(k=="crit"){sfxNoise(.09,1500,.22,1.1,.5);sfxTone(110,.18,.12,"square",.5)}
   else if(k=="roar"){const f=104*(.94+Math.random()*.12);sfxTone(f,1.0,.18,"sawtooth",.66);sfxTone(f*1.5,1.0,.10,"square",.62);sfxNoise(.9,560,.15,1.1,.65)}
  }catch(e){}
 }

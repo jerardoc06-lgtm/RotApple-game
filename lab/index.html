@@ -798,7 +798,10 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
  if(m.losT<=0){m.losT=.22;
   const pd=Math.hypot(P.x-m.hx,P.y-m.hy),reach=m.ai==1?m.terr:m.terr*.85;
   const quiet=P.blk?.55:1,hear=17*quiet,face=m.fx==null?1:((P.x-m.x)*m.fx+(P.y-m.y)*m.fy)/d;
-  m.sees=!P.dead&&pd<reach&&(d<hear||(d<100*quiet&&face>.22&&losClear(m.x,m.y,P.x,P.y,4)))}
+  m.saw=!P.dead&&pd<reach&&(d<hear||(d<78*quiet&&face>.22&&losClear(m.x,m.y,P.x,P.y,4)))}
+ m.alert=Math.max(0,(m.alert||0)+(m.saw?dt:-dt*3));
+ if(m.saw&&m.alert<.5&&m.ai!==1){m.fx=(P.x-m.x)/d;m.fy=(P.y-m.y)/d}
+ m.sees=m.saw&&(m.alert>=.5||m.ai==1);
  if(m.st>0){m.x=Math.max(10,Math.min(CW-10,m.x));return}
  if(m.ai==1){                                        /* chase, hunting the last place it saw you */
   if(P.dead||d>m.terr+40||hd>m.terr){m.ai=2;m.sees=false;m.s=0}   /* it will not leave its ground */
@@ -824,7 +827,7 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
   else{
    if(!m.route){m.route=patrolRoute(m.hx,m.hy,m.terr);m.ri=0;m.pt=rnd(0,2)}
    const w=m.route[m.ri]||{x:m.hx,y:m.hy};
-   if(m.pt>0){m.pt-=dt;const a=G.t*.45+m.ph;m.fx=Math.cos(a);m.fy=Math.sin(a)}
+   if(m.pt>0){m.pt-=dt;if(!(m.saw&&m.alert<.5)){const a=G.t*.45+m.ph;m.fx=Math.cos(a);m.fy=Math.sin(a)}}
    else{
     const ax=w.x-m.x,ay=w.y-m.y,ad=Math.hypot(ax,ay)||1;
     if(ad<15){m.ri=(m.ri+1)%m.route.length;m.pt=rnd(1.5,3.5)}
