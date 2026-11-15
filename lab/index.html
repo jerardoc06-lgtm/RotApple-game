@@ -913,7 +913,7 @@ const amb=new THREE.AmbientLight(0xffffff,.5),torch=new THREE.PointLight(0xffc88
 const MT=(c,e)=>HQ?new THREE.MeshPhongMaterial({color:c,emissive:e||0,shininess:28,specular:0x2a2a34}):new THREE.MeshLambertMaterial({color:c,flatShading:true,emissive:e||0});
 let HQ=0;const BX=(w,h,d)=>new THREE.BoxGeometry(w,h,d),
 /* same footprint as BX but with its edges cut back, so armour and limbs stop reading as brickwork */
-RBX=(w,h,d,bev)=>{const b=Math.min(w,h,d)*(bev==null?.3:bev),w2=Math.max(.05,w-2*b),d2=Math.max(.05,d-2*b),dep=Math.max(.05,h-2*b);
+RBX=(w,h,d,bev)=>{const b=Math.min(w,h,d)*((bev==null||bev>1)?.3:bev),w2=Math.max(.05,w-2*b),d2=Math.max(.05,d-2*b),dep=Math.max(.05,h-2*b);
  const sh=new THREE.Shape();sh.moveTo(-w2/2,-d2/2);sh.lineTo(w2/2,-d2/2);sh.lineTo(w2/2,d2/2);sh.lineTo(-w2/2,d2/2);sh.closePath();
  const g=new THREE.ExtrudeGeometry(sh,{depth:dep,bevelEnabled:true,bevelThickness:b,bevelSize:b,bevelSegments:2,steps:1,curveSegments:2});
  g.translate(0,0,-dep/2);g.rotateX(-1.5708);g.computeVertexNormals();g.clearGroups();return g},
@@ -1064,33 +1064,8 @@ function pose(g,o){const A=g.userData.arm;if(!A)return;const t=G.t,b=!!o.sz,ph=o
  if(b&&idle&&G.z==0)r.rotation.x=-.9+Math.sin(t*2.4)*.5;
  const u=g.userData;if(u.ap){const q=u.ap[1];q.position.set(Math.sin(t*2.4)*8,13+Math.abs(Math.cos(t*2.4))*6,9+Math.cos(t*2.4)*1.5);q.rotation.y=t*3;u.ap[0].rotation.y=t*1.5}
  if(u.cape)u.cape.rotation.x=.08+Math.sin(t*2.2)*.1;if(u.ears)u.ears.forEach(p=>p[0].rotation.z=-p[1]*.2+Math.sin(t*2.5+p[1])*.09)}
-function buildPlayer(){buildPlayerOld();const U=pl.userData,m=U.ml;HQ=1;ML=U.m;U.robe.material.color.setHex(0x22242e);
- part(m,LA([[6.35,9.2],[5.9,10.8],[5.0,12.4],[3.9,13.5]],.14),0x3a3d47,0,0,0,0x050507);
- /* deltoid mass: the pauldrons sit on these, not on empty air beside the neck */
-
- for(let i=0;i<9;i++){const a=i*.698,t=part(m,RBX(1.7,3.8,.35),0x2a2a32,Math.sin(a)*6.4,2.2,Math.cos(a)*6.4);t.rotation.y=a}
- [-1,1].forEach(q=>{part(m,SP(2.25),0x3a3d47,q*4.15,13.0,0,0x050507).scale.set(1.06,.84,1.02);part(m,CN(.45,1.8,4),0xd8d0b0,q*4.95,14.0,0).rotation.z=-q*.9;part(m,SP(.3),0xffb040,q*.95,17.3,2.9,0xffa020);part(m,RBX(.3,1.6,.2),0xe8e4d8,q*1.7,16.4,2.7)});
- part(m,CY(1.3,1.3,8,10),0x4a3a22,0,11.5,-5.2).rotation.z=1.5708;
- U.sig=part(m,TO(1.1,.15,18),0xff6020,0,10.2,4.3,0xff4010);part(m,SP(.4),0xff6020,0,10.2,4.3,0xff4010);
- const S=new THREE.Group();S.position.set(0,13.4,-1.6);m.add(S);U.scarf=S;for(let i=0;i<3;i++)part(S,RBX(1.5,.4,5+i*1.5),0x8a1018,(i-1)*1.2,-i*.5,-3-i*.7,0x300408);
- part(swp,RBX(.25,.7,10),0xff7030,0,0,10.5,0xff5010);HQ=0}
-function playerFx(p,mv){const U=pl.userData,t=G.t;if(!U.scarf)return;U.scarf.rotation.x=-.2+Math.sin(t*3)*.12+(mv&&!p.act?.5:0)+(p.act=="roll"?.6:0);U.scarf.rotation.z=Math.sin(t*2.2)*.12;U.sig.scale.setScalar(1+Math.sin(t*3)*.12)}
-function buildPlayerOld(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);pl.userData.ml=m;const K0=0x08080a,E=0x050507;
- pl.userData.robe=part(m,LA([[6.9,0],[6.75,.8],[6.0,4],[4.6,7.4],[4.15,8.6],[4.5,10.2],[4.75,11.8],[4.5,12.8],[3.5,13.8],[1.5,14.6]]),K0,0,0,0,E);part(m,CY(6.6,6.6,.8,12),0x1a1a20,0,.5,0);
- part(m,CY(3.6,3.7,1.2,12),0x3a2a14,0,8.5,0);part(m,RBX(1.4,1.4,.6),0xe8d36a,0,8.5,3.7,0x403810);part(m,RBX(.5,4.5,.4),0x3a2a14,1.6,5.5,3.8);
- part(m,CY(2.3,2.7,1.9,12),0x050506,0,14.0,0,E);part(m,LA([[5.5,12.2],[4.6,13.2],[3.4,13.9],[2.2,14.3]],.1),0x0d0d12,0,0,0,E);part(m,TO(5.05,.35,24),0x8a7a30,0,9.8,0,0x201c08).rotation.x=1.5708;part(m,SP(1.3),0x3a2a14,-4.4,6.4,2.4);part(m,RBX(.7,10,.3),0x8a7a30,0,7.6,4.6,0x201c08);for(let i=0;i<5;i++){const yy=11-i*1.5;part(m,SP(.3),0xe8d36a,0,yy,Math.max(3.9,3.7+(10.5-yy)*.45)+.1,0x403810)}part(m,RBX(1.2,1,10),0x1a1008,-3.4,5.5,-1.8).rotation.x=.5;part(m,CY(1.1,1.3,1.6,8),SKN,0,14.4,0,0x1a0e06);part(m,CY(3.6,2.6,2.6,10),K0,0,12.8,-1.4,E);part(m,SP(.55),0xe8d36a,0,10.8,3.2,0xe8d36a);
- pl.userData.boots=[];pl.userData.arm={};[-1,1].forEach(q=>{pl.userData.boots.push(part(m,RBX(2.4,3,3.4),0x120e0a,q*1.9,.6,1.4));part(m,RBX(.6,2.2,1.4),0x1a0f08,q*2.5,16.8,.8);pl.userData.arm[q<0?"l":"r"]=arm(m,q*4.4,12.4,0,3.6,K0,0x8a7a30,0x1a1210,E,0xe8e4d8)});
- /* helm: a small dome, a brow and a visor slit, carried on a neck rather than a bucket */
- part(m,CY(.85,1.05,1.1,10),0x1a1208,0,16.3,.1,0x050507);
- part(m,SP(1.35),0x5a5f6b,0,17.9,0,0x050507).scale.set(1,1.12,1.05);
- part(m,CY(1.2,1.36,.3,16),0x8a7a30,0,17.2,0,0x201c08);
- part(m,RBX(1.85,.45,.45),0x2e3038,0,17.75,1.0,0x050507);
- part(m,RBX(1.5,.18,.25),0x050507,0,17.55,1.15,0x0a0a0c);
- part(m,CN(.38,1.0,4),0x8a7a30,0,19.3,-.3,0x201c08);
- part(m,CY(2.0,1.5,2.4,12),0x0d0d12,0,15.0,-1.2,E);
- swp=new THREE.Group();swp.position.set(0,-4.1,0);swp.rotation.x=1.5708;pl.userData.arm.r.el.add(swp);part(swp,RBX(1.1,.5,15),0xcfd8e0,0,0,9.5,0x223344);part(swp,RBX(.4,.6,13),0x8899aa,0,0,9.5,0x223344);part(swp,CN(.55,1.8,4),0xcfd8e0,0,0,17.9,0x223344).rotation.x=1.5708;
- part(swp,RBX(5,.7,.8),0x8a7a30,0,0,1.5,0x201c08);part(swp,CY(.4,.4,3,6),0x1a1008,0,0,-.2).rotation.x=1.5708;part(swp,SP(.7),0x8a7a30,0,0,-1.8,0x201c08);
- flk=part(pl.userData.arm.l.el,SP(1.7),0xd62828,0,-4.2,0,0x601010);shade(pl,6);scene.add(pl);HQ=0}
+/* ---- the player: one deliberate model, built bottom-up ----
+   cloak, torso, breastplate, pauldrons, arms, helm, greaves. Feet at y=0. */
 function mkMob(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const b=new THREE.Group();g.add(b);const U=g.userData;U.b=b;
  const leg=(q,y,c,fc)=>{const L=new THREE.Group();L.position.set(q*1.9,y,0);b.add(L);
  part(L,LA([[.74,-y],[.98,-y*.85],[1.12,-y*.66],[.84,-y*.5],[1.16,-y*.22],[1.06,0]],.06),c,0,0,0);
@@ -1177,46 +1152,46 @@ function buildPlayer2(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=ne
   part(K,SP(1.05),SD,0,0,.15);part(K,CY(1.2,.6,2.9,12),ST,0,-1.3,0);
   const AN=new THREE.Group();AN.position.set(0,-3.3,0);K.add(AN);U.ankles.push(AN);
   part(AN,CY(1.18,1.0,2.3,12),LE,0,.58,0);part(AN,CY(1.22,1.2,.26,12),0x241a12,0,1.62,0);
-  part(AN,BX(1.95,1.25,2.7),LE,0,-.3,.28);part(AN,BX(1.72,.85,1.6),LE,0,-.6,1.32);
-  part(AN,BX(1.36,.62,.75),LE,0,-.74,1.68);part(AN,BX(1.7,1.15,1.15),LE,0,-.55,-1.53);
-  part(AN,BX(2.02,.3,1.7),0x15100c,0,-1,-1.14);part(AN,BX(2.1,.3,2.4),0x15100c,0,-1,.82);part(AN,BX(1.2,.2,.42),0x3a3a3e,0,-.78,1.72);
-  part(AN,BX(.4,.6,.22),0x8a7250,q*1.12,-.12,.45)});
+  part(AN,RBX(1.95,1.25,2.7),LE,0,-.3,.28);part(AN,RBX(1.72,.85,1.6),LE,0,-.6,1.32);
+  part(AN,RBX(1.36,.62,.75),LE,0,-.74,1.68);part(AN,RBX(1.7,1.15,1.15),LE,0,-.55,-1.53);
+  part(AN,RBX(2.02,.3,1.7),0x15100c,0,-1,-1.14);part(AN,RBX(2.1,.3,2.4),0x15100c,0,-1,.82);part(AN,RBX(1.2,.2,.42),0x3a3a3e,0,-.78,1.72);
+  part(AN,RBX(.4,.6,.22),0x8a7250,q*1.12,-.12,.45)});
  // hip plate, hanging tabard strip front and back, steel tassets
  U.robe=part(m,CY(2.1,2.6,3,12),NV,0,9.5,0,E);U.robe.scale.set(1.02,1,.9);
- part(m,BX(1.95,6.4,.28),NV,0,8.3,2.25);part(m,BX(.42,5.4,.06),0x59617a,0,8.4,2.4);
- part(m,BX(2.2,5.4,.3),NV,0,8.6,-2.25);
- part(m,BX(1.5,4.2,.6),ST,-2.5,9.9,1.4).rotation.z=.12;part(m,BX(1.5,4.2,.6),ST,2.5,9.9,1.4).rotation.z=-.12;
- part(m,CY(2.7,2.7,.9,12),0x1d1a1a,0,11.1,0).scale.set(1.05,1,.95);part(m,BX(1.3,1.3,.55),GD,0,11.1,2.5,0x403010);
+ part(m,RBX(1.95,6.4,.28),NV,0,8.3,2.25);part(m,RBX(.42,5.4,.06),0x59617a,0,8.4,2.4);
+ part(m,RBX(2.2,5.4,.3),NV,0,8.6,-2.25);
+ part(m,RBX(1.5,4.2,.6),ST,-2.5,9.9,1.4).rotation.z=.12;part(m,RBX(1.5,4.2,.6),ST,2.5,9.9,1.4).rotation.z=-.12;
+ part(m,CY(2.7,2.7,.9,12),0x1d1a1a,0,11.1,0).scale.set(1.05,1,.95);part(m,RBX(1.3,1.3,.55),GD,0,11.1,2.5,0x403010);
  // cuirass: narrow waist, broad chest
- part(m,CY(2.55,2.2,5.4,12),ST,0,13.8,0,E).scale.set(1.02,1,.88);
+ part(m,CY(2.72,2.02,5.4,14),ST,0,13.8,0,E).scale.set(1.02,1,.9);
  part(m,CY(2.65,2.5,3,12),ST,0,15.05,0,E).scale.set(1.02,1,.86);
- part(m,BX(.4,3.6,.4),0x7d838c,0,14.1,2.5);part(m,CY(2.6,2.6,.7,12),SD,0,11.5,0).scale.set(1.05,1,.95);
- part(m,BX(3.8,1,2.4),SD,0,16.2,0);
+ part(m,RBX(.4,3.6,.4),0x7d838c,0,14.1,2.5);part(m,CY(2.6,2.6,.7,12),SD,0,11.5,0).scale.set(1.05,1,.95);
+ part(m,RBX(3.8,1,2.4),SD,0,16.2,0);
  // small two-plate pauldrons
- [-1,1].forEach(q=>{part(m,BX(2.2,1.5,2.7),ST,q*2.85,15.65,0).rotation.z=q*-.28;part(m,BX(1.85,1.05,2.3),SD,q*3.05,14.6,0).rotation.z=q*-.32});
+ [-1,1].forEach(q=>{part(m,RBX(2.3,1.6,2.8),ST,q*3.05,15.35,0).rotation.z=q*-.30;part(m,RBX(1.9,1.1,2.35),SD,q*3.15,14.35,0).rotation.z=q*-.36});
  // slim arms
- [-1,1].forEach(q=>{const A=arm(m,q*3.62,16,0,2.7,ST,SD,GLV,E,SD,.62);A.scale.set(.92,1,.92);U.arm[q<0?"l":"r"]=A});
+ [-1,1].forEach(q=>{const A=arm(m,q*3.5,15.9,0,2.75,ST,SD,GLV,E,SD,.72);A.scale.set(1,1,1);U.arm[q<0?"l":"r"]=A});
  U.arm.l.hand.forEach(h=>h.visible=false);
  // navy cowl and cape tails
  const S=new THREE.Group();S.position.set(0,16.2,-.9);m.add(S);U.scarf=S;
- part(S,CY(2.3,2.7,2,10),NV,0,-.3,0);part(S,CY(2.2,2.4,.55,10),NV2,0,.9,.1);
- for(let i=0;i<3;i++)part(S,BX(2,.45,3.6+i*1.2),NV,(i-1)*.6,-.9-i*.32,-1.5-i*.55);
+ part(S,CN(2.55,2.2,12),NV,0,-.2,0);part(S,CY(2.1,2.3,.5,12),NV2,0,.85,.1);
+ for(let i=0;i<2;i++){const t=part(S,RBX(1.7,.4,5.4+i*1.2),NV,i?-.85:.85,-2.2-i*.5,-1.05-i*.35);t.rotation.x=.3}
  // bucket great helm with T-slit and comb
- part(m,CY(1.65,1.9,1.2,8),0x15171d,0,16.6,0);part(m,CY(2.05,2.2,3.7,8),ST,0,18.55,0);part(m,CN(2.1,.5,8),SD,0,20.62,-.05);part(m,CY(2.05,2.15,.55,8),SD,0,16.75,0);
- part(m,BX(2.25,2.5,.35),0x7e8591,0,18.55,2.05);
- part(m,BX(1.75,.46,.34),0x07070a,0,19.1,2.22);part(m,BX(.46,1.25,.34),0x07070a,0,18.3,2.22);
- part(m,BX(2.6,.6,.45),0x646b76,0,17.35,2.1);
- part(m,BX(3.2,.4,2.4),SD,0,20.3,-.1);
+ part(m,CY(1.5,1.75,1.2,12),0x15171d,0,16.6,0);part(m,CY(1.72,1.95,3.2,14),ST,0,18.35,0);part(m,SP(1.74),ST,0,19.9,0,0x050507).scale.set(1,.8,1);part(m,CY(1.74,1.92,.5,14),SD,0,16.62,0);
+ part(m,RBX(1.95,2.25,.38),0x7e8591,0,18.4,1.76);
+ part(m,RBX(1.5,.42,.3),0x07070a,0,18.9,1.94);part(m,RBX(.42,1.15,.3),0x07070a,0,18.2,1.94);
+ part(m,RBX(2.2,.55,.42),0x646b76,0,17.3,1.83);
+ part(m,RBX(2.7,.36,2.1),SD,0,20.1,-.1);
  U.sig=part(m,SP(.34),0x4a6ad8,0,14.2,2.45,0x1a2a80);
  // smaller kite shield angled off the body
  const SH=new THREE.Group();SH.position.set(-0.35,-3.7,2.75);SH.rotation.set(.05,.24,-.05);U.arm.l.add(SH);U.shield=SH;SH.visible=false;
- part(SH,BX(4.9,6.7,.42),0x0f1526,0,.15,-.3);
- part(SH,BX(4.5,6.4,.5),NV,0,.25,0);
- part(SH,BX(.72,5.2,.34),LT,0,.2,.34);part(SH,BX(3.1,.72,.34),LT,0,1.9,.34);
- part(SH,BX(4.9,.7,.34),0x2a3350,0,3.35,.1);
- swp=new THREE.Group();swp.position.set(0,-2.7,0);swp.rotation.x=2.0;U.arm.r.el.add(swp);
- part(swp,BX(.62,.26,8.2),LT,0,0,5.4,0x223344);part(swp,BX(.24,.34,7),SD,0,0,5.4,0x223344);part(swp,CN(.34,1.4,4),LT,0,0,10.1,0x223344).rotation.x=1.5708;
- part(swp,BX(3,.42,.6),0x7d838c,0,0,1.1,0x201c08);part(swp,CY(.34,.34,2.8,6),0x241a14,0,0,-.5).rotation.x=1.5708;part(swp,SP(.55),GD,0,0,-2,0x403010);
+ part(SH,RBX(4.9,6.7,.42),0x0f1526,0,.15,-.3);
+ part(SH,RBX(4.5,6.4,.5),NV,0,.25,0);
+ part(SH,RBX(.72,5.2,.34),LT,0,.2,.34);part(SH,RBX(3.1,.72,.34),LT,0,1.9,.34);
+ part(SH,RBX(4.9,.7,.34),0x2a3350,0,3.35,.1);
+ swp=new THREE.Group();swp.position.set(0,-2.7,0);swp.rotation.x=2.55;U.arm.r.el.add(swp);
+ part(swp,RBX(.62,.26,8.2),LT,0,0,5.4,0x223344);part(swp,RBX(.24,.34,7),SD,0,0,5.4,0x223344);part(swp,CN(.34,1.4,4),LT,0,0,10.1,0x223344).rotation.x=1.5708;
+ part(swp,RBX(3,.42,.6),0x7d838c,0,0,1.1,0x201c08);part(swp,CY(.34,.34,2.8,6),0x241a14,0,0,-.5).rotation.x=1.5708;part(swp,SP(.55),GD,0,0,-2,0x403010);
  flk=part(U.arm.r.el,SP(.8),0x6a2a2a,0,-3.6,1.1,0x2a0808);
  shade(pl,6);scene.add(pl);HQ=0}
 function mkBoss2(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const B=new THREE.Group();B.scale.setScalar(o.sz/(G.z==2?10:8));g.add(B);const U=g.userData;U.b=B;const z=G.z;U.arm={};
