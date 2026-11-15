@@ -813,7 +813,7 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
          ax=tx-m.x,ay=ty-m.y,ad=Math.hypot(ax,ay)||1;
    if(m.s==0&&m.cd<=0){
     if(m.sees||d<26||ad>18)mv(m,ax/ad*sp*dt+(m.type=="b"?Math.sin(G.t*6+m.ph)*30*dt:0),ay/ad*sp*dt,5);
-    if(d<22){m.s=1;m.t=.5;sndAt(m,"wind",.9)}}
+    if(d<22){m.s=1;m.t=.5;sndAt(m,"wind",.9);G.tele.push({x:m.x,y:m.y,r:m.type=="s"?30:24,t:m.t,t0:m.t,d:0,v:1})}}
    else if(m.s==1){m.t-=dt;if(m.t<=0){if(dist(m,P)<28)hurt(9+G.z*4);m.s=0;m.cd=1.1}}
    if(!m.sees&&ad<20&&m.s==0){m.ai=2}
   }
@@ -863,7 +863,7 @@ function update(dt){
   const ax=m.x-ox,ay=m.y-oy,al=Math.hypot(ax,ay);if(al>.03){m.fx=ax/al;m.fy=ay/al}});const b=G.boss;
   if(b&&!b.on&&b.hp>0&&!G.intro&&dist(P,b)<125){G.intro=1;sealBoss();say(Z[G.z].intro,()=>{b.on=true})}
   if(b)updBoss(b,dt)}bodies();
- for(const t of G.tele){t.t-=dt;if(t.t<=0){flash=.08;ring(t.x,t.y,t.r);if(!P.dead&&dist(P,t)<t.r)hurt(t.d,1);t.dead=1}}G.tele=G.tele.filter(t=>!t.dead);
+ for(const t of G.tele){t.t-=dt;if(t.t<=0){flash=.08;ring(t.x,t.y,t.r);if(!P.dead&&!t.v&&dist(P,t)<t.r)hurt(t.d,1);t.dead=1}}G.tele=G.tele.filter(t=>!t.dead);
  for(const p of G.proj){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;if(dist(p,P)<6&&!P.dead&&P.inv<=0){hurt(9);p.l=0}}G.proj=G.proj.filter(p=>p.l>0);
  if(G.z==3){const nb=bio(P.x,P.y);if(G.bio==null)G.bio=nb;else if(nb!==G.bio){G.bioT=(G.bioT||0)+dt;if(G.bioT>.7){G.bio=nb;G.bioT=0;G.banner={t:3.2,x:BIOME[nb].n}}}else G.bioT=0}
  for(const k in Pr)delete Pr[k]}
