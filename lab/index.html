@@ -957,10 +957,12 @@ function face(g,y,z,sk,br,ey,ee,mo){part(g,SP(2.7),sk,0,y,z).scale.set(1,1.18,1.
 function slv(g,x,y,z,c,r1,r2,l,rx,rz,e){const m=part(g,CY(r1,r2,l,8),c,x,y,z,e);m.rotation.set(rx,0,rz);return m}
 function apple(g,x,y,z){const a=new THREE.Group();a.position.set(x,y,z);g.add(a);part(a,SP(1.8),0xd01428,0,0,0,0x600010);part(a,BX(.25,.8,.25),0x3a2410,0,1.8,0);part(a,BX(.9,.15,.5),0x2f8a3a,.5,1.9,0);return a}
 function arm(g,x,y,z,len,sl,cu,gl,e,un,fl){fl=fl||1;const A=new THREE.Group();A.position.set(x,y,z);g.add(A);
- part(A,SP(1.7*fl),sl,0,0,0,e);part(A,CY(1.45*fl,1.15*fl,len,14),sl,0,-len/2,0,e);part(A,SP(1.2*fl),sl,0,-len,0,e);
+ part(A,SP(1.72*fl),sl,0,len*.06,0,e).scale.set(1.26,.86,1.14);
+ part(A,LA([[1.02*fl,-len],[1.14*fl,-len*.8],[1.34*fl,-len*.52],[1.5*fl,-len*.26],[1.32*fl,.1]],.05),sl,0,0,0,e);
+ part(A,SP(1.12*fl),sl,0,-len,0,e).scale.set(1,.9,1);
  const El=new THREE.Group();El.position.y=-len;A.add(El);A.el=El;
  part(A,RBX(.5,1.25,1.45),cu,(x<0?-1:1)*1.12,-len,0);
- part(El,CY(1.15,1.05*fl,len,14),sl,0,-len/2,0,e);part(El,CY(1.1*fl+.08,1.1*fl+.08,.7,14),un,0,-len+.5,0);part(El,CY(1.18*fl+.1,1.18*fl+.1,.5,14),cu,0,-len+.95,0,e);
+ part(El,LA([[.8*fl,-len],[.9*fl,-len*.8],[1.06*fl,-len*.5],[1.2*fl,-len*.16],[1.0*fl,0]],.05),sl,0,0,0,e);part(El,CY(1.1*fl+.08,1.1*fl+.08,.7,14),un,0,-len+.5,0);part(El,CY(1.18*fl+.1,1.18*fl+.1,.5,14),cu,0,-len+.95,0,e);
  const HD=A.hand=[];const pm=part(El,SP(1),gl,0,-len-.5,0,0x120a06);pm.scale.set(1,1.15,.8);HD.push(pm);for(let i=-1;i<2;i++)HD.push(part(El,CY(.2,.15,1.3,6),gl,i*.38,-len-1.3,.15));HD.push(part(El,CY(.22,.16,1,6),gl,x<0?-.85:.85,-len-.6,.4).rotation.z=x<0?.6:-.6);return A}
 function playerPose(p,mv){
  const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
@@ -1081,10 +1083,13 @@ function buildPlayerOld(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=
  part(swp,RBX(5,.7,.8),0x8a7a30,0,0,1.5,0x201c08);part(swp,CY(.4,.4,3,6),0x1a1008,0,0,-.2).rotation.x=1.5708;part(swp,SP(.7),0x8a7a30,0,0,-1.8,0x201c08);
  flk=part(pl.userData.arm.l.el,SP(1.7),0xd62828,0,-4.2,0,0x601010);shade(pl,6);scene.add(pl);HQ=0}
 function mkMob(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const b=new THREE.Group();g.add(b);const U=g.userData;U.b=b;
- const leg=(q,y,c,fc)=>{const L=new THREE.Group();L.position.set(q*1.9,y,0);b.add(L);part(L,CY(1,.75,y,6),c,0,-y/2,0);part(L,RBX(1.8,.8,2.8),fc,0,-y+.4,.7);return L},hd=y=>{const H=new THREE.Group();H.position.set(0,y,0);b.add(H);return H};
+ const leg=(q,y,c,fc)=>{const L=new THREE.Group();L.position.set(q*1.9,y,0);b.add(L);
+ part(L,LA([[.74,-y],[.98,-y*.85],[1.12,-y*.66],[.84,-y*.5],[1.16,-y*.22],[1.06,0]],.06),c,0,0,0);
+ part(L,SP(.95),c,0,-y*.5,0);part(L,RBX(1.8,.8,2.8),fc,0,-y+.4,.7);return L},hd=y=>{const H=new THREE.Group();H.position.set(0,y,0);b.add(H);return H};
  if(o.type=="g"){const SK=0x56683f,DK=0x2f3a22,RD=0xd01428,E=0x0a1006,BN=0xd8cfa8;
   U.legs=[leg(-1,5.5,DK,0x1a1a10),leg(1,5.5,DK,0x1a1a10)];
-  part(b,CY(2.8,3.8,8,10),SK,0,9.5,0,E).rotation.x=.3;part(b,SP(3),DK,0,6.2,-.2,E).scale.set(1.1,.7,1);
+  part(b,LA([[3.4,5.2],[4.25,6.6],[4.5,8.6],[4.15,10.6],[3.3,12.2],[2.45,13.3]],.1),SK,0,0,0,E).rotation.x=.12;
+  part(b,SP(3.1),DK,0,6,-.2,E).scale.set(1.2,.72,1.05);
   for(let i=0;i<4;i++)part(b,RBX(3.6,.4,.5),BN,0,8+i*1.2,2.6-i*.2);
   part(b,TO(2.9,.28,14),0x2f8a3a,0,8.2,0).rotation.x=1.5708;
   apple(b,-1.6,12.5,-2.8).scale.setScalar(1.4);apple(b,3.2,12.8,0).scale.setScalar(.8);
@@ -1101,8 +1106,9 @@ function mkMob(o){HQ=1;const g=new THREE.Group();ML=g.userData.m=[];const b=new 
    [0,1,2].forEach(i=>part(W,RBX(.4,.4,6.5-i*.8),F,q*(3.2+i*2.6),0,-2.7));part(W,CN(.45,1.4,4),0xcfc8d8,q*11,0,.2).rotation.z=-q*1.57});
   const T=part(b,CN(.55,4.5,5),F,0,-.3,-4.2);T.rotation.x=-1.57;U.tail=T}
  if(o.type=="s"){const CT=0x16323c,DK=0x0c1c26,BN=0xdce8e4,SW=0x1a5a34,E=0x04101a;
-  U.legs=[leg(-1,5.5,DK,0x0a141a),leg(1,5.5,DK,0x0a141a)];part(b,CY(2.9,4,8,12),CT,0,9.4,0,E);U.tat=[];
-  for(let i=0;i<5;i++){const a=i*1.26,t=part(b,RBX(1.8,4.5,.4),CT,Math.sin(a)*3.3,5.3,Math.cos(a)*3.3,E);t.rotation.y=a;U.tat.push(t)}
+  U.legs=[leg(-1,5.5,DK,0x0a141a),leg(1,5.5,DK,0x0a141a)];part(b,LA([[3.2,5.2],[4.35,7.4],[4.1,9.4],[3.2,11.6],[2.3,13.1]],.09),CT,0,0,0,E);U.tat=[];
+  part(b,LA([[4.55,1.4],[4.6,3.2],[4.1,4.6],[3.55,5.6]],.07),CT,0,0,0,E);
+  for(let i=0;i<5;i++){const a=i*1.26,t=part(b,RBX(1.4,3.6,.3),CT,Math.sin(a)*4.1,3.6,Math.cos(a)*4.1,E);t.rotation.y=a;U.tat.push(t)}
   part(b,TO(3.3,.3,16),0xb89860,0,7,0).rotation.x=1.5708;for(let i=0;i<3;i++)part(b,SP(.35),0xe8c860,.0,9+i*1.4,3.3,0x403010);
   [-1,1].forEach(q=>{part(b,SP(.6),0xc8d4c0,q*2.8,12.2,.8);part(b,RBX(.7,5,.3),SW,q*2.6,9.8,2.4)});
   const H=hd(13.2);U.head=H;part(H,SP(2.5),BN,0,1.2,0,0x202a28).scale.set(1,1.1,1);part(H,RBX(2,.8,1.8),BN,0,-1.1,1);
