@@ -922,7 +922,18 @@ CN=(r,h,n)=>new THREE.ConeGeometry(r,h,HQ?20:(n||6)),
 SP=r=>HQ?new THREE.SphereGeometry(r,22,16):new THREE.SphereGeometry(r,7,5);
 let world,ML,em=new Map,tm=new Map,pm=new Map,sparks=[],decor=[],stainM,exitM,flames,rain,rp,bolt,pl,swp,flk,spT=0;
 function add(g,c,x,y,z,e){const m=new THREE.Mesh(g,MT(c,e));m.castShadow=m.receiveShadow=true;const q=g.parameters||{};if([0x4a5048,0x3a3a34,0x34342e,0x2a2a30].includes(c)){const t=BRICK.clone();t.needsUpdate=true;t.repeat.set((q.width||(q.radiusBottom||10)*5)/14,(q.height||20)/14);m.material.map=t}else if(c!=0x0a2a30)m.material.map=NOISE;m.position.set(x,y,z);(SGn?SGn.g:world).add(m);return m}
-function part(g,geo,c,x,y,z,e){const m=new THREE.Mesh(geo,MT(c,e));m.material.map=NOISE;m.material.userData.e=e||0;m.castShadow=true;m.position.set(x,y,z);g.add(m);ML.push(m.material);return m}
+/* flesh and battered plate are never machine-perfect: nudge every surface a little and
+   weld the normals across seams, so characters stop reading as assembled primitives */
+let OA=.1;function organ(g,a){a=a==null?OA:a;g=g.clone();const p=g.attributes.position,n=g.attributes.normal,
+ key=i=>p.getX(i).toFixed(2)+"|"+p.getY(i).toFixed(2)+"|"+p.getZ(i).toFixed(2);
+ const ks=new Array(p.count),seen={};
+ for(let i=0;i<p.count;i++){const k=ks[i]=key(i);
+  if(!(k in seen)){seen[k]=1;const h=Math.sin(p.getX(i)*2.7+p.getY(i)*1.9)*Math.cos(p.getZ(i)*3.1+p.getY(i)*1.3),sc=1+a*h;
+   p.setXYZ(i,p.getX(i)*sc,p.getY(i)*sc,p.getZ(i)*sc)}}
+ const acc={};for(let i=0;i<p.count;i++){const k=ks[i];if(acc[k]){acc[k].x+=n.getX(i);acc[k].y+=n.getY(i);acc[k].z+=n.getZ(i)}else acc[k]=new THREE.Vector3(n.getX(i),n.getY(i),n.getZ(i))}
+ for(let i=0;i<p.count;i++){const v=acc[ks[i]],l=Math.hypot(v.x,v.y,v.z)||1;n.setXYZ(i,v.x/l,v.y/l,v.z/l)}
+ p.needsUpdate=true;n.needsUpdate=true;return g}
+function part(g,geo,c,x,y,z,e){if(HQ)geo=organ(geo);const m=new THREE.Mesh(geo,MT(c,e));m.material.map=NOISE;m.material.userData.e=e||0;m.castShadow=true;m.position.set(x,y,z);g.add(m);ML.push(m.material);return m}
 function shade(g,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r,10).rotateX(-1.5708),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.45}));m.position.y=.3;g.add(m)}
 function glow(g,h){g.userData.m.forEach(m=>m.emissive.setHex(h||m.userData.e))}
 function tex(a,b,rx,ry){const c=document.createElement("canvas");c.width=c.height=32;const g=c.getContext("2d");g.fillStyle=a;g.fillRect(0,0,32,32);for(let i=0;i<70;i++){g.fillStyle=Math.random()<.5?b:"#0005";g.fillRect(Math.random()*32|0,Math.random()*32|0,2+Math.random()*4|0,2)}const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry||rx);return t}
