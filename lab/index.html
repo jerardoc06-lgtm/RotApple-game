@@ -247,11 +247,16 @@ function fmat(t){if(FM[t])return FM[t];const c=FC[t],m=new THREE.MeshLambertMate
   if(fd)sh.fragmentShader="uniform vec3 uC;uniform vec3 uPl;varying vec3 vWP;\n"+sh.fragmentShader.replace("void main() {","void main() {\nvec3 ab=uPl-uC;float tt=dot(vWP-uC,ab)/dot(ab,ab);float dd=length(vWP-(uC+ab*clamp(tt,0.,1.)));float fa=(1.-smoothstep(4.,15.,dd))*(1.-smoothstep(.86,.99,tt));if(fa>0.&&fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)<fa*.93)discard;float cd=length(vWP-uC);if(cd<26.){float ca=1.-smoothstep(7.,26.,cd);if(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453+.37)<ca*.92)discard;}")}}
  return FM[t]=m}
 function water(x,y,r,c){const m=new THREE.Mesh(new THREE.CircleGeometry(r,36).rotateX(-1.5708),new THREE.MeshPhongMaterial({color:c,emissive:0x04141a,shininess:80,specular:0x6a8aa0,transparent:true,opacity:.94}));m.position.set(x,.5,y);world.add(m);MAPW.push({x,y,r,c:(c==0x0c2a30||c==0x0a2a30)?"#1a5260":"#3a3640"});WATER.push({x,y,r,m,blue:c==0x0c2a30||c==0x0a2a30})}
+const ANISO=()=>Math.min(4,(ren&&ren.capabilities&&ren.capabilities.getMaxAnisotropy())||1);
 function groundTex(){const c=document.createElement("canvas");c.width=c.height=256;const g=c.getContext("2d"),R=Math.random;g.fillStyle="#182816";g.fillRect(0,0,256,256);
- for(let i=0;i<300;i++){g.fillStyle="rgba("+(10+R()*30|0)+","+(30+R()*50|0)+","+(10+R()*25|0)+","+(.15+R()*.25)+")";const r=4+R()*16,x=R()*256,y=R()*256;for(const a of[0,256])for(const b of[0,256]){g.beginPath();g.arc(x-a,y-b,r,0,6.3);g.fill()}}
- for(let i=0;i<2600;i++){const x=R()*256,y=R()*256,h=3+R()*7;g.strokeStyle="rgba("+(24+R()*38|0)+","+(54+R()*62|0)+","+(20+R()*24|0)+","+(.32+R()*.36)+")";g.beginPath();g.moveTo(x,y);g.lineTo(x+R()*3-1.5,y-h);g.stroke()}
- for(let i=0;i<200;i++){g.fillStyle=["#4a3820","#5a4426","#2a2216","#6a5030"][i&3];g.globalAlpha=.55;g.fillRect(R()*256|0,R()*256|0,2+R()*3|0,1+R()*2|0)}g.globalAlpha=1;
- const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(75,75);t.magFilter=t.minFilter=THREE.NearestFilter;t.anisotropy=1;return t}
+ /* broad patches first: at play distance the eye reads the ground from these, not from single blades */
+ for(let i=0;i<70;i++){g.fillStyle="rgba("+(12+R()*26|0)+","+(34+R()*44|0)+","+(12+R()*22|0)+","+(.10+R()*.16)+")";const r=26+R()*54,x=R()*256,y=R()*256;for(const a of[0,256])for(const b of[0,256]){g.beginPath();g.arc(x-a,y-b,r,0,6.3);g.fill()}}
+ /* then tufts heavy enough to survive the pixel grid */
+ for(let i=0;i<1150;i++){const x=R()*256,y=R()*256,h=6+R()*11;g.strokeStyle="rgba("+(26+R()*34|0)+","+(58+R()*54|0)+","+(22+R()*20|0)+","+(.35+R()*.35)+")";g.lineWidth=1.3+R()*2.0;g.beginPath();g.moveTo(x,y);g.lineTo(x+R()*4-2,y-h);g.stroke()}
+ g.lineWidth=1;
+ /* sparse stones and bare earth give the pattern landmarks to hold on to */
+ for(let i=0;i<90;i++){g.fillStyle=["#4a3820","#5a4426","#2a2216","#6a5030"][i&3];g.globalAlpha=.5;g.fillRect(R()*256|0,R()*256|0,3+R()*6|0,2+R()*4|0)}g.globalAlpha=1;
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(40,40);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.anisotropy=ANISO();return t}
 function dirtTex(){const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d"),R=Math.random;g.fillStyle="#5a4430";g.fillRect(0,0,128,128);
  for(let i=0;i<500;i++){g.fillStyle="rgba("+(60+R()*60|0)+","+(45+R()*40|0)+","+(28+R()*30|0)+","+(.3+R()*.4)+")";g.fillRect(R()*128,R()*128,1+R()*4,1+R()*3)}
  for(let i=0;i<40;i++){g.fillStyle="rgba(140,130,115,.55)";g.beginPath();g.ellipse(R()*128,R()*128,1+R()*2.5,1+R()*1.6,R()*3,0,6.3);g.fill()}
@@ -921,8 +926,8 @@ const NOISE=noiseTex(0),BRICK=noiseTex(1);
 function stoneTex(a,b,rx,ry,plank){const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");g.fillStyle=a;g.fillRect(0,0,64,64);
  if(plank){for(let r=0;r<4;r++){const v=Math.random()*30|0;g.fillStyle=b;g.globalAlpha=.5;g.fillRect(0,r*16,64,16);g.globalAlpha=1;for(let i=0;i<14;i++){g.fillStyle="rgba(0,0,0,.25)";g.fillRect(Math.random()*64|0,r*16+2+Math.random()*12|0,8+Math.random()*16|0,1)}g.fillStyle="#050302";g.fillRect(0,r*16,64,2);g.fillRect((r*23)%64,r*16,2,16)}}
  else{for(let r=0;r<4;r++){let x=-(r*7)%13;while(x<64){const w=11+Math.random()*9|0,v=Math.random();g.fillStyle=v<.5?b:a;g.globalAlpha=.5+v*.5;g.fillRect(x+1,r*16+1,w-2,14);g.globalAlpha=1;x+=w}}g.fillStyle="#04050480";for(let r=0;r<4;r++)g.fillRect(0,r*16,64,2)}
- for(let i=0;i<120;i++){g.fillStyle=Math.random()<.5?"#0004":"#ffffff12";g.fillRect(Math.random()*64|0,Math.random()*64|0,2,2)}
- const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry||rx);return t}
+ for(let i=0;i<34;i++){g.fillStyle=Math.random()<.5?"#0004":"#ffffff12";g.fillRect(Math.random()*64|0,Math.random()*64|0,2,2)}
+ const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.anisotropy=ANISO();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry||rx);return t}
 const da=(a,b)=>{let d=b-a;while(d>3.14)d-=6.28;while(d<-3.14)d+=6.28;return d};
 
 const SKN=0xc89870,SPH=(r,t)=>new THREE.SphereGeometry(r,18,12,0,6.283,0,t),TO=(r,t,n)=>new THREE.TorusGeometry(r,t,8,Math.max(n||14,22));
@@ -1272,7 +1277,7 @@ function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
  scene.background=new THREE.Color(T[0]);scene.fog=new THREE.Fog(T[0],ZL[5],ZL[6]);
  amb.color.setHex(T[3]).lerp(_lzC.setHex(ZL[1]),.6);amb.intensity=ZL[0];
  moon.intensity=ZL[2];moon.color.setHex(ZL[3]);hemi.intensity=ZL[4];
- const fl=new THREE.Mesh(new THREE.PlaneGeometry(z==3?WS+320:1200,z==3?WS+320:1200),new THREE.MeshLambertMaterial({map:z==3?groundTex():stoneTex(T[1],T[2],60,60,z==2)}));fl.receiveShadow=true;fl.rotation.x=-1.5708;FLM=fl;fl.position.set(z==3?WS/2:160,0,z==3?WS/2:520);fl.material.color.setHex([0x8e8e86,0x8c8e92,0x84827c,0x8c8c80][z]);   /* the ground is the darkest large surface in its zone */world.add(fl);
+ const fl=new THREE.Mesh(new THREE.PlaneGeometry(z==3?WS+320:1200,z==3?WS+320:1200),new THREE.MeshLambertMaterial({map:z==3?groundTex():stoneTex(T[1],T[2],34,34,z==2)}));fl.receiveShadow=true;fl.rotation.x=-1.5708;FLM=fl;fl.position.set(z==3?WS/2:160,0,z==3?WS/2:520);fl.material.color.setHex([0x8e8e86,0x8c8e92,0x84827c,0x8c8c80][z]);   /* the ground is the darkest large surface in its zone */world.add(fl);
  const tree=(x,zz)=>{add(CY(2,3.5,44,5),0x1a140e,x,22,zz);add(BX(2,2,22),0x1a140e,x+6,36,zz).rotation.y=.6;add(BX(2,2,18),0x1a140e,x-6,30,zz).rotation.y=-.7};
  if(z==0){for(let i=0;i<6;i++){const x=-10+i*68;add(BX(56,44,36),0x4a5048,x,22,26);add(CN(42,24,4),0x1b1d22,x,56,26).rotation.y=.785;add(BX(8,12,1),0x050607,x-12,26,44.5);add(BX(8,12,1),0x050607,x+12,26,44.5);add(BX(12,18,1),0x2f8a3a,x+4+(i%2)*8,12,44.8);add(SP(1.5),0xd01428,x+8,18,45.5,0x500008)}
   [90,170].forEach(q=>{[-34,354].forEach(x=>{add(BX(30,40,56),0x4a5048,x,20,q);add(CN(34,20,4),0x1b1d22,x,50,q).rotation.y=.785})});
