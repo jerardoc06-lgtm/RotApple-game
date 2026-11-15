@@ -1065,7 +1065,10 @@ function pose(g,o){const A=g.userData.arm;if(!A)return;const t=G.t,b=!!o.sz,ph=o
  const u=g.userData;if(u.ap){const q=u.ap[1];q.position.set(Math.sin(t*2.4)*8,13+Math.abs(Math.cos(t*2.4))*6,9+Math.cos(t*2.4)*1.5);q.rotation.y=t*3;u.ap[0].rotation.y=t*1.5}
  if(u.cape)u.cape.rotation.x=.08+Math.sin(t*2.2)*.1;if(u.ears)u.ears.forEach(p=>p[0].rotation.z=-p[1]*.2+Math.sin(t*2.5+p[1])*.09)}
 function buildPlayer(){buildPlayerOld();const U=pl.userData,m=U.ml;HQ=1;ML=U.m;U.robe.material.color.setHex(0x34343c);
- part(m,LA([[6.2,9.4],[5.6,11],[4.4,13],[3.4,14]],.14),0x24242c,0,0,0,0x050507);
+ part(m,LA([[6.35,9.2],[5.9,10.8],[5.0,12.4],[3.9,13.5]],.14),0x24242c,0,0,0,0x050507);
+ /* deltoid mass: the pauldrons sit on these, not on empty air beside the neck */
+ [-1,1].forEach(q=>{part(m,SP(2.05),0x24242c,q*3.6,13.0,0,0x050507).scale.set(1.22,.84,1.06);
+  part(m,SP(1.45),0x2e2e38,q*3.85,13.7,0,0x050507).scale.set(1.15,.55,1.15)});
  for(let i=0;i<9;i++){const a=i*.698,t=part(m,RBX(1.7,3.8,.35),0x2a2a32,Math.sin(a)*6.4,2.2,Math.cos(a)*6.4);t.rotation.y=a}
  [-1,1].forEach(q=>{part(m,SP(2.3),0x3a3a44,q*4.9,13.4,0).scale.set(1,.55,1.1);part(m,CN(.5,2,4),0xd8d0b0,q*5.6,14.2,0).rotation.z=-q*.9;part(m,SP(.3),0xffb040,q*.95,17.3,2.9,0xffa020);part(m,RBX(.3,1.6,.2),0xe8e4d8,q*1.7,16.4,2.7)});
  part(m,CY(1.3,1.3,8,10),0x4a3a22,0,11.5,-5.2).rotation.z=1.5708;
@@ -1074,9 +1077,9 @@ function buildPlayer(){buildPlayerOld();const U=pl.userData,m=U.ml;HQ=1;ML=U.m;U
  part(swp,RBX(.25,.7,10),0xff7030,0,0,10.5,0xff5010);HQ=0}
 function playerFx(p,mv){const U=pl.userData,t=G.t;if(!U.scarf)return;U.scarf.rotation.x=-.2+Math.sin(t*3)*.12+(mv&&!p.act?.5:0)+(p.act=="roll"?.6:0);U.scarf.rotation.z=Math.sin(t*2.2)*.12;U.sig.scale.setScalar(1+Math.sin(t*3)*.12)}
 function buildPlayerOld(){HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);pl.userData.ml=m;const K0=0x08080a,E=0x050507;
- pl.userData.robe=part(m,LA([[6.9,0],[6.7,.8],[5.9,4],[4.5,8],[3.7,10.5],[3.9,12.5],[3.3,14],[1.4,14.8]]),K0,0,0,0,E);part(m,CY(6.6,6.6,.8,12),0x1a1a20,0,.5,0);
+ pl.userData.robe=part(m,LA([[6.9,0],[6.75,.8],[6.0,4],[4.6,7.4],[4.15,8.6],[4.5,10.2],[4.75,11.8],[4.5,12.8],[3.5,13.8],[1.5,14.6]]),K0,0,0,0,E);part(m,CY(6.6,6.6,.8,12),0x1a1a20,0,.5,0);
  part(m,CY(3.6,3.7,1.2,12),0x3a2a14,0,8.5,0);part(m,RBX(1.4,1.4,.6),0xe8d36a,0,8.5,3.7,0x403810);part(m,RBX(.5,4.5,.4),0x3a2a14,1.6,5.5,3.8);
- part(m,CY(2.9,3.8,2.2,12),0x050506,0,13.3,0,E);part(m,LA([[5.9,9.6],[5.2,11.5],[3.8,13.4],[2.6,14.2],[1.6,14.4]],.1),0x0d0d12,0,0,0,E);part(m,TO(5.6,.35,24),0x8a7a30,0,9.7,0,0x201c08).rotation.x=1.5708;part(m,SP(1.3),0x3a2a14,-4.4,6.4,2.4);part(m,CY(1.9,2.0,.9,16),0xe8e4d8,0,14.3,0);part(m,RBX(.7,10,.3),0x8a7a30,0,7.6,4.6,0x201c08);for(let i=0;i<5;i++){const yy=11-i*1.5;part(m,SP(.3),0xe8d36a,0,yy,Math.max(3.9,3.7+(10.5-yy)*.45)+.1,0x403810)}part(m,RBX(1.2,1,10),0x1a1008,-3.4,5.5,-1.8).rotation.x=.5;part(m,CY(1.1,1.3,1.6,8),SKN,0,14.4,0,0x1a0e06);part(m,CY(3.6,2.6,2.6,10),K0,0,12.8,-1.4,E);part(m,SP(.55),0xe8d36a,0,10.8,3.2,0xe8d36a);
+ part(m,CY(2.9,3.8,2.2,12),0x050506,0,13.3,0,E);part(m,LA([[5.9,9.6],[5.2,11.5],[3.8,13.4],[2.6,14.2],[1.6,14.4]],.1),0x0d0d12,0,0,0,E);part(m,TO(5.05,.35,24),0x8a7a30,0,9.8,0,0x201c08).rotation.x=1.5708;part(m,SP(1.3),0x3a2a14,-4.4,6.4,2.4);part(m,CY(1.9,2.0,.9,16),0xe8e4d8,0,14.3,0);part(m,RBX(.7,10,.3),0x8a7a30,0,7.6,4.6,0x201c08);for(let i=0;i<5;i++){const yy=11-i*1.5;part(m,SP(.3),0xe8d36a,0,yy,Math.max(3.9,3.7+(10.5-yy)*.45)+.1,0x403810)}part(m,RBX(1.2,1,10),0x1a1008,-3.4,5.5,-1.8).rotation.x=.5;part(m,CY(1.1,1.3,1.6,8),SKN,0,14.4,0,0x1a0e06);part(m,CY(3.6,2.6,2.6,10),K0,0,12.8,-1.4,E);part(m,SP(.55),0xe8d36a,0,10.8,3.2,0xe8d36a);
  pl.userData.boots=[];pl.userData.arm={};[-1,1].forEach(q=>{pl.userData.boots.push(part(m,RBX(2.4,3,3.4),0x120e0a,q*1.9,.6,1.4));part(m,RBX(.6,2.2,1.4),0x1a0f08,q*2.5,16.8,.8);pl.userData.arm[q<0?"l":"r"]=arm(m,q*4.4,12.4,0,3.6,K0,0x8a7a30,0x1a1210,E,0xe8e4d8)});
  face(m,17,.3,SKN,0x1a0f08,0x201408,0,0x4a2a1a);part(m,RBX(2.2,.55,.6),0x1a0f08,0,15.8,2.9);part(m,SPH(2.95,1.75),0x1a0f08,0,17.1,-.3);part(m,RBX(5.6,4,2),0x1a0f08,0,16,-2.4);
  swp=new THREE.Group();swp.position.set(0,-4.1,0);swp.rotation.x=1.5708;pl.userData.arm.r.el.add(swp);part(swp,RBX(1.1,.5,15),0xcfd8e0,0,0,9.5,0x223344);part(swp,RBX(.4,.6,13),0x8899aa,0,0,9.5,0x223344);part(swp,CN(.55,1.8,4),0xcfd8e0,0,0,17.9,0x223344).rotation.x=1.5708;
