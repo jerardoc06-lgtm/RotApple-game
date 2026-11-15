@@ -833,10 +833,10 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
   if(hd>10)mv(m,m.hx>m.x?sp*.6*dt:-sp*.6*dt,m.hy>m.y?sp*.6*dt:-sp*.6*dt,5);
   else{m.ai=0;m.pt=0}
   m.hp=Math.min(m.max,m.hp+m.max*.12*dt);
-  if(m.sees&&d<110&&!P.dead){m.ai=1;sndAt(m,"growl",.75)}
+  if(m.sees&&d<110&&!P.dead){m.ai=1;mobCry(m,.75)}
  }
  else{                                               /* idle: walk its route between landmarks */
-  if(m.sees&&!P.dead){m.ai=1;m.cd=Math.max(m.cd,.3);sndAt(m,"growl",1)}
+  if(m.sees&&!P.dead){m.ai=1;m.cd=Math.max(m.cd,.3);mobCry(m,1)}
   else{
    if(!m.route){m.route=patrolRoute(m.hx,m.hy,m.terr);m.ri=0;m.pt=rnd(0,2)}
    const w=m.route[m.ri]||{x:m.hx,y:m.hy};
@@ -1516,6 +1516,8 @@ function sfx(k,v){
   else if(k=="pick"){sfxTone(660,.18,.045,"triangle",1);sfxTone(880,.25,.03,"sine",1)}
   else if(k=="growl"){const f=178*(.9+Math.random()*.2);sfxTone(f,.55,.16,"sawtooth",.66);sfxTone(f*.5,.56,.09,"square",.7);sfxNoise(.5,840,.13,1.5,.6)}
   else if(k=="wind"){sfxNoise(.28,1400,.15,2.2,2.0);sfxTone(250,.24,.07,"triangle",1.4)}
+  else if(k=="chit"){sfxNoise(.09,2600,.09,3.4,1.7);sfxTone(720,.14,.045,"square",1.35);sfxNoise(.07,3100,.06,4.2,1.8)}
+  else if(k=="gurgle"){sfxTone(148,.72,.14,"sawtooth",.55);sfxNoise(.62,420,.13,1.15,1.5)}
   else if(k=="rattle"){const f=196*(.92+Math.random()*.16);sfxTone(f,.46,.12,"sawtooth",.5);sfxNoise(.44,980,.10,1.4,.5)}
   else if(k=="stepG"){sfxNoise(.055,780*(.88+Math.random()*.24),.05,1.1,.55)}
   else if(k=="stepS"){sfxNoise(.05,1900*(.9+Math.random()*.2),.045,1.6,.7)}
@@ -1532,6 +1534,7 @@ function footstep(){
  else if(/CASTLE|BRIDGE|STONE|VESPER/i.test((Z[G.z]||{}).n||""))sfx("stepS",v);
  else sfx("stepG",v);
 }
+function mobCry(m,g0){sndAt(m,m.type=="b"?"chit":m.type=="s"?"gurgle":"growl",g0)}
 function sndAt(m,k,g0){const d=Math.hypot(m.x-P.x,m.y-P.y);if(d>260)return;
  const v=Math.max(.22,1-d/260);sfx(k,(g0||1)*v)}
 function ambTick(dt){if(!AC||G.mute)return;if(AC.state!=="running"){try{AC.resume()}catch(e){}if(AC.state!=="running")return}bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
