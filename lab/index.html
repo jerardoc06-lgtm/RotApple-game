@@ -18,7 +18,7 @@ body{display:flex;flex-direction:column}
 #mbox h2{margin:0 0 6px;font-size:18px;color:#e8d36a;font-weight:700}
 #mbox p{margin:0 0 10px;font-size:13px;color:#b9c9b0}
 #mbox button{display:block;width:100%;margin:6px 0;padding:11px;background:#1d1528;color:#e6dcc0;border:1px solid #6b5a2e;font:inherit;font-size:14px}
-#mbox{background:linear-gradient(#110c1a,#08060d);border:2px solid #4a3d24;box-shadow:inset 0 0 0 2px #0b0910,0 0 44px rgba(0,0,0,.9)}#mbox h2{font-size:15px;letter-spacing:.34em;color:#c9a94e;text-transform:uppercase;border-bottom:1px solid #3b3323;padding-bottom:8px;margin-bottom:10px}#mbox p{letter-spacing:.12em;color:#8a8471}#mbox button{background:#0d0a13;border:1px solid #3b3323;letter-spacing:.08em;color:#b8ae94}#mbox.inv{max-width:none;width:100%;height:100%;max-height:100%;display:flex;flex-direction:column;border:0;padding:calc(20px + env(safe-area-inset-top)) 18px 18px}#mbox.inv button{text-align:left;padding-left:16px;border-left:2px solid #3b3323}#mbox.inv p{text-align:left}#menu{background:rgba(2,2,5,.94)}#mbox button:active{background:#241a2e;border-color:#8a7a50;color:#e6dcc0}
+#mbox{background:linear-gradient(#110c1a,#08060d);border:2px solid #4a3d24;box-shadow:inset 0 0 0 2px #0b0910,0 0 44px rgba(0,0,0,.9)}#mbox h2{font-size:15px;letter-spacing:.34em;color:#c9a94e;text-transform:uppercase;border-bottom:1px solid #3b3323;padding-bottom:8px;margin-bottom:10px}#mbox p{letter-spacing:.12em;color:#8a8471}#mbox button{background:#0d0a13;border:1px solid #3b3323;letter-spacing:.08em;color:#b8ae94}#mbox.inv{max-width:min(100%,560px);width:100%;height:auto;max-height:calc(100% - 18px);display:flex;flex-direction:column;border:0;padding:14px 14px 12px}#mbox.inv h2{font-size:13px;letter-spacing:.3em}#mbox.inv button{text-align:left;padding:9px 12px;font-size:12.5px;line-height:1.35;border-left:2px solid #3b3323}#mbox.inv p{text-align:left}#menu{background:rgba(2,2,5,.94);z-index:9;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}#mbox button:active{background:#241a2e;border-color:#8a7a50;color:#e6dcc0}
 #ctl{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 max(18px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));gap:10px;pointer-events:none;z-index:5}#ctl>*{pointer-events:auto}#mbox{max-height:100%;overflow:auto}#rot{display:none;position:fixed;inset:0;z-index:20;background:#060509;color:#e8d36a;align-items:center;justify-content:center;text-align:center;font-size:18px;padding:30px}@media (orientation:portrait) and (max-width:900px){#rot{display:flex}}
 .g{display:grid;gap:6px}
 #dp{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px)}
@@ -1072,18 +1072,18 @@ function ring(x,y,r){const m=new THREE.Mesh(new THREE.RingGeometry(.8,1,32).rota
 function puff(x,y,s){const m=new THREE.Mesh(new THREE.SphereGeometry(1,6,5),new THREE.MeshBasicMaterial({color:0x8a8478,transparent:true,opacity:.35,depthWrite:false}));m.position.set(x,2,y);m.scale.setScalar(s);world.add(m);FX.push({m,t:0,l:.6,k:"p",s})}
 function ember(){const m=new THREE.Mesh(new THREE.SphereGeometry(.45,4,3),new THREE.MeshBasicMaterial({color:0xffa030,transparent:true}));m.position.set(BF.x+rnd(-3,3),8,BF.y+rnd(-3,3));world.add(m);FX.push({m,t:0,l:1.6,k:"e",vx:rnd(-4,4),vz:rnd(-4,4)})}
 function hud(){const bw=(v,m,w)=>w*v/m;
- X.font="6px monospace";
+ X.font="5px monospace";
  const t1="F L A S K S  "+P.fl+"      R U N E S  "+S.r+"      L V  "+lv(),
        t2=(W[S.w].n+(S.sh?"   \u00b7   KITE SHIELD":"")).toUpperCase(),
-       pw=Math.max(mhp()*1.2+8,X.measureText(t1).width,X.measureText(t2).width)+18,
-       ph=(G.whet>0||G.tonic>0)?60:50;
- X.fillStyle="rgba(4,3,7,.55)";X.fillRect(2,2,pw,ph);
- R(2,2,pw+1,1,"#3b3323");R(2,ph+1,pw+1,1,"#3b3323");R(2,2,1,ph,"#3b3323");R(pw+1,2,1,ph,"#3b3323");
- R(7,7,mhp()*1.2+2,9,"#0d0709");R(8,8,bw(Math.max(0,P.hp),mhp(),mhp()*1.2),7,"#6b1018");R(8,8,bw(Math.max(0,P.hp),mhp(),mhp()*1.2),2,"#c23a44");
- R(7,19,mst()*1.2+2,7,"#080a06");R(8,20,bw(P.st,mst(),mst()*1.2),5,"#2f4a2b");R(8,20,bw(P.st,mst(),mst()*1.2),1,"#7ba568");
- X.fillStyle="#948b74";X.fillText(t1,8,36);
- X.fillStyle="#5d5847";X.fillText(t2,8,46);
- if(G.whet>0||G.tonic>0){X.fillStyle="#6f6650";X.fillText((G.whet>0?"WHET "+(G.whet|0)+"s   ":"")+(G.tonic>0?"TONIC "+(G.tonic|0)+"s":""),8,57);}
+       pw=Math.max(mhp()*.95+8,X.measureText(t1).width,X.measureText(t2).width)+11,
+       ph=(G.whet>0||G.tonic>0)?55:44;
+ X.fillStyle="rgba(4,3,7,.55)";X.fillRect(0,0,pw,ph);
+ R(0,0,pw+1,1,"#3b3323");R(0,ph,pw+1,1,"#3b3323");R(pw,0,1,ph,"#3b3323");
+ R(4,5,mhp()*.95+2,7,"#0d0709");R(5,6,bw(Math.max(0,P.hp),mhp(),mhp()*.95),5,"#6b1018");R(5,6,bw(Math.max(0,P.hp),mhp(),mhp()*.95),1.6,"#c23a44");
+ R(4,14,mst()*.95+2,5,"#080a06");R(5,15,bw(P.st,mst(),mst()*.95),3,"#2f4a2b");R(5,15,bw(P.st,mst(),mst()*.95),1,"#7ba568");
+ X.fillStyle="#948b74";X.fillText(t1,5,30);
+ X.fillStyle="#5d5847";X.fillText(t2,5,39);
+ if(G.whet>0||G.tonic>0){X.fillStyle="#6f6650";X.fillText((G.whet>0?"WHET "+(G.whet|0)+"s   ":"")+(G.tonic>0?"TONIC "+(G.tonic|0)+"s":""),5,48);}
  const b=G.boss;if(b&&b.on&&b.hp>0){R(40,H-16,240,8,"#000");R(41,H-15,238*Math.max(0,b.hp)/b.max,6,"#8a1010");X.fillStyle="#e6dcc0";X.textAlign="center";X.fillText(Z[G.z].B.n,CW/2,H-20);X.textAlign="left"}
  {const og=G.mobs.find(m=>m.type=="o"&&m.hp>0&&m.ag);if(og){R(40,H-16,240,8,"#000");R(41,H-15,238*Math.max(0,og.hp)/og.max,6,og.hp<og.max/2?"#c02a10":"#8a3a10");X.fillStyle="#e6dcc0";X.textAlign="center";X.fillText("Grummash, the Apple-Gorged Ogre",CW/2,H-20);X.textAlign="left"}}
  if(G.banner){X.textAlign="center";X.font="bold 16px monospace";X.fillStyle="#e8d36a";X.fillText(G.banner.x,CW/2,110);X.textAlign="left"}}
@@ -1119,7 +1119,7 @@ function minimap(){
  X.font="5px monospace";X.fillStyle="#8a7a50";X.fillText("tap: full map",cx,cy+MR+8);X.textAlign="left"}
 let BMc=null;
 function bigMap(){
- const z=G.z,f=z==3,B=f?{x0:0,y0:0,x1:WS,y1:WS}:{x0:0,y0:40,x1:320,y1:1000},bw=B.x1-B.x0,bh=B.y1-B.y0,LW=118,oy=22,sc=Math.min((H-oy-8)/bh,(HW-LW-10)/bw),mw=bw*sc,mh=bh*sc,ox=LW+(HW-LW-mw)/2,tx=x=>ox+(x-B.x0)*sc,ty=y=>oy+(y-B.y0)*sc;
+ const z=G.z,f=z==3,B=f?{x0:0,y0:0,x1:WS,y1:WS}:{x0:0,y0:40,x1:320,y1:1000},bw=B.x1-B.x0,bh=B.y1-B.y0,LW=118,oy=22,sc=Math.min((H-oy-26)/bh,(HW-LW-34)/bw)*.9,mw=bw*sc,mh=bh*sc,ox=LW+(HW-LW-mw)/2,tx=x=>ox+(x-B.x0)*sc,ty=y=>oy+(y-B.y0)*sc;
  X.save();X.fillStyle="rgba(5,4,9,.95)";X.fillRect(0,0,HW,H);X.textAlign="left";
  const lb=(t,x,y,c)=>{X.font="6px monospace";X.lineWidth=2.2;X.strokeStyle="#000";X.strokeText(t,x,y);X.fillStyle=c||"#e6dcc0";X.fillText(t,x,y)};
  const di=(x,y,r,c)=>{X.beginPath();X.moveTo(x,y-r);X.lineTo(x+r,y);X.lineTo(x,y+r);X.lineTo(x-r,y);X.closePath();X.fillStyle=c;X.fill();X.strokeStyle="#000";X.lineWidth=.8;X.stroke()};
@@ -1219,7 +1219,7 @@ if(G.z==3)for(const g of hubTrees)g.visible=Math.abs(g.position.x-P.x)<460&&Math
  if(P.dead){X.globalAlpha=Math.min(.7,(2.8-P.dt)*.8);R(0,0,HW,H,"#000");X.globalAlpha=1;if(P.dt<2.4){X.textAlign="center";X.font="bold 10px monospace";X.fillStyle="#6a0c14";X.fillText("YOU HAVE RETURNED",HW/2,H/2-10);X.font="bold 14px monospace";X.fillStyle="#a01020";X.fillText("TO THE ROT",HW/2,H/2+6);X.textAlign="left"}}}
 const wrap=$("wrap"),stage=$("stage");function fit(){const w=wrap.clientWidth,h=wrap.clientHeight,as=w/h;stage.style.width=w+"px";stage.style.height=h+"px";ren.setSize(Math.round(RHq*as),RHq,false);cam.aspect=as;cam.updateProjectionMatrix();HW=Math.round(240*as);C.width=HW;C.height=H}
 addEventListener("pointerdown",()=>{try{screen.orientation.lock("landscape").catch(()=>{})}catch(e){}},{once:true});
-addEventListener("resize",fit);fit();
+addEventListener("resize",fit);addEventListener("orientationchange",()=>{setTimeout(fit,220);setTimeout(fit,700)});fit();setTimeout(fit,350);
 // ── ambience: filtered wind, a low drone and distant bells, all synthesised ──
 let AC=null,BUS=null,AM=null,bellT=12;
 function initAudio(){
@@ -1251,7 +1251,7 @@ function bell(){if(!AC||!BUS)return;const t=AC.currentTime;
 }
 function ambTick(dt){if(!AC||AC.state!=="running")return;bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
 ["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,initAudio,{passive:true})});
-let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}update(dt);ambTick(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
+let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}if(Math.abs(C.width-Math.round(240*(wrap.clientWidth/Math.max(1,wrap.clientHeight))))>2)fit();update(dt);ambTick(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
 P=newPlayer();loadZone(3,true);requestAnimationFrame(loop);
 menu("ROTAPPLE","A dark fantasy of red fruit and black tides. Slash, smash, roll through danger, and rest at the bonfire. Drag to orbit the camera (Z/X tilt, Q/R turn, C or double-tap to reset, Tab locks onto the nearest foe). I opens your bag, E interacts, M or a tap on the minimap opens the full map.",[{l:"Begin",f:()=>{closeMenu();G.seen[3]=true;say(Z[3].arr)}}]);
 </script></body></html>
