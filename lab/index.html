@@ -112,7 +112,7 @@ const Z=[
  win:["The Count scatters into bats, and the bats into ash.","“The root… is not here. Follow the apples… back across the black water…”","A harbour wind whistles through the broken gate."]},
 {n:"The Drowned Hare",bg:"#0e1a1d",acc:"#1c2c30",mob:"s",cnt:5,
  B:{n:"Captain Harebone, the Drowned Hare",hp:340,col:"#0e0e12",sz:14,spd:40,mv:["bolt","dash","spray","slam","bolt"],run:1200,proj:"#dff2ff"},
- arr:["THE DROWNED HARE","A ghost ship under red sails. Lightning cracks around the standing stones of the drowned sea.","The first apple seed came aboard here, and never left."],
+ arr:["THE DROWNED HARE","A ghost ship under red sails. Lightning cracks around the standing stones of the drowned sea.","The first apple seed came aboard here, and never left.","Brinewretches haul themselves along the rail, brass bands biting at their middles."],
  intro:["The Captain rises from the helm, rabbit ears bound in gold wire.","“I carried the seed across the world. Do you know what it fed me? Everything.”"],
  win:[]}
 ];
@@ -812,7 +812,7 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
    const tx=m.sees||m.lx==null?P.x:m.lx,ty=m.sees||m.ly==null?P.y:m.ly,
          ax=tx-m.x,ay=ty-m.y,ad=Math.hypot(ax,ay)||1;
    if(m.s==0&&m.cd<=0){
-    /* bats keep their distance and circle, spiders lunge in from far off, grunts just walk at you */
+    /* bats keep their distance and circle, brinewretches lunge in from far off, grunts just walk at you */
     const tan=m.type=="b"?.55:0,keep=m.type=="b"?(d>30?1:d<20?-1:0):1;
     const ux2=ax/ad,uy2=ay/ad;
     if(m.sees||d<26||ad>18)mv(m,ux2*sp*dt*keep-uy2*sp*dt*tan,uy2*sp*dt*keep+ux2*sp*dt*tan,5);
