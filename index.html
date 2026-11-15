@@ -233,8 +233,8 @@ function skyCycle(dt){
  _skyC.copy(_skyNight).lerp(_skyDay,day).lerp(_skyDusk,hor*.42);
  if(scene.background&&scene.background.isColor)scene.background.copy(_skyC);
  if(scene.fog){scene.fog.color.copy(_skyC).lerp(_bioC.setHex(BIOME_FOG[bio(P.x,P.y)]),.22);scene.fog.near=76+day*8;scene.fog.far=165+day*50}
- amb.intensity=.24+.5*day;amb.color.setHex(day>.45?0x9aa892:0x7a86b8);
- moon.intensity=.22+.9*night;moon.color.setHex(day>.45?0xc8d0e0:0x9aa8d8);
+ amb.intensity=.085+.635*day;amb.color.setHex(day>.45?0x9aa892:0x6f7ba8);
+ moon.intensity=.18+.72*night;moon.color.setHex(day>.45?0xc8d0e0:0x93a2d4);
  hemi.intensity=.14+.42*day;
  const u=SKY&&SKY.userData;if(u){
   u.dome.material.color.copy(_skyC).multiplyScalar(4.5+day*6);
@@ -370,7 +370,8 @@ function fxWorld(dt){if(SKY)SKY.visible=G.z==3;if(G.z!=3||!WD)return;skyCycle(dt
  if(Math.random()<dt*2.4){const w=WATER[(Math.random()*WATER.length)|0];if(w&&w.blue&&Math.hypot(w.x-P.x,w.y-P.y)<w.r+300){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*w.r*.9,m=new THREE.Mesh(new THREE.RingGeometry(.7,1,24).rotateX(-1.5708),new THREE.MeshBasicMaterial({color:0xcfe8f0,transparent:true,opacity:.5,depthWrite:false}));m.position.set(w.x+Math.cos(a)*r,.9,w.y+Math.sin(a)*r);world.add(m);RP.push({m,t:0,l:2.2});if(Math.random()<.18)spark(m.position.x,m.position.z,0xbfe8ff,6)}}
  for(const r of RP){r.t+=dt;const k=r.t/r.l;r.m.scale.setScalar(1+k*9);r.m.material.opacity=.5*(1-k);if(k>=1){world.remove(r.m);r.dead=1}}RP=RP.filter(r=>!r.dead);
  const mvg=(K.w||K.a||K.s||K.d||JX||JY)&&!P.dead&&!G.pause&&!G.dlg&&!G.bigmap&&!P.act;if(mvg&&t-lastDust>.22){lastDust=t;puff(P.x-P.fx*3,P.y-P.fy*3,1.3)}
- torch.intensity=(.85+1.15*(1-G.dayF))+Math.sin(t*13)*.08+Math.sin(t*7.3)*.06}
+ G.fl=(G.fl||0)+(Math.random()-.5)*dt*11;G.fl*=(1-dt*3.4);G.fl=Math.max(-1,Math.min(1,G.fl));
+ torch.intensity=(.85+1.15*(1-G.dayF))*(1+.22*G.fl)+Math.sin(t*13)*.05+Math.sin(t*7.3)*.04}
 
 function portalsVis(v){world.children.forEach(o=>{if(o.userData.pt)o.visible=v})}
 function sealBoss(){if(G.z>2||G.seal)return;G.seal=1;G.gate={k:"w",x0:140,y0:240,x1:180,y1:248};COL.push(G.gate);G.gateM=add(BX(40,34,8),0x2a2a30,160,17,244,0x300808);portalsVis(false);G.banner={t:3.6,x:"THE PORTAL SEALS BEHIND YOU"};shake=8}
@@ -1209,7 +1210,38 @@ if(G.z==3)for(const g of hubTrees)g.visible=Math.abs(g.position.x-P.x)<460&&Math
 const wrap=$("wrap"),stage=$("stage");function fit(){const w=wrap.clientWidth,h=wrap.clientHeight,as=w/h;stage.style.width=w+"px";stage.style.height=h+"px";ren.setSize(Math.round(RHq*as),RHq,false);cam.aspect=as;cam.updateProjectionMatrix();HW=Math.round(240*as);C.width=HW;C.height=H}
 addEventListener("pointerdown",()=>{try{screen.orientation.lock("landscape").catch(()=>{})}catch(e){}},{once:true});
 addEventListener("resize",fit);fit();
-let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}update(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
+// ── ambience: filtered wind, a low drone and distant bells, all synthesised ──
+let AC=null,BUS=null,AM=null,bellT=12;
+function initAudio(){
+ if(AC){if(AC.state==="suspended")AC.resume();return}
+ const Ctor=window.AudioContext||window.webkitAudioContext;if(!Ctor)return;
+ try{AC=new Ctor()}catch(e){return}
+ BUS=AC.createGain();BUS.gain.value=.9;BUS.connect(AC.destination);
+ AM=AC.createGain();AM.gain.value=.0001;AM.connect(BUS);
+ const len=Math.floor(AC.sampleRate*4),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+ let y=0;for(let i=0;i<len;i++){y=(y+.02*(Math.random()*2-1))/1.02;d[i]=y*3.5}
+ const src=AC.createBufferSource();src.buffer=buf;src.loop=true;
+ const lp=AC.createBiquadFilter();lp.type="lowpass";lp.frequency.value=380;lp.Q.value=.7;
+ const wg=AC.createGain();wg.gain.value=.5;
+ src.connect(lp);lp.connect(wg);wg.connect(AM);src.start();
+ const lfo=AC.createOscillator();lfo.frequency.value=.07;const lg=AC.createGain();lg.gain.value=150;
+ lfo.connect(lg);lg.connect(lp.frequency);lfo.start();
+ [[55,.09],[82.5,.045],[110,.025]].forEach(function(p){const o=AC.createOscillator();o.type="sine";o.frequency.value=p[0];const g=AC.createGain();g.gain.value=p[1];o.connect(g);g.connect(AM);o.start()});
+ AM.gain.setTargetAtTime(.5,AC.currentTime,4);
+}
+function bell(){if(!AC||!BUS)return;const t=AC.currentTime;
+ const out=AC.createGain();out.gain.value=1;out.connect(BUS);
+ [174,262,349,523].forEach(function(f,i){
+  const o=AC.createOscillator();o.type="sine";o.frequency.value=f*(1+(Math.random()-.5)*.004);
+  const g=AC.createGain();g.gain.setValueAtTime(.0001,t);
+  g.gain.linearRampToValueAtTime(.18/(i+1.4),t+.02);
+  g.gain.exponentialRampToValueAtTime(.0008,t+7+i*2.2);
+  o.connect(g);g.connect(out);o.start(t);o.stop(t+10+i*3);
+ });
+}
+function ambTick(dt){if(!AC||AC.state!=="running")return;bellT-=dt;if(bellT<=0){bell();bellT=34+Math.random()*46}}
+["pointerdown","keydown","touchstart"].forEach(function(e){addEventListener(e,initAudio,{passive:true})});
+let last=0;let fpsA=0,fpsN=0,fpsT=0;function loop(t){const raw=(t-last)/1000||0,dt=Math.min(.05,raw);last=t;fpsA+=Math.min(raw,.2);fpsN++;if(fpsN>=90){const av=fpsA/fpsN;fpsA=fpsN=0;if(t-fpsT>3500){if(av>.05&&RHq>180){RHq-=20;fpsT=t;fit()}}}update(dt);ambTick(dt);fxWorld(dt);draw();if(G.bigmap)bigMap();requestAnimationFrame(loop)}
 P=newPlayer();loadZone(3,true);requestAnimationFrame(loop);
 menu("ROTAPPLE","A dark fantasy of red fruit and black tides. Slash, smash, roll through danger, and rest at the bonfire. Drag to orbit the camera (Z/X tilt, Q/R turn, C or double-tap to reset, Tab locks onto the nearest foe). I opens your bag, E interacts, M or a tap on the minimap opens the full map.",[{l:"Begin",f:()=>{closeMenu();G.seen[3]=true;say(Z[3].arr)}}]);
 </script></body></html>
