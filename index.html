@@ -1366,7 +1366,10 @@ function draw(){
  for(const d of dying){d.t+=dt;const u=d.t/d.L,g=d.g;g.rotation.x=-Math.min(1.4,u*4);g.position.y=Math.max(-3,-u*8);glow(g,((G.t*20)|0)%2?0xff3010:0);if(u>.6)g.scale.setScalar(Math.max(.01,1-(u-.6)*2.5));if(u>=1)world.remove(g)}dying=dying.filter(d=>d.t<d.L);
  const mobs=G.mobs.filter(m=>m.hp>0);sync(em,mobs.concat(G.boss&&G.boss.hp>0?[G.boss]:[]),o=>o.sz?mkBoss2(o):mkMob(o));
  for(const [o,g] of em){const b=o.sz;g.position.set(o.x,o.type=="b"?9+Math.sin(G.t*5+o.ph)*2:(b&&G.z==1?4+Math.sin(G.t*2)*2:Math.abs(Math.sin(G.t*(b?5:9)+(o.ph||0)))*(b?.8:.9)),o.y);
-  g.rotation.y+=da(g.rotation.y,Math.atan2(P.x-o.x,P.y-o.y))*.2;const inner=g.userData.b;inner.rotation.x=0;
+  const faceP=o.ai==1||o.sees||o.sz||o.type=="o";          /* only stare at you once it knows you are there */
+  const hx=faceP?P.x-o.x:(o.fx||0),hy=faceP?P.y-o.y:(o.fy||0);
+  if(hx||hy)g.rotation.y+=da(g.rotation.y,Math.atan2(hx,hy))*(faceP?.2:.12);
+  const inner=g.userData.b;inner.rotation.x=0;
   const wind=b?(o.mv&&o.a<.6):o.s==1;if(wind)inner.rotation.x=-.35;if(b&&o.mv=="dash"&&o.f)inner.rotation.x=.5;
   if(g.userData.wl){const w=Math.sin(G.t*(b?7:22)+(o.ph||0))*.7;g.userData.wl.rotation.z=w;g.userData.wr.rotation.z=-w}
   glow(g,o.fl>0?0xffffff:(wind&&((G.t*18)|0)%2?0xaa0000:0));pose(g,o);anim(g,o);
