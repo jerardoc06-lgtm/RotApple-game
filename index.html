@@ -171,7 +171,9 @@ function hubSpawn(t){
  if(ad<440)s={x:BF.x+ax/ad*440,y:BF.y+ay/ad*440};
  mkMob0(s.x,s.y,t);
  const m=G.mobs[G.mobs.length-1];m.terr=terr}
-function mkMob0(x,y,t){const hp={g:30,b:22,s:45}[t];G.mobs.push({x,y,hp,max:hp,s:0,t:0,cd:rnd(0,1),kx:0,ky:0,fl:0,type:t,ph:rnd(0,6)})}
+function mkMob0(x,y,t){const base={g:30,b:22,s:45}[t];
+ /* health grows with the player's level, so upgrades buy power and not one-hit kills */
+ const hp=Math.round(base*(1+.45*(lv()-1)));G.mobs.push({x,y,hp,max:hp,s:0,t:0,cd:rnd(0,1),kx:0,ky:0,fl:0,type:t,ph:rnd(0,6)})}
 function spawnDun(Zd){const D=DUN[G.z];D.R.forEach((r,i)=>{if(!i||i==D.en)return;const w=r[2]-r[0],h=r[3]-r[1];if(w<100){for(let y=r[1]+100;y<r[3]-60;y+=200)mkMob0(r[0]+w/2,y,Zd.mob)}else for(let k=0;k<1+(w*h>14000);k++)mkMob0(r[0]+rnd(24,w-24),r[1]+rnd(24,h-24),Zd.mob)})}
 /* ---------- Grummash, the Apple-Gorged Ogre: optional boss with a lair in the Ashfall Forest ---------- */
 const OGL={x:560,y:1400};
