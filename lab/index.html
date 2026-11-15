@@ -725,7 +725,7 @@ function kill(t){sfx(t.sz||!t.type?"kill":"rattle");if(t.sz){G.defeated[G.z]=tru
   const zz=G.z,bx=t.x,by=t.y,last=G.defeated.slice(0,3).every(Boolean);
   if(last){S.own[8+zz]=1;S.w=8+zz;G.banner={t:3.4,x:"OBTAINED: "+W[8+zz].n.toUpperCase()}}else setTimeout(()=>{if(G.z==zz)addDrop(zz,Math.max(30,Math.min(CW-30,bx)),Math.max(75,Math.min(H-40,by)))},1500);
   setTimeout(()=>{if(last)ending();else say(Z[zz].win)},2200)}
- else if(t.type=="o")ogreKill(t);else{S.r+=20*(G.z+1);if(Math.random()<.15){give("herb",1);G.banner={t:1.6,x:"FOUND: ASHEN HERB"}}}}
+ else if(t.type=="o")ogreKill(t);else{puff(t.x,t.y,2.6);spark(t.x,t.y,0x9a9080,12);S.r+=20*(G.z+1);if(Math.random()<.15){give("herb",1);G.banner={t:1.6,x:"FOUND: ASHEN HERB"}}}}
 function strike(range,mul){const tg=[...G.mobs];if(G.boss&&G.boss.on&&G.boss.hp>0)tg.push(G.boss);
  for(const t of tg){if(t.hp<=0||P.hit.has(t))continue;const dx=t.x-P.x,dy=t.y-P.y,d=Math.hypot(dx,dy)||1;
   if(d<range+(t.sz||t.rad||6)&&(dx*P.fx+dy*P.fy)/d>-.1){
@@ -1359,11 +1359,11 @@ function draw(){
  if(p.dead){ml.rotation.x=-1.45;ml.position.y=2}
  pl.visible=!(p.inv>.05&&((G.t*30)|0)%2&&p.act!="roll");if(p.inv>.52)spark(p.x,p.y,0xc01020);
  torch.position.set(p.x,36,p.y+12);fire.position.set(BF.x,18,BF.y);fire.intensity=1.4+Math.random()*.6;flames.forEach((f,i)=>{f.scale.set(1,.8+Math.random()*.5,1)});
- for(const [o,g] of em)if(o.hp<=0&&!o.dy){o.dy=1;em.delete(o);dying.push({g,t:0,L:o.sz||o.type=="o"?2:.9});spark(o.x,o.y,o.sz?0xff6030:0xffd080,o.sz?40:16)}
+ for(const [o,g] of em)if(o.hp<=0&&!o.dy){o.dy=1;em.delete(o);dying.push({g,t:0,L:o.sz||o.type=="o"?2:1.35});spark(o.x,o.y,o.sz?0xff6030:0xffd080,o.sz?40:16)}
  if(mv&&!p.act&&!p.dead&&G.t>nextDust){nextDust=G.t+.14;puff(p.x-p.fx*3,p.y-p.fy*3,1.6)}if(p.act=="roll"&&G.t>nextDust){nextDust=G.t+.05;puff(p.x,p.y,2.4)}
  if(Math.random()<.3)ember();
  for(const f of FX){f.t+=dt;const u=f.t/f.l,m=f.m;if(f.k=="r"){m.scale.set(1+f.r*u,1,1+f.r*u);m.material.opacity=.8*(1-u)}else if(f.k=="p"){m.scale.setScalar(f.s*(1+u*2));m.position.y+=dt*8;m.material.opacity=.35*(1-u)}else{m.position.x+=f.vx*dt;m.position.z+=f.vz*dt;m.position.y+=16*dt;m.material.opacity=1-u}if(u>=1)world.remove(m)}FX=FX.filter(f=>f.t<f.l);
- for(const d of dying){d.t+=dt;const u=d.t/d.L,g=d.g;g.rotation.x=-Math.min(1.4,u*4);g.position.y=Math.max(-3,-u*8);glow(g,((G.t*20)|0)%2?0xff3010:0);if(u>.6)g.scale.setScalar(Math.max(.01,1-(u-.6)*2.5));if(u>=1)world.remove(g)}dying=dying.filter(d=>d.t<d.L);
+ for(const d of dying){d.t+=dt;const u=d.t/d.L,g=d.g;g.rotation.x=-Math.min(1.45,u*3);g.position.y=Math.max(-.7,-u*2);glow(g,((G.t*20)|0)%2?0xff3010:0);if(u>.72)g.scale.setScalar(Math.max(.01,1-(u-.72)*3.5));if(u>=1)world.remove(g)}dying=dying.filter(d=>d.t<d.L);
  const mobs=G.mobs.filter(m=>m.hp>0);sync(em,mobs.concat(G.boss&&G.boss.hp>0?[G.boss]:[]),o=>o.sz?mkBoss2(o):mkMob(o));
  for(const [o,g] of em){const b=o.sz;g.position.set(o.x,o.type=="b"?9+Math.sin(G.t*5+o.ph)*2:(b&&G.z==1?4+Math.sin(G.t*2)*2:Math.abs(Math.sin(G.t*(b?5:9)+(o.ph||0)))*(b?.8:.9)),o.y);
   const faceP=o.ai==1||o.sees||o.sz||o.type=="o";          /* only stare at you once it knows you are there */
