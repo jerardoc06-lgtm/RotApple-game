@@ -751,6 +751,7 @@ function updP(dt){
  P.blk=!!(S.sh&&K.g&&!P.dead&&P.st>2&&!P.act);
  if(P.blk)P.st=Math.max(0,P.st-5*dt);
  const ix=(K.d?1:0)-(K.a?1:0)+JX,iy=(K.s?1:0)-(K.w?1:0)+JY,il=Math.hypot(ix,iy)||1,cl=Math.min(1,il),cc=Math.cos(camYaw),sn=Math.sin(camYaw),mx=(cc*ix+sn*iy)/il*cl,my=(-sn*ix+cc*iy)/il*cl,ml=Math.hypot(mx,my);
+ P.mv=(!P.act&&ml)?1:0;
  if(!P.act){
   if(ml){const sp=P.blk?34:80;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml;
    P.stp=(P.stp==null?.3:P.stp)-dt*(G.tonic>0?1.15:1);
@@ -804,11 +805,14 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
  m.losT=(m.losT||0)-dt;
  if(m.losT<=0){m.losT=.22;
   const pd=Math.hypot(P.x-m.hx,P.y-m.hy),reach=m.ai==1?m.terr:m.terr*.85;
-  const quiet=P.blk?.55:1,hear=17*quiet,face=m.fx==null?1:((P.x-m.x)*m.fx+(P.y-m.y)*m.fy)/d;
-  m.saw=!P.dead&&pd<reach&&(d<hear||(d<78*quiet&&face>.22&&losClear(m.x,m.y,P.x,P.y,4)))}
+  /* each creature notices you its own way: a bat sees far but barely hears, a brinewretch is blind yet hears you move */
+  const SD={g:{s:78,h:17},b:{s:120,h:7},s:{s:38,h:46}}[m.type]||{s:78,h:17};
+  const quiet=P.blk?.55:1,hear=(m.type=="s"&&!P.mv&&d>9?0:SD.h)*quiet,face=m.fx==null?1:((P.x-m.x)*m.fx+(P.y-m.y)*m.fy)/d;
+  m.saw=!P.dead&&pd<reach&&(d<hear||(d<SD.s*quiet&&face>.22&&losClear(m.x,m.y,P.x,P.y,4)))}
+ const NT={g:.5,b:.32,s:.72}[m.type]||.5;                     /* how long before it is sure it saw you */
  m.alert=Math.max(0,(m.alert||0)+(m.saw?dt:-dt*3));
- if(m.saw&&m.alert<.5&&m.ai!==1){m.fx=(P.x-m.x)/d;m.fy=(P.y-m.y)/d}
- m.sees=m.saw&&(m.alert>=.5||m.ai==1);
+ if(m.saw&&m.alert<NT&&m.ai!==1){m.fx=(P.x-m.x)/d;m.fy=(P.y-m.y)/d}
+ m.sees=m.saw&&(m.alert>=NT||m.ai==1);
  if(m.st>0){m.x=Math.max(10,Math.min(CW-10,m.x));return}
  if(m.ai==1){                                        /* chase, hunting the last place it saw you */
   if(P.dead||d>m.terr+40||hd>m.terr){m.ai=2;m.sees=false;m.s=0}   /* it will not leave its ground */
