@@ -151,18 +151,26 @@ function walkSpot(x,y,r){
   if(solidAt(px,py,8)||inPond(px,py))continue;
   return{x:px,y:py}}
  return{x:Math.max(B.x0+14,Math.min(B.x1-14,x)),y:Math.max(B.y0+14,Math.min(B.y1-14,y))}}
-function patrolRoute(hx,hy){
- const pts=[],near=LM.filter(L=>{const d=Math.hypot(L.x-hx,L.y-hy);return d>80&&d<700}).sort(()=>Math.random()-.5);
- for(const L of near){if(pts.length>=2)break;const s=walkSpot(L.x,L.y,90);if(!solidAt(s.x,s.y,7)&&!inPond(s.x,s.y))pts.push(s)}
- for(let i=0;pts.length<3&&i<50;i++){const s=walkSpot(hx,hy,rnd(90,340));if(Math.hypot(s.x-hx,s.y-hy)>70&&(!solidAt(s.x,s.y,7))&&!inPond(s.x,s.y))pts.push(s)}
+function patrolRoute(hx,hy,terr){
+ const pts=[],inT=p=>Math.hypot(p.x-hx,p.y-hy)<=terr*.88,
+       near=LM.filter(L=>{const d=Math.hypot(L.x-hx,L.y-hy);return d>70&&d<terr*.9}).sort(()=>Math.random()-.5);
+ for(const L of near){if(pts.length>=2)break;const s=walkSpot(L.x,L.y,70);if(inT(s)&&!solidAt(s.x,s.y,7)&&!inPond(s.x,s.y))pts.push(s)}
+ for(let i=0;pts.length<3&&i<60;i++){const s=walkSpot(hx,hy,rnd(60,terr*.8));if(inT(s)&&Math.hypot(s.x-hx,s.y-hy)>50&&!solidAt(s.x,s.y,7)&&!inPond(s.x,s.y))pts.push(s)}
  if(!pts.length)pts.push({x:hx,y:hy});
  return pts}
 function hubSpawn(t){
+ const terr=t=="s"?250:t=="b"?260:200;
  let s=null;
- for(let i=0;i<8;i++){
-  s=Math.random()<.3?walkSpot(BF.x,BF.y,300):(LM.length?walkSpot(LM[Math.random()*LM.length|0].x,LM[Math.random()*LM.length|0].y,110):walkSpot(rnd(200,WS-200),rnd(200,WS-200),60));
-  if(!solidAt(s.x,s.y,8)&&!inPond(s.x,s.y))break}
- mkMob0(s.x,s.y,t)}
+ for(let i=0;i<16;i++){
+  s=LM.length?walkSpot(LM[Math.random()*LM.length|0].x,LM[Math.random()*LM.length|0].y,110):walkSpot(rnd(200,WS-200),rnd(200,WS-200),60);
+  if(solidAt(s.x,s.y,8)||inPond(s.x,s.y))continue;
+  if(Math.hypot(s.x-BF.x,s.y-BF.y)<440)continue;                 /* never at the bonfire you wake beside */
+  if(G.mobs.some(m=>Math.hypot(m.x-s.x,m.y-s.y)<300))continue;   /* keep territories apart */
+  break}
+ const ax=s.x-BF.x,ay=s.y-BF.y,ad=Math.hypot(ax,ay)||1;
+ if(ad<440)s={x:BF.x+ax/ad*440,y:BF.y+ay/ad*440};
+ mkMob0(s.x,s.y,t);
+ const m=G.mobs[G.mobs.length-1];m.terr=terr}
 function mkMob0(x,y,t){const hp={g:30,b:22,s:45}[t];G.mobs.push({x,y,hp,max:hp,s:0,t:0,cd:rnd(0,1),kx:0,ky:0,fl:0,type:t,ph:rnd(0,6)})}
 function spawnDun(Zd){const D=DUN[G.z];D.R.forEach((r,i)=>{if(!i||i==D.en)return;const w=r[2]-r[0],h=r[3]-r[1];if(w<100){for(let y=r[1]+100;y<r[3]-60;y+=200)mkMob0(r[0]+w/2,y,Zd.mob)}else for(let k=0;k<1+(w*h>14000);k++)mkMob0(r[0]+rnd(24,w-24),r[1]+rnd(24,h-24),Zd.mob)})}
 /* ---------- Grummash, the Apple-Gorged Ogre: optional boss with a lair in the Ashfall Forest ---------- */
@@ -678,15 +686,18 @@ function rest(){P.hp=mhp();P.st=mst();P.fl=3;spawn();
 function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
  if(m.hp<=0)return;
  if(m.hx==null){m.hx=m.x;m.hy=m.y;m.ai=0}            /* remembers where it belongs */
+ if(m.terr==null)m.terr=200;                          /* and how far it will stray */
  m.fl-=dt;m.cd-=dt;m.st=(m.st||0)-dt;
  mv(m,m.kx*dt,m.ky*dt,5);m.kx*=.88;m.ky*=.88;
  const dx=P.x-m.x,dy=P.y-m.y,d=Math.hypot(dx,dy)||1,sp={g:26,b:58,s:34}[m.type],hd=Math.hypot(m.hx-m.x,m.hy-m.y);
  /* sight is checked a few times a second, not every frame; walls block it, close range is heard */
  m.losT=(m.losT||0)-dt;
- if(m.losT<=0){m.losT=.22;m.sees=!P.dead&&(d<26||(d<150&&losClear(m.x,m.y,P.x,P.y,4)))}
+ if(m.losT<=0){m.losT=.22;
+  const pd=Math.hypot(P.x-m.hx,P.y-m.hy),reach=m.ai==1?m.terr:m.terr*.85;
+  m.sees=!P.dead&&pd<reach&&(d<26||(d<150&&losClear(m.x,m.y,P.x,P.y,4)))}
  if(m.st>0){m.x=Math.max(10,Math.min(CW-10,m.x));return}
  if(m.ai==1){                                        /* chase, hunting the last place it saw you */
-  if(P.dead||d>300||hd>340){m.ai=2;m.sees=false;m.s=0}
+  if(P.dead||d>m.terr+40||hd>m.terr){m.ai=2;m.sees=false;m.s=0}   /* it will not leave its ground */
   else{
    if(m.sees){m.lx=P.x;m.ly=P.y}
    const tx=m.sees||m.lx==null?P.x:m.lx,ty=m.sees||m.ly==null?P.y:m.ly,
@@ -707,7 +718,7 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
  else{                                               /* idle: walk its route between landmarks */
   if(m.sees&&!P.dead){m.ai=1;m.cd=Math.max(m.cd,.3)}
   else{
-   if(!m.route){m.route=patrolRoute(m.hx,m.hy);m.ri=0;m.pt=rnd(0,2)}
+   if(!m.route){m.route=patrolRoute(m.hx,m.hy,m.terr);m.ri=0;m.pt=rnd(0,2)}
    const w=m.route[m.ri]||{x:m.hx,y:m.hy};
    if(m.pt>0)m.pt-=dt;
    else{
