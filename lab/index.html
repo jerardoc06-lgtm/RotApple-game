@@ -142,6 +142,27 @@ function dungeon(z){const D=DUN[z],GW=18,GH=54,g=new Uint8Array(GW*GH);
   if(w&&s<0)s=i;if(!w&&s>=0){const x0=(s-1)*20,x1=(i-1)*20,cx=(x0+x1)/2;cBox("w",cx,j*20+10,x1-x0,20);add(BX(x1-x0,22,20),D.wc,cx,11,j*20+10);s=-1}}}
  const prop=(x,y)=>{if(z==0){cCir("p",x,y,5);add(CY(5,5.4,9,12),0x5a3a1e,x,4.5,y)}else if(z==1){cCir("p",x,y,3.6);add(CY(3,3.6,26,10),0x3a3a34,x,13,y)}else{cBox("p",x,y,9,9);add(BX(9,9,9),0x4a3018,x,4.5,y)}};
  D.R.forEach((r,i)=>{const w=r[2]-r[0],h=r[3]-r[1];if(!i||w<100||h<60)return;[.25,.75].forEach(f=>{const x=r[0]+w*f;glowSprite(x,15,r[1]+4,D.tc,36);add(BX(2,2,2),D.tc,x,14,r[1]+3,D.tc)});if(i!=D.en&&h>=80)[16,w-16].forEach(d=>prop(r[0]+d,r[1]+16))})}
+function inPond(x,y){for(const p of PONDS){if(Math.hypot(x-p[0],y-p[1])<p[2]+8)return true}return false}
+function walkSpot(x,y,r){
+ const B=BND();r=Math.max(r,26);
+ for(let i=0;i<26;i++){
+  const a=rnd(0,6.283),d=rnd(0,r),px=x+Math.cos(a)*d,py=y+Math.sin(a)*d;
+  if(px<B.x0+14||px>B.x1-14||py<B.y0+14||py>B.y1-14)continue;
+  if(solidAt(px,py,8)||inPond(px,py))continue;
+  return{x:px,y:py}}
+ return{x:Math.max(B.x0+14,Math.min(B.x1-14,x)),y:Math.max(B.y0+14,Math.min(B.y1-14,y))}}
+function patrolRoute(hx,hy){
+ const pts=[],near=LM.filter(L=>{const d=Math.hypot(L.x-hx,L.y-hy);return d>80&&d<700}).sort(()=>Math.random()-.5);
+ for(const L of near){if(pts.length>=2)break;const s=walkSpot(L.x,L.y,90);if(!solidAt(s.x,s.y,7)&&!inPond(s.x,s.y))pts.push(s)}
+ for(let i=0;pts.length<3&&i<50;i++){const s=walkSpot(hx,hy,rnd(90,340));if(Math.hypot(s.x-hx,s.y-hy)>70&&(!solidAt(s.x,s.y,7))&&!inPond(s.x,s.y))pts.push(s)}
+ if(!pts.length)pts.push({x:hx,y:hy});
+ return pts}
+function hubSpawn(t){
+ let s=null;
+ for(let i=0;i<8;i++){
+  s=Math.random()<.3?walkSpot(BF.x,BF.y,300):(LM.length?walkSpot(LM[Math.random()*LM.length|0].x,LM[Math.random()*LM.length|0].y,110):walkSpot(rnd(200,WS-200),rnd(200,WS-200),60));
+  if(!solidAt(s.x,s.y,8)&&!inPond(s.x,s.y))break}
+ mkMob0(s.x,s.y,t)}
 function mkMob0(x,y,t){const hp={g:30,b:22,s:45}[t];G.mobs.push({x,y,hp,max:hp,s:0,t:0,cd:rnd(0,1),kx:0,ky:0,fl:0,type:t,ph:rnd(0,6)})}
 function spawnDun(Zd){const D=DUN[G.z];D.R.forEach((r,i)=>{if(!i||i==D.en)return;const w=r[2]-r[0],h=r[3]-r[1];if(w<100){for(let y=r[1]+100;y<r[3]-60;y+=200)mkMob0(r[0]+w/2,y,Zd.mob)}else for(let k=0;k<1+(w*h>14000);k++)mkMob0(r[0]+rnd(24,w-24),r[1]+rnd(24,h-24),Zd.mob)})}
 /* ---------- Grummash, the Apple-Gorged Ogre: optional boss with a lair in the Ashfall Forest ---------- */
@@ -385,7 +406,7 @@ function fxWorld(dt){if(SKY)SKY.visible=G.z==3;if(G.z!=3||!WD)return;skyCycle(dt
 function portalsVis(v){world.children.forEach(o=>{if(o.userData.pt)o.visible=v})}
 function sealBoss(){if(G.z>2||G.seal)return;G.seal=1;G.gate={k:"w",x0:140,y0:240,x1:180,y1:248};COL.push(G.gate);G.gateM=add(BX(40,34,8),0x2a2a30,160,17,244,0x300808);portalsVis(false);G.banner={t:3.6,x:"THE PORTAL SEALS BEHIND YOU"};shake=8}
 function unseal(){G.seal=0;if(G.gate){const i=COL.indexOf(G.gate);if(i>=0)COL.splice(i,1);G.gate=null}if(G.gateM){world.remove(G.gateM);G.gateM=null}portalsVis(true)}
-Z.push({n:"Ashfall Forest",bg:"#1e1a22",acc:"#3a3026",mob:"g",cnt:0,arr:["CHAPTER I: THE ASHFALL FOREST","A forest older than any village, wide and dark. A bonfire has burned in its heart since the blight began.","You wake in the clearing with no memory of the road. Paths run out in every direction: orchard, castle, sea.","The villagers call your kind the Unfed. Find Elder Maren by the well, then wander where you like."],intro:[],win:[]});
+Z.push({n:"Ashfall Forest",bg:"#1e1a22",acc:"#3a3026",mob:"g",cnt:16,arr:["CHAPTER I: THE ASHFALL FOREST","A forest older than any village, wide and dark. A bonfire has burned in its heart since the blight began.","You wake in the clearing with no memory of the road. Paths run out in every direction: orchard, castle, sea.","The villagers call your kind the Unfed. Find Elder Maren by the well, then wander where you like."],intro:[],win:[]});
 Z[2].win=["The Captain sinks into the black water, still laughing.","“The root is not mine to guard, friar. Seek the others.”","The sealed portal flares open once more."];
 let wShown=-1;function setWp(){const w=W[S.w];if(wShown===S.w)return;wShown=S.w;swp.visible=S.w>0;swp.scale.z=Math.min(w.len||1,1.12);for(let i=0;i<3;i++){const m=swp.children[i].material;m.color.setHex(w.col||0xcfd8e0);m.emissive.setHex(w.fx?(w.em||0xff3a08):0x223344)}}
 const NN=()=>G.z==3?N.find(n=>dist(P,n)<24):null;
@@ -597,7 +618,7 @@ function loadZone(z,fresh){G.z=z;if(P)P.lock=null;BF=z==3?{x:800,y:800}:{x:DUN[z
  const b=Zd.B;G.boss=G.defeated[z]||!b?null:{x:160,y:100,hp:b.hp,max:b.hp,on:false,mv:null,t:1.2,a:0,f:0,sz:b.sz,spd:b.spd,mvs:b.mv,proj:b.proj,run:b.run,col:b.col,fl:0,vx:0,vy:0};
  G.intro=0;G.seal=0;G.gate=G.gateM=null;buildScene(z);if(z==3)ogreLair();mkPortals();mkItems();seed=[];let s=z*97+7;for(let i=0;i<130;i++){s=(s*1103515245+12345)&0x7fffffff;seed.push([s%CW,56+(s>>8)%184,(s>>16)%3])}
  if(fresh){if(z==3){P.x=BF.x;P.y=BF.y+44}else{P.x=DUN[z].sp[0];P.y=DUN[z].sp[1]}}}
-function spawn(){G.mobs=[];const Zd=Z[G.z];if(G.z==3&&!S.ogre)spawnOgre();if(G.z<3)spawnDun(Zd);else for(let i=0;i<Zd.cnt;i++){const hp={g:30,b:22,s:45}[Zd.mob];G.mobs.push({x:rnd(40,280),y:rnd(90,170),hp,max:hp,s:0,t:0,cd:rnd(0,1),kx:0,ky:0,fl:0,type:Zd.mob,ph:rnd(0,6)})}}
+function spawn(){G.mobs=[];const Zd=Z[G.z];if(G.z==3&&!S.ogre)spawnOgre();if(G.z<3)spawnDun(Zd);else{for(let i=0;i<Zd.cnt;i++)hubSpawn(Zd.mob)}}
 
 function hurt(d,tag){if(P.inv>0||P.dead)return;
  if(P.blk&&!tag){
@@ -683,16 +704,20 @@ function updMob(m,dt){if(m.type=="o")return updOgre(m,dt);
   m.hp=Math.min(m.max,m.hp+m.max*.12*dt);
   if(m.sees&&d<110&&!P.dead)m.ai=1;
  }
- else{                                               /* idle, drifting around its post */
+ else{                                               /* idle: walk its route between landmarks */
   if(m.sees&&!P.dead){m.ai=1;m.cd=Math.max(m.cd,.3)}
   else{
-   m.pt=(m.pt||0)-dt;
-   if(m.pt<=0||m.px==null){m.pt=rnd(3.5,8);const a=rnd(0,6.283),r=rnd(8,52);m.px=m.hx+Math.cos(a)*r;m.py=m.hy+Math.sin(a)*r}
-   const ax=m.px-m.x,ay=m.py-m.y,ad=Math.hypot(ax,ay)||1;
-   if(ad>7)mv(m,ax/ad*sp*.4*dt,ay/ad*sp*.4*dt,5)
+   if(!m.route){m.route=patrolRoute(m.hx,m.hy);m.ri=0;m.pt=rnd(0,2)}
+   const w=m.route[m.ri]||{x:m.hx,y:m.hy};
+   if(m.pt>0)m.pt-=dt;
+   else{
+    const ax=w.x-m.x,ay=w.y-m.y,ad=Math.hypot(ax,ay)||1;
+    if(ad<15){m.ri=(m.ri+1)%m.route.length;m.pt=rnd(1.5,3.5)}
+    else mv(m,ax/ad*sp*.45*dt,ay/ad*sp*.45*dt,5)
+   }
   }
  }
- m.x=Math.max(10,Math.min(CW-10,m.x))}
+ const BB=BND();m.x=Math.max(BB.x0+6,Math.min(BB.x1-6,m.x));m.y=Math.max(BB.y0+6,Math.min(BB.y1-6,m.y))}
 
 function updBoss(b,dt){
  if(!b.on||b.hp<=0)return;b.fl-=dt;
