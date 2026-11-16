@@ -932,7 +932,7 @@ function arm(g,x,y,z,len,sl,cu,gl,e,un,fl){fl=fl||1;const A=new THREE.Group();A.
  part(A,BX(.5,1.25,1.45),cu,(x<0?-1:1)*1.12,-len,0);
  part(El,CY(1.15,1.05*fl,len,14),sl,0,-len/2,0,e);part(El,CY(1.1*fl+.08,1.1*fl+.08,.7,14),un,0,-len+.5,0);part(El,CY(1.18*fl+.1,1.18*fl+.1,.5,14),cu,0,-len+.95,0,e);
  const HD=A.hand=[];const pm=part(El,SP(1),gl,0,-len-.5,0,0x120a06);pm.scale.set(1,1.15,.8);HD.push(pm);for(let i=-1;i<2;i++)HD.push(part(El,CY(.2,.15,1.3,6),gl,i*.38,-len-1.3,.15));HD.push(part(El,CY(.22,.16,1,6),gl,x<0?-.85:.85,-len-.6,.4).rotation.z=x<0?.6:-.6);return A}
-let PLAK=3.3,KN_SC=11.13,KN_LOADED=0;
+let PLAK=3.3,PLDIP=1,KN_SC=11.13,KN_LOADED=0;
 function rigKnight(src){
  const P={};src.traverse(o=>{if(o.isMesh)P[o.name]=o});
  const Y180=new THREE.Matrix4().makeRotationY(Math.PI);
@@ -1041,7 +1041,7 @@ function rigKnight(src){
   if(n.indexOf('cape')===0&&U.robe)return;
   o.material=conv(o.material);o.position.set(0,0,0);mdl.add(o);});
  if(old)scene.remove(old);
- pl.position.copy(p0);pl.rotation.y=r0;shade(pl,6);scene.add(pl);HQ=0;KN_LOADED=1;
+ pl.position.copy(p0);pl.rotation.y=r0;shade(pl,6);scene.add(pl);HQ=0;PLDIP=1;KN_LOADED=1;
 }
 function playerPose(p,mv){
  const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
@@ -1123,8 +1123,8 @@ function playerPose(p,mv){
  U.ankles[0].rotation.x=ank(hA,kA,.34*Math.max(0,sf)-.15*Math.max(0,-sf))+sl[0];U.ankles[0].rotation.z=-sl[1];
  U.ankles[1].rotation.x=ank(hB,kB,.34*Math.max(0,-sf)-.15*Math.max(0,sf))+sl[0];U.ankles[1].rotation.z=-sl[1];
  const dip=(t)=>1.15*Math.cos(t)+2.1*Math.abs(Math.sin(t))-1.15;
- U.ankles[0].position.y=-PLAK+dip(hA+kA+U.ankles[0].rotation.x)*PLAK/3.3;
- U.ankles[1].position.y=-PLAK+dip(hB+kB+U.ankles[1].rotation.x)*PLAK/3.3;
+ U.ankles[0].position.y=-PLAK+dip(hA+kA+U.ankles[0].rotation.x)*PLAK/3.3*PLDIP;
+ U.ankles[1].position.y=-PLAK+dip(hB+kB+U.ankles[1].rotation.x)*PLAK/3.3*PLDIP;
  m.rotation.set(bx,my,bz);m.position.set(0,by,0);
  if(U.head)U.head.rotation.x=walking?-.03-.028*Math.cos(ph*2):(p.act?-.10:0);
  U.robe.rotation.set(walking?.05:0,0,Math.sin(t*1.2)*.012);
