@@ -936,21 +936,36 @@ let PLAK=3.3,PLDIP=1,KN_SC=11.13,KN_LOADED=0;
 function rigKnight(src){
  const P={};src.traverse(o=>{if(o.isMesh)P[o.name]=o});
  const Y180=new THREE.Matrix4().makeRotationY(Math.PI);
+ src.updateMatrixWorld(true);
+ const JN={};
+ src.traverse(o=>{const m=/^joint_([a-z]+)_([LR])$/i.exec(o.name||'');if(!m)return;
+  const v=new THREE.Vector3();o.getWorldPosition(v);v.applyMatrix4(Y180);
+  const k=m[1].toLowerCase();(JN[k]=JN[k]||[]).push(v);});
+ const joint=(k,ref)=>{const L=JN[k];if(!L||!L.length)return null;
+  if(ref.x>1e-4&&L.every(v=>v.x<0)||ref.x<-1e-4&&L.every(v=>v.x>0))return null;
+  let best=null,bd=1e9;L.forEach(v=>{if(Math.abs(ref.x)>1e-4&&Math.abs(v.x)>1e-4&&Math.sign(v.x)!==Math.sign(ref.x))return;
+   const d=v.distanceTo(ref);if(d<bd){bd=d;best=v}});return best;};
  Object.keys(P).forEach(n=>{P[n].geometry.applyMatrix4(Y180)});
  const bbx=n=>{const o=P[n];if(!o)return null;o.geometry.computeBoundingBox();return o.geometry.boundingBox};
  if(!P['cuirass']||!P['greave_1']||!P['rerebrace_1'])throw new Error('knight parts missing');
  const J={},ARM={};
  [-1,1].forEach(q=>{const f=q>0?'1':'-1';
   const cu=bbx('cuisse_'+f),gr=bbx('greave_'+f),rr=bbx('rerebrace_'+f),va=bbx('vambrace_'+f);
-  const hip=new THREE.Vector3(cu.getCenter(new THREE.Vector3()).x,cu.max.y+(cu.max.y-cu.min.y)*.22,cu.getCenter(new THREE.Vector3()).z);
-  const knee=new THREE.Vector3(hip.x,(cu.min.y+gr.max.y)/2,hip.z);
-  const ank=new THREE.Vector3(gr.getCenter(new THREE.Vector3()).x,gr.min.y,gr.getCenter(new THREE.Vector3()).z);
-  const sho=new THREE.Vector3(rr.getCenter(new THREE.Vector3()).x,rr.max.y-(rr.max.y-rr.min.y)*.30,rr.getCenter(new THREE.Vector3()).z);
-  const elb=new THREE.Vector3(sho.x,rr.min.y,sho.z);
-  const wri=new THREE.Vector3(va.getCenter(new THREE.Vector3()).x,va.min.y,va.getCenter(new THREE.Vector3()).z);
+  let hip=new THREE.Vector3(cu.getCenter(new THREE.Vector3()).x,cu.max.y+(cu.max.y-cu.min.y)*.22,cu.getCenter(new THREE.Vector3()).z);
+  let knee=new THREE.Vector3(hip.x,(cu.min.y+gr.max.y)/2,hip.z);
+  let ank=new THREE.Vector3(gr.getCenter(new THREE.Vector3()).x,gr.min.y,gr.getCenter(new THREE.Vector3()).z);
+  let sho=new THREE.Vector3(rr.getCenter(new THREE.Vector3()).x,rr.max.y-(rr.max.y-rr.min.y)*.30,rr.getCenter(new THREE.Vector3()).z);
+  let elb=new THREE.Vector3(sho.x,rr.min.y,sho.z);
+  let wri=new THREE.Vector3(va.getCenter(new THREE.Vector3()).x,va.min.y,va.getCenter(new THREE.Vector3()).z);
+  hip=joint('hip',hip)||hip;knee=joint('knee',knee)||knee;ank=joint('ankle',ank)||ank;
+  sho=joint('shoulder',sho)||sho;elb=joint('elbow',elb)||elb;wri=joint('wrist',wri)||wri;
   J[q]={hip:hip,knee:knee,ank:ank,sho:sho,elb:elb,wri:wri};
  });
- [-1,1].forEach(q=>{const j=J[q],sx=j.sho.x>=0?1:-1,th=-sx*(Math.PI/2+.145);
+ [-1,1].forEach(q=>{const j=J[q],sx=j.sho.x>=0?1:-1;
+  /* with the joints exported, the arm's own direction says exactly how far to rotate */
+  const ad=j.elb.clone().sub(j.sho);
+  const th=(JN.elbow&&ad.length()>.01)?(-(Math.atan2(ad.y,ad.x)+Math.PI/2)+sx*.05):(-sx*(Math.PI/2+.145));
+
   const m4=new THREE.Matrix4().makeTranslation(j.sho.x,j.sho.y,j.sho.z)
     .multiply(new THREE.Matrix4().makeRotationZ(th))
     .multiply(new THREE.Matrix4().makeTranslation(-j.sho.x,-j.sho.y,-j.sho.z));
@@ -1402,7 +1417,7 @@ function extras(z){if(z==3)hamlet();if(z<3)arena(z);glowSprite(BF.x,12,BF.y,0xff
 function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
  if(world)scene.remove(world);world=new THREE.Group();scene.add(world);em.clear();tm.clear();pm.clear();sparks=[];decor=[];if(rain)scene.remove(rain);rain=null;
  if(!pl)buildPlayer2();
- if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(location.pathname.indexOf('/lab/')>=0?'../knight_tpose.glb':'knight_tpose.glb');
+ if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(new URLSearchParams(location.search).get('k'))||(location.pathname.indexOf('/lab/')>=0?'../knight_tpose.glb':'knight_tpose.glb');
   new THREE.GLTFLoader().load(KU,g=>{try{rigKnight(g.scene)}catch(e){console.warn('knight rig failed',e)}},undefined,e=>console.warn('knight load failed',e))}
  camT.x=P.x;camT.z=P.y;
  const T=[[0x0a2624,"#1d2a1e","#34452e",0x6a8a7a,.6],[0x241a3a,"#241e30","#3a3248",0x8a70c0,.55],[0x0a1518,"#2a1d14","#3d2a1c",0x7a98a8,.5],[0x08161a,"#1b2f19","#2d4a26",0x8aa890,.62]][z];
