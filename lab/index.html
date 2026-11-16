@@ -628,38 +628,74 @@ function loadArmour(){
   next();
  });
 }
-/* the pack is authored around a bulkier body than this one, so a plate hung on its bone still
-   floats off the skin. Each group of plates is therefore fitted onto the body part it covers:
-   the group is scaled until its own box meets that part's box (with a little clearance, so it
-   sits over the skin rather than inside it) and then centred on the part. Scaling the whole
-   group about its own centre keeps rivets and straps on the plate they belong to. */
-const ARM_PART={helm:["skull"],cuirass:["torso"],fauld:["trunks","waistband","navel","glute"],tasset:["trunks","navel","glute"],
- pauldron:["delt"],rerebrace:["upperarm"],couter:["elbow"],vambrace:["forearm"],
- gauntlet:["palm","finger","thumb"],cuisse:["thigh"],poleyn:["knee"],
- greave:["calf","calfmuscle"],sabaton:["foot","toes","heel"]};
-const ARM_CLEAR={helm:1.06,cuirass:1.03,fauld:1.06,tasset:1.05,pauldron:1.08,rerebrace:1.07,couter:1.10,
- vambrace:1.07,gauntlet:1.10,cuisse:1.07,poleyn:1.10,greave:1.06,sabaton:1.06};
+/* ---- fitting the plates -----------------------------------------------------------
+   The pack was built around a bulkier figure than this one, so a plate hung on its bone
+   still hovered off the skin and overhung the limb. Every group of plates is instead
+   fitted to the body part it covers, measured from that part's own vertices: scaled by the
+   radius it has to wrap, moved onto the limb's centre line, and seated at the end of the
+   limb that holds it - a cuisse hangs from the hip, a greave from the knee, a helm caps the
+   crown. The whole group is scaled together, so rivets, straps and lames stay on the plate
+   they belong to.                                                                   */
+const ARM_PART={helm:["skull"],cuirass:["torso"],fauld:["trunks","waistband","navel","glute"],
+ tasset:["trunks","navel","glute"],pauldron:["delt"],rerebrace:["upperarm"],
+ couter:["elbow"],vambrace:["forearm"],gauntlet:["palm","finger","thumb"],
+ cuisse:["thigh"],poleyn:["knee"],greave:["calf","calfmuscle"],sabaton:["foot","toes","heel"]};
+/* how far off the skin a plate rides: it is a shell over padding, so only a few per cent */
+/* which end of the part the plate is held by */
+const ARM_HOLD={helm:"top",cuirass:"top",fauld:"top",tasset:"top",pauldron:"centre",
+ rerebrace:"top",couter:"centre",vambrace:"top",gauntlet:"centre",cuisse:"top",
+ poleyn:"centre",greave:"top",sabaton:"bottom"};
+/* the piece whose radius the fit is measured from: the shell that actually wraps the part.
+   The helmet is the case that matters - its gorget is wider than its crown, so measuring the
+   largest piece in the group shrank the helmet until the skull came through the top of it. */
+const ARM_SHELL={helm:/^helm_dome/,cuirass:/^cuirass$/,fauld:/^fauld_0/,tasset:/^tasset_-?1$/,
+ pauldron:/^pauldron_lame/,rerebrace:/^rerebrace_-?1$/,couter:/^couter_-?1$/,vambrace:/^vambrace_-?1$/,
+ gauntlet:/^gauntlet_hand/,cuisse:/^cuisse_-?1$/,poleyn:/^poleyn_-?1$/,greave:/^greave_-?1$/,
+ sabaton:/^sabaton_/};
+/* a plate may not be much taller than the part it covers, or a helm swallows the neck */
+/* how far a band may be lengthened along the limb to span the part it covers */
+const ARM_LEN={cuisse:1.4,greave:1.45,rerebrace:1.45,vambrace:1.45,poleyn:1.2,couter:1.2};
 function dressArmour(a,root){
  const U=pl.userData,B=U.B,mdl=U.mdl;
  if(!B||!mdl)return 0;
- /* the pack already faces the way this body does, so no half turn: doing it put the breastplate
-    on his back and left his chest bare */
- root.rotation.y=0;
+ /* the pack already faces the way this body does, so no half turn */
  root.updateMatrixWorld(true);
  const bonePos={};
  const posOf=n=>{
   if(!bonePos[n]){const v=new THREE.Vector3();if(!B[n])return null;B[n].getWorldPosition(v);bonePos[n]=mdl.worldToLocal(v)}
   return bonePos[n];
  };
- const inv=mdl.matrixWorld.clone().invert();
- /* the body part a plate of this kind covers, in the pack's own metres */
- const partBox=(kind,sfx)=>{
-  const box=new THREE.Box3();
+ const inv=mdl.matrixWorld.clone().invert(),TP=new THREE.Vector3();
+ /* the spread of a set of points about its own vertical axis: where its centre line runs,
+    the radius it wraps, and how tall it stands */
+ const stats=pts=>{
+  if(!pts.length)return null;
+  let sx=0,sz=0,y0=1e9,y1=-1e9;
+  for(const p of pts){sx+=p[0];sz+=p[2];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]}
+  const n=pts.length,x=sx/n,z=sz/n;
+  let r=0,rm=0;
+  for(const p of pts){const d=Math.hypot(p[0]-x,p[2]-z);r+=d;if(d>rm)rm=d}
+  return {x:x,z:z,r:r/n,rmax:rm,y0:y0,y1:y1,yc:(y0+y1)/2};
+ };
+ const platePts=list=>{
+  const out=[];
+  for(const it of list){
+   const pos=it.g.attributes.position;
+   for(let i=0;i<pos.count;i++)out.push([pos.getX(i),pos.getY(i),pos.getZ(i)]);
+  }
+  return out;
+ };
+ const bodyPts=(kind,sfx)=>{
+  const out=[];
   for(const n of (ARM_PART[kind]||[])){
    const o=pl.getObjectByName("body_"+n+"_"+sfx)||pl.getObjectByName("body_"+n);
-   if(o)box.union(new THREE.Box3().setFromObject(o));
+   if(!o||!o.geometry)continue;
+   o.updateWorldMatrix(true,false);
+   const pos=o.geometry.attributes.position;
+   for(let i=0;i<pos.count;i++){TP.fromBufferAttribute(pos,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv);
+    out.push([TP.x,TP.y,TP.z])}
   }
-  return box.isEmpty()?null:box.applyMatrix4(inv);
+  return out;
  };
  const items=[];
  root.traverse(o=>{
@@ -673,8 +709,7 @@ function dressArmour(a,root){
    c:g.boundingBox.getCenter(new THREE.Vector3())});
  });
  if(!items.length)return 0;
- /* a rivet or strap whose name names nothing goes with the nearest piece that does, rather than
-    being left hanging in the air on its own */
+ /* a rivet or strap whose name names nothing goes with the nearest piece that does */
  items.forEach(it=>{
   if(it.kind)return;
   let best=null,bd=1e9;
@@ -694,43 +729,71 @@ function dressArmour(a,root){
   it.bone=bname;it.sfx=/_L$/.test(bname)?"-1":"1";
   (groups[bname+"|"+it.kind]=groups[bname+"|"+it.kind]||[]).push(it);
  });
+ /* One scale for the whole suit. The pack was drawn for a knight of about this height, so
+    its pieces are already in proportion to each other and to this body: scaling each group
+    on its own is what made the suit come apart - shoulder plates larger than the arms under
+    them, bands that no longer met. Only the scale of the set is fitted, from the torso, and
+    each group is then simply seated on the part it covers. */
+ const girth=(()=>{const o=pl.getObjectByName("body_torso");if(!o)return .41;
+  const b=new THREE.Box3().setFromObject(o).applyMatrix4(inv).getSize(new THREE.Vector3());
+  return (b.x+b.z)/2})();
+ const S0=Math.min(1.08,Math.max(.82,girth/.41));       /* the pack's own torso girth is .41 m */
  const holders=[];
  Object.keys(groups).forEach(k=>{
   const list=groups[k],bone=B[list[0].bone],at=posOf(list[0].bone);
   if(!bone||!at)return;
-  const gb=new THREE.Box3();list.forEach(it=>gb.union(it.g.boundingBox));
-  const gc=gb.getCenter(new THREE.Vector3()),gs=gb.getSize(new THREE.Vector3());
-  const kind=list[0].kind,tb=partBox(kind,list[0].sfx),clr=ARM_CLEAR[kind]||1.1;
-  const sc=new THREE.Vector3(1,1,1),nc=gc.clone();
-  if(tb){
-   const tc=tb.getCenter(new THREE.Vector3()),ts=tb.getSize(new THREE.Vector3());
-   /* a plate is a shell around the limb, not a box that fills it: it is fitted by the radius it
-      wraps, so it keeps its own proportions and clearance instead of being stretched to a box -
-      matched axis by axis the front of the cuirass sank into the chest and only its edges showed */
-   const rp=(gs.x+gs.z)/4,rb=(ts.x+ts.z)/4;
-   if(rp>.002&&rb>.002){const k=Math.min(1.7,Math.max(.55,rb*clr/rp));sc.set(k,k,k)}
-   /* and along the limb it is fitted to the length of that part, or a band authored for a
-      shorter leg stops above the knee and leaves a ring of bare skin between it and the next */
-   if(gs.y>.002&&ts.y>.002)sc.y=Math.min(1.5,Math.max(.7,ts.y*1.02/gs.y));
-   nc.copy(tc);
+  const kind=list[0].kind;
+  const ps=stats(platePts(list)),bs=stats(bodyPts(kind,list[0].sfx));
+  if(!ps)return;
+  /* the piece whose radius the fit is measured from: the shell that actually wraps the part,
+     not the group, whose straps and neck guard drag the average off */
+  const rx=ARM_SHELL[kind];
+  const shell=(rx&&list.find(it=>rx.test((it.name||"").toLowerCase())))||list.reduce((a,b)=>{
+   const va=a.g.boundingBox.getSize(new THREE.Vector3()).length(),
+         vb=b.g.boundingBox.getSize(new THREE.Vector3()).length();
+   return vb>va?b:a},list[0]);
+  /* the shell is centred on the limb, not the group: a helm's neck guard hangs behind its
+     crown and drags the group's average backwards, which buried the face plate in the head */
+  const sp=shell.g.attributes.position;
+  let sy0=1e9,sy1=-1e9,cx=0,cz=0;
+  for(let i=0;i<sp.count;i++){const y=sp.getY(i);if(y<sy0)sy0=y;if(y>sy1)sy1=y;
+   cx+=sp.getX(i);cz+=sp.getZ(i)}
+  cx/=sp.count||1;cz/=sp.count||1;
+  const s=S0;
+  const tx=bs?bs.x-s*(cx-ps.x):ps.x,tz=bs?bs.z-s*(cz-ps.z):ps.z;
+  let ty=ps.yc,ky=1;
+  if(bs){
+   const pad=.008,hold=ARM_HOLD[kind]||"centre";
+   /* the bands were drawn for shorter limbs than his, so a band is lengthened along the limb
+      until it spans the part - which is what closes the ring of bare skin at the knee and the
+      gap between the elbow and the vambrace. Its girth is untouched. */
+   const ph=sy1-sy0;
+   if(hold!=="centre"&&ph>.01)
+    ky=Math.min(ARM_LEN[kind]||1.2,Math.max(1,(bs.y1-bs.y0)*.99/ph));
+   if(hold==="top")ty=bs.y1+pad-ky*s*(sy1-ps.yc);
+   else if(hold==="bottom")ty=bs.y0-pad-ky*s*(sy0-ps.yc);
+   else ty=bs.yc;
   }
   list.forEach(it=>{
-   it.g.translate(-it.c.x,-it.c.y,-it.c.z);     /* centred, then scaled about its own centre */
-   it.g.scale(sc.x,sc.y,sc.z);
-   const mp=new THREE.Vector3(nc.x+(it.c.x-gc.x)*sc.x,nc.y+(it.c.y-gc.y)*sc.y,nc.z+(it.c.z-gc.z)*sc.z);
+   it.g.translate(-ps.x,-ps.yc,-ps.z);          /* onto its own axis, then scaled about it */
+   it.g.scale(s,s*ky,s);
+   it.g.translate(tx,ty,tz);                    /* and onto the limb's axis, at its own end */
+   it.g.computeBoundingBox();
+   const c=it.g.boundingBox.getCenter(new THREE.Vector3());
+   it.g.translate(-c.x,-c.y,-c.z);
    const m=new THREE.Mesh(it.g,it.mat);
    m.castShadow=true;m.frustumCulled=false;m.name=it.name;
-   m.position.copy(mp).sub(at);
+   m.position.copy(c).sub(at);
    const h=new THREE.Group();h.add(m);bone.add(h);holders.push(h);
-   /* the pack's cuirass is a breastplate open at the back and its tassets hang at the front,
-      so the same plates are turned half around about his spine: the geometry, metal and wear
-      are unchanged, and the suit closes behind him instead of leaving his back bare */
+   /* the pack's cuirass is a breastplate open at the back and the tassets hang at the
+      front, so those same plates are turned half around his spine: same metal, same wear,
+      and the suit closes behind him rather than leaving his back bare */
    const nm2=(it.name||"").toLowerCase();
-   if((kind==="cuirass"&&/^cuirass$/.test(nm2))||(/^(tasset|fauld)(_|$)/.test(nm2)&&kind!=="cuirass")){
+   if((kind==="cuirass"&&/^cuirass$/.test(nm2))||(/^tasset(_|$)/.test(nm2)&&kind!=="cuirass")){
     const bg=it.g.clone(),bm=new THREE.Mesh(bg,it.mat);
     bg.scale(-1,1,-1);                          /* a half turn, so the winding still faces out */
     bm.castShadow=true;bm.frustumCulled=false;bm.name=it.name+"_back";
-    bm.position.set(2*nc.x-mp.x,mp.y,2*nc.z-mp.z).sub(at);
+    bm.position.set(2*tx-c.x,c.y,2*tz-c.z).sub(at);
     const bh=new THREE.Group();bh.add(bm);bone.add(bh);holders.push(bh);
    }
   });
