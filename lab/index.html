@@ -1400,6 +1400,47 @@ function playerPose(p,mv){
   bx=-.03-w*.30+s2*.52-r2*.19; by=-E(a/.50)*.30+E((a-.50)/.42)*.30;
   tuck=w*.55-s2*.30-r2*.25;
  }
+ /* ---- bare hands: the slash is a cross-body strike and the smash an overhead one, both
+    wound up against the blow and released through the hips and spine, with the shoulder and
+    elbow only finishing what the trunk started */
+ if(NOARM&&(p.act==="light"||p.act==="heavy")){
+  const L=p.act==="light";
+  const wd=L?.12:.26, sd=L?.14:.18, rd=L?.26:.34;
+  const w=E(a/wd), s2=E((a-wd)/sd), r2=E((a-wd-sd)/rd);
+  const wind=w*(1-s2);            /* coiled, waiting to go */
+  const rel=s2*(1-r2*.55);        /* released, easing off as it settles */
+  const hipY=L?.40:.30, spineY=L?.52:.40;
+  if(U.tr){
+   if(U.tr.pelvis)U.tr.pelvis.rotation.y=wind*hipY-rel*hipY*1.6;
+   if(U.tr.s1)U.tr.s1.rotation.y=wind*spineY*.6-rel*spineY*.85;
+   if(U.tr.s2)U.tr.s2.rotation.y=wind*spineY*.4-rel*spineY*.65;
+   if(U.tr.clavR)U.tr.clavR.rotation.x=-wind*.10+rel*.16;
+   if(U.tr.clavL)U.tr.clavL.rotation.x=wind*.06-rel*.10;
+  }
+  if(L){
+   /* slash: coil away from the blow, whip across the body, let the turn carry the arm past it */
+   rx=-.10+wind*1.15-rel*2.00;
+   rz=-.10-wind*.45+rel*.95;
+   re=-.30-wind*1.05+rel*1.20;
+   lx=-.15-wind*.35+rel*.55; le=-.30-wind*.25+rel*.40; lz=-.15-wind*.28+rel*.42;
+   my=wind*.40-rel*.90;
+   bx=-.02-wind*.10+rel*.22;
+   bz=-wind*.06+rel*.10;
+   by=-wind*.10+rel*.14;
+   tuck=wind*.26+rel*.16;
+  }else{
+   /* smash: both hands overhead, the back arches, then the whole body drives them down */
+   rx=-.10-wind*2.45+rel*2.35;
+   rz=-.10-wind*.32+rel*.36;
+   re=-.30-wind*.35+rel*.58;
+   lx=-.10-wind*2.30+rel*2.20; le=-.30-wind*.40+rel*.62; lz=-.10-wind*.20+rel*.26;
+   my=wind*.26-rel*.50;
+   bx=-.04-wind*.30+rel*.64;
+   by=-wind*.20+rel*.28;
+   tuck=wind*.28+rel*.52;
+  }
+  if(U.head)U.head.rotation.x=wind*.08-rel*.20;
+ }
  // ---- flask: raise to the helm, tip back, lower
  if(p.act==="flask"){
   const w=E(a/.20), r2=E((a-.46)/.22);
