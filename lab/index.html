@@ -1325,8 +1325,9 @@ function playerPose(p,mv){
   by=(Math.abs(cf)-1)*.15+.055*Math.cos(ph*2);
   bx=.05+Math.abs(sf)*.02;
  }else{
-  const br=Math.sin(t*1.5);
+  const br=Math.sin(t*1.5), sway=Math.sin(t*.6);
   rx+=-.025+br*.022; re+=-.02+br*.018; lx+=br*.01; by=br*.05;
+  bz=sway*.03;                     /* the weight rolls slowly from one foot to the other */
  }
  // without a shield the left arm is just an arm: mirror the sword arm, opposite phase
  /* with nothing in the hands both arms hang alike, whatever the save thinks he is holding */
@@ -1355,6 +1356,12 @@ function playerPose(p,mv){
      would drag the hand across the belly */
   if(U.tr.clavR)U.tr.clavR.rotation.x=-tw*.05;
   if(U.tr.clavL)U.tr.clavL.rotation.x=tw*.05;
+  /* breathing carries on whether he is walking or standing: the chest lifts and the shoulders
+     go with it, on its own slow clock so it never marches in time with the step */
+  const br2=Math.sin(t*1.6);
+  if(U.tr.s2)U.tr.s2.rotation.x=-.018+br2*.010;
+  if(U.tr.clavR)U.tr.clavR.rotation.z=br2*.012;
+  if(U.tr.clavL)U.tr.clavL.rotation.z=-br2*.012;
  }
  // ---- guard: shield up across the chest, body turned into it
  if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
