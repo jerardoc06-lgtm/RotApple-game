@@ -651,6 +651,8 @@ function dressArmour(a,root){
   g.applyMatrix4(o.matrixWorld);               /* bake the node's transform into the geometry */
   g.computeBoundingBox();
   const c=g.boundingBox.getCenter(new THREE.Vector3());
+  g.translate(-c.x,-c.y,-c.z);                 /* the geometry now sits on its own origin, so the
+                                                  offset below places it once, not twice */
   let bname=ARM_BONE[fam];
   if(ARM_SIDED[fam]){
    const pr=posOf(fam+"_R");if(!pr)return;
