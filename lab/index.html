@@ -1309,7 +1309,7 @@ function playerPose(p,mv){
  const CL=v=>v<0?0:v>1?1:v, E=v=>{v=CL(v);return v*v*(3-2*v)}, EO=v=>{v=CL(v);return 1-Math.pow(1-v,3)};
  const walking=mv&&!p.act, ph=t*7.6, sf=Math.sin(ph), cf=Math.cos(ph);
  /* bare arms swing far less than arms carrying a blade and a board */
- const SW=NOARM?.55:1;
+ const SW=NOARM?.3:1;
  // ---- rest pose: sword arm hanging, shield arm set out from the body
  let lx=-.30,lz=-.15,le=-.80, rx=-.16,rz=.15,re=-.22, by=0,bx=0,bz=0,my=0,tuck=0,legA=0,legB=0;
  if(walking){
