@@ -606,18 +606,14 @@ const ARM=[
   files:["boots.glb","armour_boots.glb","feet.glb"]}];
 /* which bone each kind of plate rides on; the sided families are matched to a side by where
    the plate actually sits, so nothing depends on guessing which is the right arm */
-const ARM_SEG=[[/^(helm|visor|gorget)/,"head"],[/^(cuirass|plackart|fauld|belt)/,"chest"],
- [/^tasset/,"pelvis"],[/^pauldron/,"clavicle"],[/^(rerebrace|upperarm)/,"shoulder"],
- [/^(couter|elbow)/,"elbow"],[/^(vambrace|forearm|gauntlet|hand)/,"elbow"],
- [/^(cuisse|thigh)/,"hip"],[/^(poleyn|knee)/,"knee"],[/^(greave|shin|calf)/,"knee"],
- [/^(sabaton|boot|foot|toe)/,"ankle"]];
+const ARM_SEG=[[/^(helm|visor|gorget)/,"head","helm"],[/^(cuirass|plackart|fauld|belt)/,"chest","cuirass"],
+ [/^tasset/,"pelvis","tasset"],[/^pauldron/,"clavicle","pauldron"],[/^(rerebrace|upperarm)/,"shoulder","rerebrace"],
+ [/^(couter|elbow)/,"elbow","couter"],[/^(vambrace|forearm|gauntlet|hand)/,"elbow","vambrace"],
+ [/^(cuisse|thigh)/,"hip","cuisse"],[/^(poleyn|knee)/,"knee","poleyn"],[/^(greave|shin|calf)/,"knee","greave"],
+ [/^(sabaton|boot|foot|toe)/,"ankle","sabaton"]];
 const ARM_BONE={head:"head",chest:"chest",pelvis:"pelvis",clavicle:"clavicle_",shoulder:"shoulder_",
                 elbow:"elbow_",hip:"hip_",knee:"knee_",ankle:"ankle_"};
 const ARM_SIDED={clavicle:1,shoulder:1,elbow:1,hip:1,knee:1,ankle:1};
-/* the arm plates were authored around a wider arm than this body has, so they are hung by where
-   they belong on the limb - a fraction of the way down the bone - instead of by the authored
-   position, which left them standing off the arm in mid air */
-const ARM_ALONG={pauldron:.20, rerebrace:.45, couter:.02, vambrace:.50};
 function armourURL(f){return (location.pathname.indexOf('/lab/')>=0?'../assets/':'assets/')+f}
 function loadArmour(){
  if(typeof pl==="undefined"||!pl||!pl.userData||!pl.userData.B)return;
@@ -651,7 +647,7 @@ function dressArmour(a,root){
   const nm=(o.name||(o.parent&&o.parent.name)||"").toLowerCase();
   const seg=ARM_SEG.find(t=>t[0].test(nm));
   if(!seg)return;
-  const fam=seg[1],g=o.geometry.clone();
+  const fam=seg[1],kind=seg[2]||fam,g=o.geometry.clone();
   g.applyMatrix4(o.matrixWorld);               /* bake the node's transform into the geometry */
   g.computeBoundingBox();
   const c=g.boundingBox.getCenter(new THREE.Vector3());
@@ -667,38 +663,22 @@ function dressArmour(a,root){
   const m=new THREE.Mesh(g,o.material);
   m.castShadow=true;m.frustumCulled=false;m.name=o.name||"plate";
   m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
-  /* arm plates: hung on the body's own arm parts rather than on a guessed point along the bone,
-     so each shell lands where the arm actually is, whatever the pack was authored around */
-  const armPart={pauldron:"delt",rerebrace:"upperarm",couter:"elbow",vambrace:"forearm"}[fam];
+  /* the arm plates are placed on the body's own arm part for that plate, so the shell lands
+     where the arm actually is rather than where the pack assumed the arm to be */
+  const armPart={pauldron:"delt",rerebrace:"upperarm",couter:"elbow",vambrace:"forearm"}[kind];
   if(armPart){
    const sfx=/_L$/.test(bname)?"1":"-1";
    for(const n of ["body_"+armPart+"_"+sfx,"body_"+armPart+"_-1","body_"+armPart+"_1"]){
-    const o=pl.getObjectByName(n);
-    if(!o)continue;
-    const cw=new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3());
+    const bo=pl.getObjectByName(n);
+    if(!bo)continue;
+    const cw=new THREE.Box3().setFromObject(bo).getCenter(new THREE.Vector3());
     if((cw.x-pl.position.x>0)!==(sfx==="1"))continue;      /* the part on this plate's own side */
     m.position.copy(mdl.worldToLocal(cw)).sub(at);
     break;
    }
-   /* a half shell carries its weight on the closed side: turn it so that side faces away
-      from the body, leaving the opening toward the shoulder and both arms matching */
-   if(fam==="rerebrace"||fam==="couter"||fam==="vambrace"){
-    const pa=g.getAttribute("position");
-    if(pa&&pa.count){
-     const step=Math.max(1,Math.floor(pa.count/220));
-     let sx=0,sz=0,k=0;
-     for(let i=0;i<pa.count;i+=step){sx+=pa.getX(i);sz+=pa.getZ(i);k++}
-     const dx=sx/k,dz=sz/k;
-     if(Math.abs(dx)+Math.abs(dz)>.004){
-      /* turned to the outer-front of the arm, which is where a plate is seen from and where
-         it should close, leaving the opening at the back where it is hidden */
-      const want=(sfx==="1")?-0.7:Math.PI+0.7;
-      m.rotation.y=want-Math.atan2(dz,dx);
-     }
-     /* pulled in slightly so the shell sits on the arm rather than a little proud of it */
-     m.scale.set(.94,1,.94);
-    }
-   }
+   /* the rerebrace, couter and vambrace are open shells authored around a wider arm. Turned to
+      face the other way the opening falls behind the arm, so from the front it reads plated */
+   if(kind!=="pauldron"){m.rotation.y=Math.PI;m.scale.set(.94,1,.94)}
   }
   const h=new THREE.Group();
   h.add(m);bone.add(h);                        /* the bones already carry the model's scale */
