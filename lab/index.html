@@ -608,12 +608,12 @@ const ARM=[
    the plate actually sits, so nothing depends on guessing which is the right arm */
 const ARM_SEG=[[/^(helm|visor|gorget)/,"head","helm"],[/^(cuirass|plackart|fauld|belt)/,"chest","cuirass"],
  [/^tasset/,"pelvis","tasset"],[/^pauldron/,"clavicle","pauldron"],[/^(rerebrace|upperarm)/,"shoulder","rerebrace"],
- [/^(couter|elbow)/,"elbow","couter"],[/^(vambrace|forearm|gauntlet|hand)/,"elbow","vambrace"],
+ [/^(couter|elbow)/,"elbow","couter"],[/^(gauntlet|hand)/,"wrist","gauntlet"],[/^(vambrace|forearm)/,"elbow","vambrace"],
  [/^(cuisse|thigh)/,"hip","cuisse"],[/^(poleyn|knee)/,"knee","poleyn"],[/^(greave|shin|calf)/,"knee","greave"],
  [/^(sabaton|boot|foot|toe)/,"ankle","sabaton"]];
 const ARM_BONE={head:"head",chest:"chest",pelvis:"pelvis",clavicle:"clavicle_",shoulder:"shoulder_",
-                elbow:"elbow_",hip:"hip_",knee:"knee_",ankle:"ankle_"};
-const ARM_SIDED={clavicle:1,shoulder:1,elbow:1,hip:1,knee:1,ankle:1};
+                elbow:"elbow_",wrist:"wrist_",hip:"hip_",knee:"knee_",ankle:"ankle_"};
+const ARM_SIDED={clavicle:1,shoulder:1,elbow:1,wrist:1,hip:1,knee:1,ankle:1};
 function armourURL(f){return (location.pathname.indexOf('/lab/')>=0?'../assets/':'assets/')+f}
 function loadArmour(){
  if(typeof pl==="undefined"||!pl||!pl.userData||!pl.userData.B)return;
@@ -665,23 +665,22 @@ function dressArmour(a,root){
   m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
   /* the arm plates are placed on the body's own arm part for that plate, so the shell lands
      where the arm actually is rather than where the pack assumed the arm to be */
-  const armPart={pauldron:"delt",rerebrace:"upperarm",couter:"elbow",vambrace:"forearm"}[kind];
+  const armPart={pauldron:"delt",rerebrace:"upperarm",couter:"elbow",vambrace:"forearm",gauntlet:"palm"}[kind];
   if(armPart){
-   const sfx=/_L$/.test(bname)?"1":"-1";
-   for(const n of ["body_"+armPart+"_"+sfx,"body_"+armPart+"_-1","body_"+armPart+"_1"]){
-    const bo=pl.getObjectByName(n);
-    if(!bo)continue;
-    const cw=new THREE.Box3().setFromObject(bo).getCenter(new THREE.Vector3());
-    if((cw.x-pl.position.x>0)!==(sfx==="1"))continue;      /* the part on this plate's own side */
-    m.position.copy(mdl.worldToLocal(cw)).sub(at);
-    break;
-   }
+   /* the body parts carry the side its bones do - _R bones and _1 parts are the same arm, _L and
+      _-1 the other - so the part comes from the plate's own bone. Looking it up by where the plate
+      ended up put every shell on the opposite arm, where it swung on a mirrored arc and read as if
+      the armour were playing a different animation from the body */
+   const sfx=/_L$/.test(bname)?"-1":"1";
+   const bo=pl.getObjectByName("body_"+armPart+"_"+sfx);
+   if(bo){const cw=new THREE.Box3().setFromObject(bo).getCenter(new THREE.Vector3());
+    m.position.copy(mdl.worldToLocal(cw)).sub(at);}
    /* the rerebrace, couter and vambrace are open shells authored around a wider arm. Turned to
       face the other way the opening falls behind the arm, so from the front it reads plated */
-   if(kind!=="pauldron"){
+   if(kind!=="pauldron"&&kind!=="gauntlet"){
     /* turned a quarter toward the body's front, which is where these shells close: the four
        quarter turns were compared side by side and this is the one that wraps the arm */
-    m.rotation.y=(sfx==="1")?-Math.PI/2:Math.PI/2;
+    m.rotation.y=(sfx==="-1")?-Math.PI/2:Math.PI/2;
     m.scale.set(.94,1,.94);
    }
   }
