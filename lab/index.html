@@ -936,7 +936,13 @@ let PLAK=3.3,PLDIP=1,KN_SC=11.13,KN_LOADED=0;
 function rigKnight(src){
  const P={};src.traverse(o=>{if(o.isMesh)P[o.name]=o});
  const Y180=new THREE.Matrix4().makeRotationY(Math.PI);
+ const B={};
+ src.traverse(o=>{if(/^(pelvis|spine_01|spine_02|chest|neck|head|clavicle_[LR]|shoulder_[LR]|elbow_[LR]|wrist_[LR]|hand_[LR]|hip_[LR]|knee_[LR]|ankle_[LR]|toe_[LR]|cape_0[123])$/.test(o.name||''))B[o.name]=o;});
+ Object.keys(B).forEach(n=>{B[n].position.x*=-1;B[n].position.z*=-1});
  src.updateMatrixWorld(true);
+ /* joint positions in model space, cached before the model is scaled */
+ const BWP={};Object.keys(B).forEach(n=>{const v=new THREE.Vector3();B[n].getWorldPosition(v);BWP[n]=v});
+ const bv=n=>BWP[n]||null;
  const JN={};
  src.traverse(o=>{const m=/^joint_([a-z]+)_([LR])$/i.exec(o.name||'');if(!m)return;
   const v=new THREE.Vector3();o.getWorldPosition(v);v.applyMatrix4(Y180);
@@ -961,6 +967,11 @@ function rigKnight(src){
   sho=joint('shoulder',sho)||sho;elb=joint('elbow',elb)||elb;wri=joint('wrist',wri)||wri;
   J[q]={hip:hip,knee:knee,ank:ank,sho:sho,elb:elb,wri:wri};
  });
+ /* a rigged file carries its own skeleton: take the joints from the bones */
+ const useBones=!!(B['pelvis']&&B['shoulder_R']&&B['hip_R']&&B['head']);
+ if(useBones)[-1,1].forEach(q=>{const S=q>0?'R':'L',j=J[q];
+  j.hip=bv('hip_'+S)||j.hip;j.knee=bv('knee_'+S)||j.knee;j.ank=bv('ankle_'+S)||j.ank;
+  j.sho=bv('shoulder_'+S)||j.sho;j.elb=bv('elbow_'+S)||j.elb;j.wri=bv('wrist_'+S)||j.wri;});
  [-1,1].forEach(q=>{const j=J[q],sx=j.sho.x>=0?1:-1;
   /* with the joints exported, the arm's own direction says exactly how far to rotate */
   const ad=j.elb.clone().sub(j.sho);
@@ -974,6 +985,9 @@ function rigKnight(src){
     .multiply(new THREE.Matrix4().makeRotationY(-sx*Math.PI/2))
     .multiply(new THREE.Matrix4().makeTranslation(-wri.x,-wri.y,-wri.z));
   ARM[q]={m4:m4,th:th,hand:hm,up:j.sho.clone(),lo:j.elb.clone().applyMatrix4(m4),wri:wri};
+  /* the bones of the arm have to hang with it, or the forearm pivots from the old elbow */
+  if(useBones){const Rm=new THREE.Matrix4().makeRotationZ(th),bd=q>0?'R':'L';
+   ['elbow_','wrist_','hand_'].forEach(k=>{if(B[k+bd])B[k+bd].position.applyMatrix4(Rm)});}
  });
  const conv=m=>{const o=new THREE.MeshPhongMaterial({map:m.map||null,color:m.color?m.color.clone():new THREE.Color(0xffffff),shininess:13,specular:0x1d2229,emissive:0x2f363e});
   if(/MAIL/i.test(m.name||''))o.color.setHex(0xb9bfc6);
@@ -982,6 +996,8 @@ function rigKnight(src){
  const old=pl,p0=old?old.position.clone():new THREE.Vector3(),r0=old?old.rotation.y:0;
  HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);
  const U=pl.userData;U.ml=m;U.boots=[];U.knees=[];U.ankles=[];U.arm={};
+ U.spine=useBones?B['spine_02']:null;U.chest=useBones?B['chest']:null;U.neck=useBones?B['neck']:null;
+ U.clav=useBones?{l:B['clavicle_L'],r:B['clavicle_R']}:null;U.bones=useBones;
  let minY=1e9;Object.keys(P).forEach(n=>{const b=bbx(n);if(b)minY=Math.min(minY,b.min.y)});
  const SC=KN_SC,mdl=new THREE.Group();mdl.scale.setScalar(SC);mdl.position.y=.69-SC*minY;m.add(mdl);U.mdl=mdl;
  const put=(o,pivot,grp,bake)=>{if(bake)o.geometry.applyMatrix4(bake);
@@ -1009,9 +1025,13 @@ function rigKnight(src){
   return [mk(A),mk(B)];
  };
  [-1,1].forEach(q=>{const j=J[q],i=q>0?1:0,f=q>0?'1':'-1';
-  const H=new THREE.Group();H.position.copy(j.hip);mdl.add(H);U.boots[i]=H;
-  const K=new THREE.Group();K.position.copy(j.knee).sub(j.hip);H.add(K);U.knees[i]=K;
-  const A=new THREE.Group();A.position.copy(j.ank).sub(j.knee);K.add(A);U.ankles[i]=A;
+  const BS=q>0?'R':'L';
+  let H=useBones?B['hip_'+BS]:null,K=useBones?B['knee_'+BS]:null,A=useBones?B['ankle_'+BS]:null;
+  if(H&&K&&A){mdl.add(B['pelvis'])}
+  else{H=new THREE.Group();H.position.copy(j.hip);mdl.add(H);
+   K=new THREE.Group();K.position.copy(j.knee).sub(j.hip);H.add(K);
+   A=new THREE.Group();A.position.copy(j.ank).sub(j.knee);K.add(A)}
+  U.boots[i]=H;U.knees[i]=K;U.ankles[i]=A;
   if(P['thigh_mail_'+f]){
    const tm=P['thigh_mail_'+f],span=Math.abs(j.hip.y-j.knee.y);
    const halves=splitAtY(tm,j.knee.y+span*.14,span*.24);
@@ -1026,14 +1046,23 @@ function rigKnight(src){
   PLAK=Math.max(.1,j.knee.y-j.ank.y);
  });
  [-1,1].forEach(q=>{const a=ARM[q];const f=q>0?'1':'-1',sx=(a.up.x>=0?1:-1);
-  const S=new THREE.Group();S.position.copy(a.up);S.position.x-=sx*.014;mdl.add(S);
-  const E=new THREE.Group();E.position.copy(a.lo).sub(a.up);S.add(E);S.el=E;S.hand=[];
+  const BS=q>0?'R':'L';
+  let S=useBones?B['shoulder_'+BS]:null,E=useBones?B['elbow_'+BS]:null;
+  const CLV=useBones?B['clavicle_'+BS]:null;
+  if(!S||!E){S=new THREE.Group();S.position.copy(a.up);S.position.x-=sx*.014;mdl.add(S);
+   E=new THREE.Group();E.position.copy(a.lo).sub(a.up);S.add(E)}
+  S.el=E;S.hand=[];
   ['upper_mail_'+f,'rerebrace_'+f].forEach(n=>{if(P[n]){put(P[n],a.up,S,a.m4);used[n]=1}});
   const phalf=new THREE.Matrix4().makeTranslation(a.up.x,a.up.y,a.up.z)
    .multiply(new THREE.Matrix4().makeRotationZ(a.th*.78))
    .multiply(new THREE.Matrix4().makeTranslation(-a.up.x,-a.up.y,-a.up.z));
+  /* on a skeleton the pauldron belongs to the clavicle, not the arm */
+  if(CLV&&B['shoulder_'+BS]){const cp=bv('clavicle_'+BS)||a.up;
+   ['pauldron_'+f,'pauldron_fin_'+f,'pauldron_lame_'+f+'_0','pauldron_lame_'+f+'_1'].forEach(n=>{
+    if(P[n]){put(P[n],cp,CLV,false);used[n]=1}});
+  }else{
   ['pauldron_'+f,'pauldron_fin_'+f,'pauldron_lame_'+f+'_0','pauldron_lame_'+f+'_1'].forEach(n=>{
-   if(P[n]){put(P[n],a.up,S,phalf);used[n]=1}});
+   if(P[n]){put(P[n],a.up,S,phalf);used[n]=1}});}
   Object.keys(P).forEach(n=>{if(used[n])return;
    if(n.indexOf('hand_'+f)===0){S.hand.push(put(P[n],a.lo,E,new THREE.Matrix4().multiplyMatrices(a.hand,a.m4)));used[n]=1}
    else if((n.indexOf('elbow_lame_')===0||n.indexOf('vambrace_')===0||n.indexOf('couter_')===0)&&n.slice(-2)===('_'+f).slice(-2)){put(P[n],a.lo,E,a.m4);used[n]=1}
@@ -1057,7 +1086,8 @@ function rigKnight(src){
  });
  const gr=bbx('gorget'),hb=bbx('helm');
  if(gr&&hb){const np=new THREE.Vector3(gr.getCenter(new THREE.Vector3()).x,gr.max.y,gr.getCenter(new THREE.Vector3()).z);
-  const HD=new THREE.Group();HD.position.copy(np);mdl.add(HD);U.head=HD;
+  const HB=(useBones&&B['head'])?B['head']:null;if(HB)np.copy(bv('head')||np);
+  const HD=HB||new THREE.Group();if(!HB){HD.position.copy(np);mdl.add(HD)}U.head=HD;
   ['helm','helm_rim','helm_brow','visor','gorget','gorget_back','gorget_fin_1','gorget_fin_-1','mail_collar'].concat(
     Object.keys(P).filter(n=>/^bar\d$|^hole\d$/.test(n))).forEach(n=>{if(P[n]){const o=P[n];
       o.material=conv(o.material);o.position.set(-np.x,-np.y,-np.z);HD.add(o);used[n]=1}});
@@ -1072,7 +1102,8 @@ function rigKnight(src){
  }
  const cb=bbx('cape');
  if(cb){const pv=new THREE.Vector3(cb.getCenter(new THREE.Vector3()).x,cb.max.y,cb.getCenter(new THREE.Vector3()).z);
-  const C=new THREE.Group();C.position.copy(pv);mdl.add(C);U.robe=C;
+  const CR=(useBones&&B['cape_02'])?B['cape_02']:null;if(CR)pv.copy(bv('cape_02')||pv);
+  const C=CR||new THREE.Group();if(!CR){C.position.copy(pv);mdl.add(C)}U.robe=C;
   ['cape','cape_mantle','cape_collar'].forEach(n=>{if(P[n]){
    if(n==='cape'){const gp=P[n].geometry,po=gp.attributes.position;
     for(let i=0;i<po.count;i++){const x=po.getX(i),y=po.getY(i);po.setZ(i,po.getZ(i)+Math.sin(x*24)*.010*(.35+Math.min(1,Math.abs(y-.9)*2)))}
@@ -1087,7 +1118,10 @@ function rigKnight(src){
  Object.keys(P).forEach(n=>{const o=P[n];if(used[n])return;
   if(/^(helm|visor|bar\d|hole\d|gorget|mail_collar)/.test(n)&&U.head){o.material=conv(o.material);U.head.add(o);return}
   if(n.indexOf('cape')===0&&U.robe)return;
-  o.material=conv(o.material);o.position.set(0,0,0);mdl.add(o);});
+  o.material=conv(o.material);
+  const CP=(useBones&&B['chest'])?bv('chest'):null;
+  if(CP){o.position.set(-CP.x,-CP.y,-CP.z);B['chest'].add(o)}
+  else{o.position.set(0,0,0);mdl.add(o)}});
  if(old)scene.remove(old);
  pl.position.copy(p0);pl.rotation.y=r0;shade(pl,6);scene.add(pl);HQ=0;PLDIP=1;KN_LOADED=1;
 }
@@ -1416,8 +1450,16 @@ function extras(z){if(z==3)hamlet();if(z<3)arena(z);glowSprite(BF.x,12,BF.y,0xff
  if(z<2){const gm=new THREE.BufferGeometry(),v=[];for(let i=0;i<140;i++)v.push(rnd(-20,340),rnd(2,60),rnd(40,250));gm.setAttribute("position",new THREE.Float32BufferAttribute(v,3));motes=new THREE.Points(gm,new THREE.PointsMaterial({color:z?0xb090ff:0xb8ff70,size:2.4,transparent:true,opacity:.85}));motes.base=v.slice();world.add(motes)}else motes=null}
 function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
  if(world)scene.remove(world);world=new THREE.Group();scene.add(world);em.clear();tm.clear();pm.clear();sparks=[];decor=[];if(rain)scene.remove(rain);rain=null;
+ (function(){const base=playerPose;playerPose=function(p,mv){base(p,mv);
+  const U=pl&&pl.userData;if(!U||!U.chest)return;const t=G.t,w=(mv&&!p.act)?1:0,sf=Math.sin(t*7.6);
+  U.chest.rotation.x=-.02+Math.sin(t*1.6)*.012+w*.03;
+  U.chest.rotation.y=sf*.055*w+Math.sin(t*.7)*.02;
+  if(U.neck)U.neck.rotation.y=-sf*.03*w;
+  if(U.head)U.head.rotation.x=Math.sin(t*1.1)*.015;
+  if(U.clav){U.clav.l&&(U.clav.l.rotation.z=Math.sin(t*1.6)*.012);U.clav.r&&(U.clav.r.rotation.z=-Math.sin(t*1.6)*.012)}
+  if(U.spine)U.spine.rotation.y=-sf*.03*w;};})();
  if(!pl)buildPlayer2();
- if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(new URLSearchParams(location.search).get('k'))||(location.pathname.indexOf('/lab/')>=0?'../knight_tpose.glb':'knight_tpose.glb');
+ if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(new URLSearchParams(location.search).get('k'))||(location.pathname.indexOf('/lab/')>=0?'../knight_rig.glb':'knight_rig.glb');
   new THREE.GLTFLoader().load(KU,g=>{try{rigKnight(g.scene)}catch(e){console.warn('knight rig failed',e)}},undefined,e=>console.warn('knight load failed',e))}
  camT.x=P.x;camT.z=P.y;
  const T=[[0x0a2624,"#1d2a1e","#34452e",0x6a8a7a,.6],[0x241a3a,"#241e30","#3a3248",0x8a70c0,.55],[0x0a1518,"#2a1d14","#3d2a1c",0x7a98a8,.5],[0x08161a,"#1b2f19","#2d4a26",0x8aa890,.62]][z];
