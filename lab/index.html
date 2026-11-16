@@ -592,26 +592,28 @@ function mkItemMesh(it){const g=new THREE.Group();g.position.set(it.x,0,it.y);
  else{const c=it.k=="drop"?W[it.w].col:IT[it.it].c,o=new THREE.Mesh(new THREE.OctahedronGeometry(it.k=="drop"?4.5:2.2),new THREE.MeshBasicMaterial({color:c}));o.position.y=6;g.add(o);it.orb=o;glow(c,it.k=="drop"?90:30,6);
   if(it.k=="drop"){const bm=new THREE.Mesh(new THREE.CylinderGeometry(3,6,200,10,1,true),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.25,fog:false,depthWrite:false,blending:THREE.AdditiveBlending,side:2}));bm.position.y=100;g.add(bm)}}
  world.add(g);it.m=g}
-/* ===== armour: five plates, each left somewhere in the world, each worn on its own =====
-   the files are looked up by any of these names, so an upload works whatever it is called */
+/* ===== armour: five plates, each left somewhere in the world, each worn on its own ===== */
 const ARM=[
- {sl:"head", n:"Rusted sallet",        d:"the brow bar is bent over one eye", zone:0,x:250,y:420,
-  files:["armour_helm.glb","helm.glb","helmet.glb","armour_head.glb","head_armour.glb"]},
- {sl:"chest",n:"Riveted cuirass",      d:"plate over mail, still holding",    zone:0,x:90,y:640,
-  files:["armour_chest.glb","chest.glb","cuirass.glb","armour_torso.glb","torso.glb"]},
- {sl:"arms", n:"Rerebrace and vambrace",d:"couters at the elbow",             zone:3,x:470,y:540,
-  files:["armour_arms.glb","arms.glb","armour_arm.glb","vambrace.glb","gauntlets.glb"]},
- {sl:"legs", n:"Cuisse and greave",    d:"poleyns at the knee",               zone:3,x:1000,y:1120,
-  files:["armour_legs.glb","legs.glb","armour_leg.glb","greaves.glb","cuisse.glb"]},
- {sl:"feet", n:"Sabatons",             d:"pointed steel toes",                zone:3,x:700,y:1000,
-  files:["armour_feet.glb","feet.glb","armour_feet_.glb","boots.glb","sabatons.glb"]}];
-/* where each plate hangs on the skeleton, how tall it should be in the body's own metres,
-   and how far up or down from that joint it sits */
-const ARMFIT={head:{bone:"head",   h:.34, dy: .10},
-              chest:{bone:"spine_02",h:.62, dy: .06},
-              arms:{bone:"chest",  h:.74, dy: .16},
-              legs:{bone:"pelvis", h:.80, dy:-.34},
-              feet:{bone:"pelvis", h:.22, dy:-.86}};
+ {sl:"head", n:"Rusted sallet",          d:"the brow bar is bent over one eye", zone:0,x:250,y:420,
+  files:["helmet.glb","armour_helmet.glb","helm.glb"]},
+ {sl:"chest",n:"Riveted cuirass",        d:"plate over mail, still holding",    zone:0,x:90,y:640,
+  files:["chestplate.glb","armour_chestplate.glb","chest.glb"]},
+ {sl:"arms", n:"Pauldrons and vambraces",d:"coutered at the elbow",             zone:3,x:470,y:540,
+  files:["arms.glb","armour_arms.glb"]},
+ {sl:"legs", n:"Cuisse and greave",      d:"poleyns at the knee",               zone:3,x:1000,y:1120,
+  files:["leggings.glb","armour_leggings.glb","legs.glb"]},
+ {sl:"feet", n:"Sabatons",               d:"pointed steel toes",                zone:3,x:700,y:1000,
+  files:["boots.glb","armour_boots.glb","feet.glb"]}];
+/* which bone each kind of plate rides on; the sided families are matched to a side by where
+   the plate actually sits, so nothing depends on guessing which is the right arm */
+const ARM_SEG=[[/^(helm|visor|gorget)/,"head"],[/^(cuirass|plackart|fauld|belt)/,"chest"],
+ [/^tasset/,"pelvis"],[/^pauldron/,"clavicle"],[/^(rerebrace|upperarm)/,"shoulder"],
+ [/^(couter|elbow)/,"elbow"],[/^(vambrace|forearm|gauntlet|hand)/,"elbow"],
+ [/^(cuisse|thigh)/,"hip"],[/^(poleyn|knee)/,"knee"],[/^(greave|shin|calf)/,"knee"],
+ [/^(sabaton|boot|foot|toe)/,"ankle"]];
+const ARM_BONE={head:"head",chest:"chest",pelvis:"pelvis",clavicle:"clavicle_",shoulder:"shoulder_",
+                elbow:"elbow_",hip:"hip_",knee:"knee_",ankle:"ankle_"};
+const ARM_SIDED={clavicle:1,shoulder:1,elbow:1,hip:1,knee:1,ankle:1};
 function armourURL(f){return (location.pathname.indexOf('/lab/')>=0?'../assets/':'assets/')+f}
 function loadArmour(){
  if(typeof pl==="undefined"||!pl||!pl.userData||!pl.userData.B)return;
@@ -620,32 +622,54 @@ function loadArmour(){
   const next=()=>{
    if(i>=a.files.length)return;              /* none of the names are there: leave it missing */
    const f=a.files[i++];
-   new THREE.GLTFLoader().load(armourURL(f),g=>{try{wearPiece(a,g.scene)}
+   new THREE.GLTFLoader().load(armourURL(f),g=>{try{dressArmour(a,g.scene)}
      catch(e){console.warn("armour "+a.sl+" failed",e)}},undefined,()=>next());
   };
   next();
  });
 }
-/* the piece is centred on its own bounding box, scaled to the height it should be, and hung
-   from a bone, so it moves with the body instead of floating beside it */
-function wearPiece(a,obj){
- const U=pl.userData,B=U.B,fit=ARMFIT[a.sl],bone=B&&B[fit.bone];
- if(!bone)return;
- obj.updateMatrixWorld(true);
- const bb=new THREE.Box3().setFromObject(obj),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3());
- if(!sz.y)return;
- obj.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false}});
- obj.position.set(-ct.x,-ct.y,-ct.z);
- const g=new THREE.Group();
- g.add(obj);
- g.scale.setScalar((fit.h/sz.y)/KN_SC);
- const at=new THREE.Vector3();bone.getWorldPosition(at);
- const local=bone.worldToLocal(at.clone());
- g.position.set(local.x,local.y+fit.dy,local.z);
- bone.add(g);
- U.gear=U.gear||{};U.gear[a.sl]=g;
- g.visible=!!EQ[a.sl];
- return g;
+/* every plate in the pack is a separate piece already sitting in the body's own space, so each
+   one is baked into place and then hung from the bone it covers - the sabatons on the ankles,
+   the couter and vambrace on the elbows - and moves with that bone as he walks and swings */
+function dressArmour(a,root){
+ const U=pl.userData,B=U.B,mdl=U.mdl;
+ if(!B||!mdl)return 0;
+ root.rotation.y=Math.PI;                     /* the pack faces the same way the body did */
+ root.updateMatrixWorld(true);
+ const bonePos={};
+ const posOf=n=>{
+  if(!bonePos[n]){const v=new THREE.Vector3();if(!B[n])return null;B[n].getWorldPosition(v);bonePos[n]=mdl.worldToLocal(v)}
+  return bonePos[n];
+ };
+ const holders=[];
+ root.traverse(o=>{
+  if(!o.isMesh)return;
+  const nm=(o.name||(o.parent&&o.parent.name)||"").toLowerCase();
+  const seg=ARM_SEG.find(t=>t[0].test(nm));
+  if(!seg)return;
+  const fam=seg[1],g=o.geometry.clone();
+  g.applyMatrix4(o.matrixWorld);               /* bake the node's transform into the geometry */
+  g.computeBoundingBox();
+  const c=g.boundingBox.getCenter(new THREE.Vector3());
+  let bname=ARM_BONE[fam];
+  if(ARM_SIDED[fam]){
+   const pr=posOf(fam+"_R");if(!pr)return;
+   bname=fam+((c.x>=0)===(pr.x>=0)?"_R":"_L");
+  }
+  const bone=B[bname],at=posOf(bname);
+  if(!bone||!at)return;
+  const m=new THREE.Mesh(g,o.material);
+  m.castShadow=true;m.frustumCulled=false;
+  m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
+  const h=new THREE.Group();
+  h.scale.setScalar(1/KN_SC);                  /* the bones live inside the scaled model */
+  h.add(m);bone.add(h);
+  holders.push(h);
+ });
+ if(!holders.length)return 0;
+ U.gear=U.gear||{};U.gear[a.sl]=holders;
+ const on=!!EQ[a.sl];holders.forEach(h=>h.visible=on);
+ return holders.length;
 }
 function mkItems(){G.items=[];const z=G.z;pwm.clear();
  for(const w of z==3?WI:DL[z]){const done=!!S.taken[w.id];if(done&&w.k!="chest")continue;const it=Object.assign({},w),p=freeSpot(w.x,w.y,w.k=="chest"?10:7);it.x=p[0];it.y=p[1];it.done=done;if(it.k=="pick")it.lab="Pick up "+IT[w.it].n;if(it.k=="chest")cBox("b",it.x,it.y,12,8);G.items.push(it);mkItemMesh(it)}
@@ -722,7 +746,9 @@ function slotOf(n){
  return null;
 }
 function applyEquip(){
- if(pl&&pl.userData&&pl.userData.gear)for(const k in pl.userData.gear){const g=pl.userData.gear[k];if(g)g.visible=!!EQ[k]}
+ const GG=pl&&pl.userData&&pl.userData.gear;
+ if(GG)for(const k in GG){const arr=Array.isArray(GG[k])?GG[k]:[GG[k]],on=!!EQ[k];
+  for(const h of arr)if(h)h.visible=on}
  if(NOARM)return;                        /* nothing to put on yet */
  if(typeof pl==="undefined"||!pl||!pl.userData.parts)return;
  const U=pl.userData;
