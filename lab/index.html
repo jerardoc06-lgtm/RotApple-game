@@ -662,8 +662,7 @@ function dressArmour(a,root){
   m.castShadow=true;m.frustumCulled=false;
   m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
   const h=new THREE.Group();
-  h.scale.setScalar(1/KN_SC);                  /* the bones live inside the scaled model */
-  h.add(m);bone.add(h);
+  h.add(m);bone.add(h);                        /* the bones already carry the model's scale */
   holders.push(h);
  });
  if(!holders.length)return 0;
