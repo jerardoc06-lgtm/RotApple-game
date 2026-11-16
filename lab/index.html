@@ -678,7 +678,10 @@ function dressArmour(a,root){
    else{a0=posOf("elbow_"+bname.slice(-1));a1=posOf("wrist_"+bname.slice(-1))}
    if(a0&&a1){
     const t=new THREE.Vector3().lerpVectors(a0,a1,along);
-    if(fam==="pauldron")t.x+=side*(fam==="pauldron"?.03:0);
+    /* each of these is a half shell, open on the side that faces the body: centred on the bone
+       it straddles the arm and the arm shows through the gap, so it is pushed outboard by
+       roughly half its own thickness to nest over the limb instead */
+    t.x+=side*(fam==="rerebrace"?.055:fam==="vambrace"?.045:fam==="couter"?.035:.012);
     m.position.copy(t).sub(at);
    }
   }
