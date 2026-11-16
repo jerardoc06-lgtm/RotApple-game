@@ -678,7 +678,12 @@ function dressArmour(a,root){
    }
    /* the rerebrace, couter and vambrace are open shells authored around a wider arm. Turned to
       face the other way the opening falls behind the arm, so from the front it reads plated */
-   if(kind!=="pauldron"){m.rotation.y=Math.PI;m.scale.set(.94,1,.94)}
+   if(kind!=="pauldron"){
+    /* turned a quarter toward the body's front, which is where these shells close: the four
+       quarter turns were compared side by side and this is the one that wraps the arm */
+    m.rotation.y=(sfx==="1")?-Math.PI/2:Math.PI/2;
+    m.scale.set(.94,1,.94);
+   }
   }
   const h=new THREE.Group();
   h.add(m);bone.add(h);                        /* the bones already carry the model's scale */
