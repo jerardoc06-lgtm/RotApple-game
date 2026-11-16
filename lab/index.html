@@ -972,11 +972,36 @@ function rigKnight(src){
  const put=(o,pivot,grp,bake)=>{if(bake)o.geometry.applyMatrix4(bake);
    o.position.set(-pivot.x,-pivot.y,-pivot.z);o.material=conv(o.material);grp.add(o);return o};
  const used={},o_keep=[];
+ const splitAtY=(o,yCut,band)=>{
+  const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();
+  const po=g.attributes.position,uv=g.attributes.uv,nr=g.attributes.normal;
+  const A={p:[],u:[],n:[]},B={p:[],u:[],n:[]};
+  for(let i=0;i<po.count;i+=3){
+   const cy=(po.getY(i)+po.getY(i+1)+po.getY(i+2))/3;
+   const take=t=>{for(let k=0;k<3;k++){t.p.push(po.getX(i+k),po.getY(i+k),po.getZ(i+k));
+     if(uv)t.u.push(uv.getX(i+k),uv.getY(i+k));if(nr)t.n.push(nr.getX(i+k),nr.getY(i+k),nr.getZ(i+k))}};
+   if(cy>yCut-band)take(A);
+   if(cy<yCut+band)take(B);
+  }
+  const mk=t=>{const gg=new THREE.BufferGeometry();
+   gg.setAttribute('position',new THREE.Float32BufferAttribute(t.p,3));
+   if(uv)gg.setAttribute('uv',new THREE.Float32BufferAttribute(t.u,2));
+   if(nr)gg.setAttribute('normal',new THREE.Float32BufferAttribute(t.n,3));
+   return gg};
+  return [mk(A),mk(B)];
+ };
  [-1,1].forEach(q=>{const j=J[q],i=q>0?1:0,f=q>0?'1':'-1';
   const H=new THREE.Group();H.position.copy(j.hip);mdl.add(H);U.boots[i]=H;
   const K=new THREE.Group();K.position.copy(j.knee).sub(j.hip);H.add(K);U.knees[i]=K;
   const A=new THREE.Group();A.position.copy(j.ank).sub(j.knee);K.add(A);U.ankles[i]=A;
-  ['thigh_mail_'+f,'cuisse_'+f].forEach(n=>{if(P[n]){put(P[n],j.hip,H,false);used[n]=1}});
+  if(P['thigh_mail_'+f]){
+   const tm=P['thigh_mail_'+f],span=Math.abs(j.hip.y-j.knee.y);
+   const halves=splitAtY(tm,j.knee.y+span*.14,span*.24);
+   const hi=new THREE.Mesh(halves[0],tm.material);hi.name=tm.name+'_hip';
+   const lo=new THREE.Mesh(halves[1],tm.material);lo.name=tm.name+'_knee';
+   put(hi,j.hip,H,false);put(lo,j.knee,K,false);used[tm.name]=1;
+  }
+  ['cuisse_'+f].forEach(n=>{if(P[n]){put(P[n],j.hip,H,false);used[n]=1}});
   ['knee_'+f,'knee_point_'+f].forEach(n=>{if(P[n]){put(P[n],j.knee,K,false);used[n]=1}});
   ['greave_'+f,'shin_'+f,'sabaton_'+f].forEach(n=>{if(P[n]){put(P[n],j.ank,A,false);used[n]=1}});
   PLAK=Math.max(.1,j.knee.y-j.ank.y);
