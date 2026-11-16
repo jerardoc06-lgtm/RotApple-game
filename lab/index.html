@@ -1333,9 +1333,9 @@ function playerPose(p,mv){
  /* empty hands swing: the shoulder travels about twenty degrees either way, the elbow folds
     only on the half of the swing where the arm comes forward, and the two arms are opposed */
  if(NOARM&&walking){
-  const wA=Math.sin(ph-.55);
-  rx=-.12-sf*.34;  re=-.16-Math.max(0, wA)*.45;
-  lx=-.12+sf*.34;  le=-.16-Math.max(0,-wA)*.45;
+  const wA=Math.sin(ph-.5);          /* the elbow trails the shoulder by a fraction of a stride */
+  rx=-.02-sf*.42;  re=-.06-Math.max(0, wA)*.50;
+  lx=-.02+sf*.42;  le=-.06-Math.max(0,-wA)*.50;
   rz=.15; lz=-.15;
  }
  // ---- guard: shield up across the chest, body turned into it
