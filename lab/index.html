@@ -585,17 +585,85 @@ function mkItemMesh(it){const g=new THREE.Group();g.position.set(it.x,0,it.y);
   const bar=new THREE.Mesh(BX(3.2,.75,.3),MT(0x98a0ac));bar.position.set(0,5.7,.44);g.add(bar);
   const bar2=new THREE.Mesh(BX(.75,4.9,.3),MT(0x98a0ac));bar2.position.set(0,4.2,.44);g.add(bar2);
   g.children.forEach(m=>m.castShadow=true);glow(0xbcd8ff,60,5)}
+ else if(it.k==="armour"){g.rotation.y=.4;
+  const plate=new THREE.Mesh(BX(4.6,3.4,.7),MT(0x9aa4b0,0x2a3038));plate.position.y=4.6;g.add(plate);
+  const band=new THREE.Mesh(BX(4.9,.7,1),MT(0xc8a030,0x403008));band.position.y=4.6;g.add(band);
+  g.children.forEach(m=>m.castShadow=true);glow(0xffd060,44,5)}
  else{const c=it.k=="drop"?W[it.w].col:IT[it.it].c,o=new THREE.Mesh(new THREE.OctahedronGeometry(it.k=="drop"?4.5:2.2),new THREE.MeshBasicMaterial({color:c}));o.position.y=6;g.add(o);it.orb=o;glow(c,it.k=="drop"?90:30,6);
   if(it.k=="drop"){const bm=new THREE.Mesh(new THREE.CylinderGeometry(3,6,200,10,1,true),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.25,fog:false,depthWrite:false,blending:THREE.AdditiveBlending,side:2}));bm.position.y=100;g.add(bm)}}
  world.add(g);it.m=g}
+/* ===== armour: five plates, each left somewhere in the world, each worn on its own =====
+   the files are looked up by any of these names, so an upload works whatever it is called */
+const ARM=[
+ {sl:"head", n:"Rusted sallet",        d:"the brow bar is bent over one eye", zone:0,x:250,y:420,
+  files:["armour_helm.glb","helm.glb","helmet.glb","armour_head.glb","head_armour.glb"]},
+ {sl:"chest",n:"Riveted cuirass",      d:"plate over mail, still holding",    zone:0,x:90,y:640,
+  files:["armour_chest.glb","chest.glb","cuirass.glb","armour_torso.glb","torso.glb"]},
+ {sl:"arms", n:"Rerebrace and vambrace",d:"couters at the elbow",             zone:3,x:470,y:540,
+  files:["armour_arms.glb","arms.glb","armour_arm.glb","vambrace.glb","gauntlets.glb"]},
+ {sl:"legs", n:"Cuisse and greave",    d:"poleyns at the knee",               zone:3,x:1000,y:1120,
+  files:["armour_legs.glb","legs.glb","armour_leg.glb","greaves.glb","cuisse.glb"]},
+ {sl:"feet", n:"Sabatons",             d:"pointed steel toes",                zone:3,x:700,y:1000,
+  files:["armour_feet.glb","feet.glb","armour_feet_.glb","boots.glb","sabatons.glb"]}];
+/* where each plate hangs on the skeleton, how tall it should be in the body's own metres,
+   and how far up or down from that joint it sits */
+const ARMFIT={head:{bone:"head",   h:.34, dy: .10},
+              chest:{bone:"spine_02",h:.62, dy: .06},
+              arms:{bone:"chest",  h:.74, dy: .16},
+              legs:{bone:"pelvis", h:.80, dy:-.34},
+              feet:{bone:"pelvis", h:.22, dy:-.86}};
+function armourURL(f){return (location.pathname.indexOf('/lab/')>=0?'../assets/':'assets/')+f}
+function loadArmour(){
+ if(typeof pl==="undefined"||!pl||!pl.userData||!pl.userData.B)return;
+ ARM.forEach(a=>{
+  let i=0;
+  const next=()=>{
+   if(i>=a.files.length)return;              /* none of the names are there: leave it missing */
+   const f=a.files[i++];
+   new THREE.GLTFLoader().load(armourURL(f),g=>{try{wearPiece(a,g.scene)}
+     catch(e){console.warn("armour "+a.sl+" failed",e)}},undefined,()=>next());
+  };
+  next();
+ });
+}
+/* the piece is centred on its own bounding box, scaled to the height it should be, and hung
+   from a bone, so it moves with the body instead of floating beside it */
+function wearPiece(a,obj){
+ const U=pl.userData,B=U.B,fit=ARMFIT[a.sl],bone=B&&B[fit.bone];
+ if(!bone)return;
+ obj.updateMatrixWorld(true);
+ const bb=new THREE.Box3().setFromObject(obj),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3());
+ if(!sz.y)return;
+ obj.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false}});
+ obj.position.set(-ct.x,-ct.y,-ct.z);
+ const g=new THREE.Group();
+ g.add(obj);
+ g.scale.setScalar((fit.h/sz.y)/KN_SC);
+ const at=new THREE.Vector3();bone.getWorldPosition(at);
+ const local=bone.worldToLocal(at.clone());
+ g.position.set(local.x,local.y+fit.dy,local.z);
+ bone.add(g);
+ U.gear=U.gear||{};U.gear[a.sl]=g;
+ g.visible=!!EQ[a.sl];
+ return g;
+}
 function mkItems(){G.items=[];const z=G.z;pwm.clear();
  for(const w of z==3?WI:DL[z]){const done=!!S.taken[w.id];if(done&&w.k!="chest")continue;const it=Object.assign({},w),p=freeSpot(w.x,w.y,w.k=="chest"?10:7);it.x=p[0];it.y=p[1];it.done=done;if(it.k=="pick")it.lab="Pick up "+IT[w.it].n;if(it.k=="chest")cBox("b",it.x,it.y,12,8);G.items.push(it);mkItemMesh(it)}
+ for(const a of ARM){if(a.zone!==z)continue;const id="arm_"+a.sl;if(S.taken[id])continue;
+  const p=freeSpot(a.x,a.y,7),it={id:id,k:"armour",sl:a.sl,x:p[0],y:p[1],lab:"Take the "+a.n};
+  G.items.push(it);mkItemMesh(it)}
  if(z==3&&GRAVE&&!S.taken.grave1){const g={id:"grave1",k:"pick",x:GRAVE.x+6,y:GRAVE.y+2,it:"whet",lab:"Search the shallow grave",loot:[["runes",180],["whet",1]]};G.items.push(g);mkItemMesh(g)}
  if(z<3&&G.defeated[z]&&!S.own[8+z])addDrop(z,160,105);if(z==3&&S.ogre&&!S.own[11])addDropO(OGL.x,OGL.y)}
 function addDrop(z,x,y){if(G.items.some(i=>i.id=="drop"+z))return;const w=8+z,it={id:"drop"+z,k:"drop",x,y,w,lab:"Take "+W[w].n};G.items.push(it);mkItemMesh(it)}
 function nearItem(){let b=null,bd=24;for(const it of G.items){if(it.done)continue;const d=dist(P,it);if(d<bd){bd=d;b=it}}return b}
 function itemLabel(it){return it.lab+(it.req&&!have(it.req)?" (locked)":"")}
 function openItem(it){
+ if(it.k=="armour"){
+  const a=ARM.find(v=>v.sl===it.sl);if(!a)return;
+  EQ[it.sl]=1;S.taken[it.id]=1;it.done=1;world.remove(it.m);applyEquip();
+  G.banner={t:3,x:"OBTAINED: "+a.n.toUpperCase()};sfx("pick");
+  say([a.n+". "+a.d.charAt(0).toUpperCase()+a.d.slice(1)+".",
+       "(Worn. Open your bag to take it off or put it back on.)"]);return}
  if(it.k=="gear"){S.sh=1;S.taken[it.id]=1;it.done=1;world.remove(it.m);G.banner={t:3,x:"OBTAINED: KITE SHIELD"};
   say(["A knight's kite shield, rimed with frost and orchard dust.","(Hold G to raise it. It turns aside blades and arrows — but a charging ogre will go straight through it.)"]);return}
  if(it.k=="drop"){S.own[it.w]=1;S.w=it.w;it.done=1;world.remove(it.m);G.banner={t:3,x:"OBTAINED: "+W[it.w].n.toUpperCase()};say(["The hollow lord’s relic still burns: "+W[it.w].n+".","(Equipped. Swap weapons from your Bag or at a bonfire.)",W[it.w].ad]);return}
@@ -609,8 +677,10 @@ function invMenu(msg){const ids=Object.keys(S.inv),own=S.own.map((o,i)=>o?i:-1).
  if(!ids.length)b.push({h:"(nothing but dust)"});
  ids.forEach(id=>b.push({l:IT[id].n+" ×"+S.inv[id]+" — "+IT[id].d,f:()=>useItem(id)}));
  b.push({h:"Weapons"});own.forEach(i=>b.push({l:(S.w==i?"✔ ":"Equip ")+W[i].n+" (dmg "+(W[i].d>=0?"+":"")+W[i].d+", reach "+W[i].r+")"+(W[i].ab?" — "+W[i].ad:""),f:()=>{S.w=i;invMenu()}}));
- if(!NOARM){b.push({h:"Worn"});
-  Object.keys(ES).forEach(sl=>b.push({l:ES[sl]+" — "+(EQ[sl]?EITEM[sl].n:"nothing")+"\u2003",f:()=>slotMenu(sl)}));}
+ b.push({h:"Worn"});
+  ARM.forEach(a=>{const has=S.taken["arm_"+a.sl];
+   b.push({l:ES[a.sl]+" \u2014 "+(has?(EQ[a.sl]?a.n:"nothing (taken off)"):"not found yet")+"\u2003",
+    f:()=>{if(!has)return;EQ[a.sl]=EQ[a.sl]?0:1;applyEquip();invMenu()}});});
  b.push({l:"Close",f:closeMenu});
  const eqn=Object.keys(ES).filter(k=>EQ[k]).length;
  menu("Inventory",msg||"RUNES "+S.r+"   \u00b7   FLASKS "+P.fl+"   \u00b7   HP "+Math.ceil(P.hp)+"/"+mhp()
@@ -652,6 +722,7 @@ function slotOf(n){
  return null;
 }
 function applyEquip(){
+ if(pl&&pl.userData&&pl.userData.gear)for(const k in pl.userData.gear){const g=pl.userData.gear[k];if(g)g.visible=!!EQ[k]}
  if(NOARM)return;                        /* nothing to put on yet */
  if(typeof pl==="undefined"||!pl||!pl.userData.parts)return;
  const U=pl.userData;
@@ -1207,7 +1278,7 @@ function rigKnight(src){
  /* the body that goes under the armour, if the file is there */
  if(useBones){
   const BU=(location.pathname.indexOf('/lab/')>=0?'../assets/body.glb':'assets/body.glb');
-  new THREE.GLTFLoader().load(BU,g=>{try{attachBody(g.scene)}catch(e){console.warn('body rig failed',e)}},
+  new THREE.GLTFLoader().load(BU,g=>{try{attachBody(g.scene);setTimeout(loadArmour,0)}catch(e){console.warn('body rig failed',e)}},
    undefined,e=>console.warn('body load failed',e));
  }
 }
