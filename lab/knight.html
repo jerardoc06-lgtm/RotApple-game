@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Knight — model check</title>
+<style>html,body{margin:0;background:#0d1a1a;overflow:hidden;font:12px/1.5 ui-monospace,monospace;color:#9fc0bf}
+#i{position:fixed;left:12px;top:12px;white-space:pre;opacity:.85;text-shadow:0 1px 0 #000}
+#b{position:fixed;right:12px;top:12px;display:flex;gap:6px}
+button{font:11px ui-monospace,monospace;background:#18282a;color:#bcd;border:1px solid #2e4a4c;padding:5px 8px;border-radius:3px;cursor:pointer}
+button:hover{background:#22383a}</style></head><body>
+<div id="i">loading…</div>
+<div id="b"><button data-a="0">front</button><button data-a="1.5708">side</button><button data-a="3.1416">back</button><button data-a="auto">spin</button></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x0d1a1a);
+scene.fog=new THREE.Fog(0x0d1a1a,70,150);
+const cam=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.5,600);
+const ren=new THREE.WebGLRenderer({antialias:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);
+ren.outputEncoding=THREE.sRGBEncoding;document.body.appendChild(ren.domElement);
+scene.add(new THREE.HemisphereLight(0x8fb0b4,0x0e1418,1.15));
+const key=new THREE.DirectionalLight(0xe8f2f4,1.25);key.position.set(-5,9,7);scene.add(key);
+const rim=new THREE.DirectionalLight(0x7f9fd0,.55);rim.position.set(7,4,-8);scene.add(rim);
+const g=new THREE.Group();scene.add(g);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(16,28),new THREE.MeshPhongMaterial({color:0x16262a,shininess:4}));
+floor.rotation.x=-Math.PI/2;scene.add(floor);
+
+let ang=0,spin=true,ready=false;
+new THREE.GLTFLoader().load('../knight_tpose.glb',gl=>{
+  const m=gl.scene;let tris=0,parts=0;
+  m.traverse(o=>{if(o.isMesh){parts++;
+    const gc=o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count;
+    tris+=gc/3;
+    const src=o.material;
+    const mat=new THREE.MeshPhongMaterial({map:src.map||null,color:0xffffff,shininess:22,specular:0x2b333a});
+    if(mat.map){mat.map.encoding=THREE.sRGBEncoding;mat.map.needsUpdate=true;}
+    o.material=mat;}});
+  const bb=new THREE.Box3().setFromObject(m),sz=new THREE.Vector3();bb.getSize(sz);
+  const c=new THREE.Vector3();bb.getCenter(c);
+  const s=21/sz.y;                          // 21 = the game's unit height
+  m.scale.setScalar(s);
+  m.position.copy(c).multiplyScalar(-s);    // centre, then stand the feet on the floor
+  m.position.y=-bb.min.y*s;
+  g.add(m);ready=true;
+  document.getElementById('i').textContent='parts '+parts+'   tris '+Math.round(tris)+'   textures '+8+'\nraw size '+sz.x.toFixed(2)+' x '+sz.y.toFixed(2)+' x '+sz.z.toFixed(2)+' m\nscale to game units '+s.toFixed(2)+'x';
+});
+document.getElementById('b').addEventListener('click',e=>{
+  const a=e.target.dataset.a;if(!a)return;
+  if(a==='auto'){spin=!spin;return;}
+  spin=false;ang=parseFloat(a);
+});
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)});
+let drag=false,px=0;
+addEventListener('pointerdown',e=>{drag=true;px=e.clientX;spin=false});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(drag){ang+=(e.clientX-px)*.01;px=e.clientX}});
+let d=54;
+addEventListener('wheel',e=>{d=Math.max(14,Math.min(70,d+e.deltaY*.03))},{passive:true});
+(function loop(){requestAnimationFrame(loop);
+  if(spin)ang+=.006;
+  g.rotation.y=ang;
+  cam.position.set(0,11,d);cam.lookAt(0,10.6,0);
+  ren.render(scene,cam);})();
+</script></body></html>
