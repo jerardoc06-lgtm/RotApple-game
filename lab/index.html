@@ -799,9 +799,9 @@ function updP(dt){
  const ix=(K.d?1:0)-(K.a?1:0)+JX,iy=(K.s?1:0)-(K.w?1:0)+JY,il=Math.hypot(ix,iy)||1,cl=Math.min(1,il),cc=Math.cos(camYaw),sn=Math.sin(camYaw),mx=(cc*ix+sn*iy)/il*cl,my=(-sn*ix+cc*iy)/il*cl,ml=Math.hypot(mx,my);
  P.mv=(!P.act&&ml)?1:0;
  if(!P.act){
-  if(ml){const sp=P.blk?34:80;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml;
+  if(ml){const sp=P.blk?29:68;mv(P,mx/ml*sp*dt,my/ml*sp*dt,PR);P.fx=mx/ml;P.fy=my/ml;
    P.stp=(P.stp==null?.3:P.stp)-dt*(G.tonic>0?1.15:1);
-   if(P.stp<=0){P.stp=P.blk?.5:.34;footstep()}}
+   if(P.stp<=0){P.stp=P.blk?.59:.40;footstep()}}
   else P.stp=.12;
   if(P.lock){const lx2=P.lock.x-P.x,ly2=P.lock.y-P.y,ld=Math.hypot(lx2,ly2)||1;P.fx=lx2/ld;P.fy=ly2/ld}
   if(Pr.k&&P.st>=18){P.act="roll";P.at=0;P.st-=18;P.sd=.7;P.inv=.32;P.rx=ml?mx/ml:P.fx;P.ry=ml?my/ml:P.fy;sfx("scuff")}
@@ -1319,7 +1319,7 @@ function attachBody(src){
 function playerPose(p,mv){
  const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
  const CL=v=>v<0?0:v>1?1:v, E=v=>{v=CL(v);return v*v*(3-2*v)}, EO=v=>{v=CL(v);return 1-Math.pow(1-v,3)};
- const walking=mv&&!p.act, ph=t*7.6, sf=Math.sin(ph), cf=Math.cos(ph);
+ const walking=mv&&!p.act, ph=t*6.5, sf=Math.sin(ph), cf=Math.cos(ph);
  // ---- rest pose: sword arm hanging, shield arm set out from the body
  let lx=-.30,lz=-.15,le=-.80, rx=-.16,rz=.15,re=-.22, by=0,bx=0,bz=0,my=0,tuck=0,legA=0,legB=0;
  if(walking){
