@@ -1424,10 +1424,13 @@ function playerPose(p,mv){
    re=-.30-wind*1.05+rel*1.20;
    lx=-.15-wind*.35+rel*.55; le=-.30-wind*.25+rel*.40; lz=-.15-wind*.28+rel*.42;
    my=wind*.40-rel*.90;
-   bx=-.02-wind*.10+rel*.22;
+   bx=-.02-wind*.05+rel*.09;
    bz=-wind*.06+rel*.10;
    by=-wind*.10+rel*.14;
    tuck=wind*.26+rel*.16;
+   /* the lean comes from the spine, or the whole body tips over its feet like a plank */
+   if(U.tr.s1)U.tr.s1.rotation.x=-wind*.10+rel*.26;
+   if(U.tr.s2)U.tr.s2.rotation.x=-wind*.06+rel*.18;
   }else{
    /* smash: both hands overhead, the back arches, then the whole body drives them down */
    rx=-.10-wind*2.45+rel*2.35;
@@ -1435,9 +1438,12 @@ function playerPose(p,mv){
    re=-.30-wind*.35+rel*.58;
    lx=-.10-wind*2.30+rel*2.20; le=-.30-wind*.40+rel*.62; lz=-.10-wind*.20+rel*.26;
    my=wind*.26-rel*.50;
-   bx=-.04-wind*.30+rel*.64;
-   by=-wind*.20+rel*.28;
+   bx=-.04-wind*.10+rel*.18;
+   by=-wind*.18+rel*.26;
    tuck=wind*.28+rel*.52;
+   /* arch back over the load, then fold forward over the blow, all of it in the spine */
+   if(U.tr.s1)U.tr.s1.rotation.x=-wind*.24+rel*.55;
+   if(U.tr.s2)U.tr.s2.rotation.x=-wind*.16+rel*.34;
   }
   if(U.head)U.head.rotation.x=wind*.08-rel*.20;
  }
