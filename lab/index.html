@@ -680,6 +680,21 @@ function dressArmour(a,root){
     m.position.copy(mdl.worldToLocal(cw)).sub(at);
     break;
    }
+   /* a half shell carries its weight on the closed side: turn it so that side faces away
+      from the body, leaving the opening toward the shoulder and both arms matching */
+   if(fam==="rerebrace"||fam==="couter"||fam==="vambrace"){
+    const pa=g.getAttribute("position");
+    if(pa&&pa.count){
+     const step=Math.max(1,Math.floor(pa.count/220));
+     let sx=0,sz=0,k=0;
+     for(let i=0;i<pa.count;i+=step){sx+=pa.getX(i);sz+=pa.getZ(i);k++}
+     const dx=sx/k,dz=sz/k;
+     if(Math.abs(dx)+Math.abs(dz)>.004){
+      const want=(sfx==="1")?0:Math.PI;
+      m.rotation.y=want-Math.atan2(dz,dx);
+     }
+    }
+   }
   }
   const h=new THREE.Group();
   h.add(m);bone.add(h);                        /* the bones already carry the model's scale */
