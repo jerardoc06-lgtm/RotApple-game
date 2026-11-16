@@ -1263,6 +1263,9 @@ function attachBody(src){
  U.armOut={l:0,r:0};                 /* the outward splay was for the plates, not for skin */
  /* the trunk, so the walk can turn the body instead of swinging the arms off a rigid box */
  U.tr={pelvis:B['pelvis'],s1:B['spine_01'],s2:B['spine_02'],clavR:B['clavicle_R'],clavL:B['clavicle_L']};
+ /* the head bob and look-around were driving the armour's head group, which is hidden now:
+    point them at the body's own head bone so the nod actually lands */
+ U.head=B['head']||U.head;
  /* each piece follows the bone of its own kind of limb: a calf belongs to the knee, never
     to the ankle it happens to sit near, and the side is whichever of the two is closer */
  const kindOf=nm=>{
@@ -1318,7 +1321,8 @@ function playerPose(p,mv){
   rx=-.16-sf*.46; re=-.22-Math.max(0,wf2)*.78;
   lx=-.30+sf*.24; le=-.80-Math.max(0,-wf1)*.26;
   my=sf*.10; bz=cf*.028;
-  by=(Math.abs(cf)-1)*.15;
+  /* the body rises over the straight support leg and drops onto each strike, twice a stride */
+  by=(Math.abs(cf)-1)*.15+.055*Math.cos(ph*2);
   bx=.05+Math.abs(sf)*.02;
  }else{
   const br=Math.sin(t*1.5);
