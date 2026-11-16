@@ -1371,7 +1371,11 @@ function playerPose(p,mv){
  const kA=walking?Math.max(0,sf)*1.05:tuck*1.5, kB=walking?Math.max(0,-sf)*1.05:tuck*1.5;
  U.knees[0].rotation.x=kA;U.knees[1].rotation.x=kB;
  const hA=walking?legA:tuck*1.15, hB=walking?legB:tuck*.55;
- const ank=(h,k,e)=>-(h+k)*(walking?1:.55)+(walking?e:0);
+ /* the foot is flat while it carries weight and follows the shin while it swings: the more the
+    knee is bent, the less the ankle cancels, so the toes drop naturally instead of staying
+    pinned level as the leg walks out from under them */
+ const ank=(h,k,e)=>{const sw=Math.min(1,k/1.05),f=walking?(1-sw*.8):.55;
+  return -(h+k)*f+(walking?e:0)};
  const clampA=v=>v<-.62?-.62:v>.38?.38:v;      /* a real ankle only bends so far */
  const sl=bootSlope();
  U.ankles[0].rotation.x=clampA(ank(hA,kA,.34*Math.max(0,sf)-.15*Math.max(0,-sf))+sl[0]);U.ankles[0].rotation.z=-sl[1];
