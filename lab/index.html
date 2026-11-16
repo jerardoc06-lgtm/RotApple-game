@@ -1041,7 +1041,7 @@ function rigKnight(src){
  HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);
  const U=pl.userData;U.ml=m;U.boots=[];U.knees=[];U.ankles=[];U.arm={};U.parts=P;
  U.spine=useBones?B['spine_02']:null;U.chest=useBones?B['chest']:null;U.neck=useBones?B['neck']:null;
- U.clav=useBones?{l:B['clavicle_L'],r:B['clavicle_R']}:null;U.bones=useBones;
+ U.clav=useBones?{l:B['clavicle_L'],r:B['clavicle_R']}:null;U.bones=useBones;U.B=B;U.BWP=BWP;
  let minY=1e9;Object.keys(P).forEach(n=>{const b=bbx(n);if(b)minY=Math.min(minY,b.min.y)});
  const SC=KN_SC,mdl=new THREE.Group();mdl.scale.setScalar(SC);mdl.position.y=.69-SC*minY;m.add(mdl);U.mdl=mdl;
  const put=(o,pivot,grp,bake)=>{if(bake)o.geometry.applyMatrix4(bake);
@@ -1170,12 +1170,14 @@ function rigKnight(src){
   const md=pa.clone().add(pb).multiplyScalar(.5);
   g.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(q).setPosition(md.x,md.y,md.z));
   if(bake)g.applyMatrix4(bake);
-  const o=new THREE.Mesh(g,SKN);o.name=nm;o.position.set(-boneP.x,-boneP.y,-boneP.z);B[bone].add(o);return o;
+  const o=new THREE.Mesh(g,SKN);o.name='ph_'+nm;o.position.set(-boneP.x,-boneP.y,-boneP.z);
+  B[bone].add(o);(U.phParts=U.phParts||[]).push(o);return o;
  };
  bseg('body_torso','pelvis','neck',.150,.170,'pelvis');
  bseg('body_neck','chest','head',.058,.052,'neck');
  {const hp=BWP['head'];if(hp){const g=new THREE.SphereGeometry(.105,10,8);
-  const o=new THREE.Mesh(g,SKN);o.name='body_head';o.position.set(-hp.x,-hp.y+.075,-hp.z);B['head'].add(o)}}
+  const o=new THREE.Mesh(g,SKN);o.name='ph_body_head';o.position.set(-hp.x,-hp.y+.075,-hp.z);
+  B['head'].add(o);(U.phParts=U.phParts||[]).push(o)}}
  [-1,1].forEach(q=>{const S2=q>0?'R':'L',bake=ARM[q]&&ARM[q].m4;
   bseg('body_uarm_'+S2,'shoulder_'+S2,'elbow_'+S2,.055,.048,'shoulder_'+S2,bake);
   bseg('body_farm_'+S2,'elbow_'+S2,'wrist_'+S2,.047,.040,'elbow_'+S2,bake);
@@ -1183,7 +1185,8 @@ function rigKnight(src){
   bseg('body_shin_'+S2,'knee_'+S2,'ankle_'+S2,.066,.050,'knee_'+S2);
   const ap=BWP['ankle_'+S2];
   if(ap){const g=new THREE.BoxGeometry(.10,.055,.24);g.translate(0,-.02,-.06);
-   const o=new THREE.Mesh(g,SKN);o.name='body_foot_'+S2;o.position.set(-ap.x,-ap.y,-ap.z);B['ankle_'+S2].add(o)}
+   const o=new THREE.Mesh(g,SKN);o.name='ph_body_foot_'+S2;o.position.set(-ap.x,-ap.y,-ap.z);
+   B['ankle_'+S2].add(o);(U.phParts=U.phParts||[]).push(o)}
  });
  o_keep.forEach(o=>{o.material=conv(o.material);mdl.add(o)});
  Object.keys(P).forEach(n=>{const o=P[n];if(used[n])return;
@@ -1195,6 +1198,46 @@ function rigKnight(src){
   else{o.position.set(0,0,0);mdl.add(o)}});
  if(old)scene.remove(old);
  pl.position.copy(p0);pl.rotation.y=r0;shade(pl,6);scene.add(pl);HQ=0;PLDIP=1;KN_LOADED=1;
+ /* the body that goes under the armour, if the file is there */
+ if(useBones){
+  const BU=(location.pathname.indexOf('/lab/')>=0?'../assets/body.glb':'assets/body.glb');
+  new THREE.GLTFLoader().load(BU,g=>{try{attachBody(g.scene)}catch(e){console.warn('body rig failed',e)}},
+   undefined,e=>console.warn('body load failed',e));
+ }
+}
+function attachBody(src){
+ if(typeof pl==="undefined"||!pl||!pl.userData)return 0;
+ const U=pl.userData,B=U.B,BWP=U.BWP;if(!B||!BWP)return 0;
+ const meshes=[];src.updateMatrixWorld(true);src.traverse(o=>{if(o.isMesh)meshes.push(o)});
+ if(!meshes.length)return 0;
+ const Y=new THREE.Matrix4().makeRotationY(Math.PI),SCL=new THREE.Matrix4().makeScale(.93,1,.93);
+ /* which bone a piece belongs to is decided by where it is, not what it is called:
+    the file's left and right do not have to agree with the armour's */
+ const bones=Object.keys(BWP).filter(n=>BWP[n]);
+ const nearest=(c)=>{let best=null,bd=1e9;
+  bones.forEach(n=>{const d=BWP[n].distanceTo(c);if(d<bd){bd=d;best=n}});return best};
+ let n=0;
+ meshes.forEach(o=>{
+  const nm=(o.name||'').toLowerCase();
+  o.geometry.applyMatrix4(Y);
+  /* narrow him slightly: the plates were modelled over a body and sit flush against one */
+  o.geometry.applyMatrix4(SCL);
+  o.geometry.computeBoundingBox();
+  const c=o.geometry.boundingBox.getCenter(new THREE.Vector3());
+  const bone=nearest(c),bp=BWP[bone];
+  if(!bp)return;
+  const m=o.material||{};
+  o.material=new THREE.MeshPhongMaterial({map:m.map||null,
+   color:m.color?m.color.clone():new THREE.Color(0xa8825f),shininess:6,specular:0x201810});
+  if(o.material.map){o.material.map.encoding=THREE.sRGBEncoding;o.material.map.needsUpdate=true}
+  o.name='body_'+nm;
+  o.position.set(-bp.x,-bp.y,-bp.z);
+  B[bone].add(o);n++;
+ });
+ if(n){/* retire the blocky stand-in */
+  if(U.bodyG)U.bodyG.visible=false;
+  (U.phParts||[]).forEach(o=>{o.visible=false});}
+ return n;
 }
 function playerPose(p,mv){
  const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
