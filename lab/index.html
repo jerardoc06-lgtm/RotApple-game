@@ -1295,13 +1295,12 @@ function attachBody(src){
  });
  if(n){
   if(U.bodyG)U.bodyG.visible=false;(U.phParts||[]).forEach(o=>{o.visible=false});
-  /* the model was seated for the armour, whose soles were thicker than his: drop it until the
-     lowest point of the body rests on the ground instead of hovering above it */
-  pl.updateMatrixWorld(true);
-  const bb=new THREE.Box3().setFromObject(U.ml||U.mdl);
-  const gap=(bb.min.y-pl.position.y)-FOOT_Y;
-  if(Math.abs(gap)>.02)U.mdl.position.y-=gap;
-  pl.updateMatrixWorld(true);
+  /* the model was seated for the armour, whose soles were thicker than his: seat it again on
+     the body's own lowest point, measured in model space so it does not depend on where he is
+     standing when the file finishes loading */
+  let low=1e9;
+  list.forEach(it=>{if(it.o.parent&&it.o.geometry.boundingBox)low=Math.min(low,it.o.geometry.boundingBox.min.y)});
+  if(low<1e8)U.mdl.position.y=FOOT_Y-KN_SC*low;
  }
  return n;
 }
