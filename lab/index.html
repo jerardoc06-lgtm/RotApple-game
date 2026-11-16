@@ -945,7 +945,7 @@ function rigKnight(src){
   const hip=new THREE.Vector3(cu.getCenter(new THREE.Vector3()).x,cu.max.y+(cu.max.y-cu.min.y)*.22,cu.getCenter(new THREE.Vector3()).z);
   const knee=new THREE.Vector3(hip.x,(cu.min.y+gr.max.y)/2,hip.z);
   const ank=new THREE.Vector3(gr.getCenter(new THREE.Vector3()).x,gr.min.y,gr.getCenter(new THREE.Vector3()).z);
-  const sho=new THREE.Vector3(rr.getCenter(new THREE.Vector3()).x,rr.max.y-(rr.max.y-rr.min.y)*.10,rr.getCenter(new THREE.Vector3()).z);
+  const sho=new THREE.Vector3(rr.getCenter(new THREE.Vector3()).x,rr.max.y-(rr.max.y-rr.min.y)*.30,rr.getCenter(new THREE.Vector3()).z);
   const elb=new THREE.Vector3(sho.x,rr.min.y,sho.z);
   const wri=new THREE.Vector3(va.getCenter(new THREE.Vector3()).x,va.min.y,va.getCenter(new THREE.Vector3()).z);
   J[q]={hip:hip,knee:knee,ank:ank,sho:sho,elb:elb,wri:wri};
@@ -958,7 +958,7 @@ function rigKnight(src){
   const hm=new THREE.Matrix4().makeTranslation(wri.x,wri.y,wri.z)
     .multiply(new THREE.Matrix4().makeRotationY(-sx*Math.PI/2))
     .multiply(new THREE.Matrix4().makeTranslation(-wri.x,-wri.y,-wri.z));
-  ARM[q]={m4:m4,hand:hm,up:j.sho.clone(),lo:j.elb.clone().applyMatrix4(m4),wri:wri};
+  ARM[q]={m4:m4,th:th,hand:hm,up:j.sho.clone(),lo:j.elb.clone().applyMatrix4(m4),wri:wri};
  });
  const conv=m=>{const o=new THREE.MeshPhongMaterial({map:m.map||null,color:m.color?m.color.clone():new THREE.Color(0xffffff),shininess:13,specular:0x1d2229,emissive:0x2f363e});
   if(/MAIL/i.test(m.name||''))o.color.setHex(0xb9bfc6);
@@ -972,6 +972,9 @@ function rigKnight(src){
  const put=(o,pivot,grp,bake)=>{if(bake)o.geometry.applyMatrix4(bake);
    o.position.set(-pivot.x,-pivot.y,-pivot.z);o.material=conv(o.material);grp.add(o);return o};
  const used={},o_keep=[];
+ const grow=(o,pv,k)=>{if(!o)return;o.geometry.applyMatrix4(new THREE.Matrix4()
+   .makeTranslation(0,pv.y,0).multiply(new THREE.Matrix4().makeScale(1,k,1))
+   .multiply(new THREE.Matrix4().makeTranslation(0,-pv.y,0)))};
  const splitAtY=(o,yCut,band)=>{
   const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();
   const po=g.attributes.position,uv=g.attributes.uv,nr=g.attributes.normal;
@@ -1001,16 +1004,21 @@ function rigKnight(src){
    const lo=new THREE.Mesh(halves[1],tm.material);lo.name=tm.name+'_knee';
    put(hi,j.hip,H,false);put(lo,j.knee,K,false);used[tm.name]=1;
   }
-  ['cuisse_'+f].forEach(n=>{if(P[n]){put(P[n],j.hip,H,false);used[n]=1}});
-  ['knee_'+f,'knee_point_'+f].forEach(n=>{if(P[n]){put(P[n],j.knee,K,false);used[n]=1}});
-  ['greave_'+f,'shin_'+f,'sabaton_'+f].forEach(n=>{if(P[n]){put(P[n],j.ank,A,false);used[n]=1}});
+  ['cuisse_'+f].forEach(n=>{if(P[n]){grow(P[n],j.hip,1.10);put(P[n],j.hip,H,false);used[n]=1}});
+  ['knee_'+f,'knee_point_'+f].forEach(n=>{if(P[n]){grow(P[n],j.knee,1.22);put(P[n],j.knee,K,false);used[n]=1}});
+  ['greave_'+f,'shin_'+f].forEach(n=>{if(P[n]){grow(P[n],j.ank,1.12);put(P[n],j.ank,A,false);used[n]=1}});
+  if(P['sabaton_'+f]){put(P['sabaton_'+f],j.ank,A,false);used['sabaton_'+f]=1}
   PLAK=Math.max(.1,j.knee.y-j.ank.y);
  });
  [-1,1].forEach(q=>{const a=ARM[q];const f=q>0?'1':'-1',sx=(a.up.x>=0?1:-1);
   const S=new THREE.Group();S.position.copy(a.up);S.position.x-=sx*.014;mdl.add(S);
   const E=new THREE.Group();E.position.copy(a.lo).sub(a.up);S.add(E);S.el=E;S.hand=[];
   ['upper_mail_'+f,'rerebrace_'+f].forEach(n=>{if(P[n]){put(P[n],a.up,S,a.m4);used[n]=1}});
-  ['pauldron_'+f,'pauldron_fin_'+f,'pauldron_lame_'+f+'_0','pauldron_lame_'+f+'_1'].forEach(n=>{if(P[n]){used[n]=1;o_keep.push(P[n]);P[n].geometry.translate(-sx*.012,-.022,0)}});
+  const phalf=new THREE.Matrix4().makeTranslation(a.up.x,a.up.y,a.up.z)
+   .multiply(new THREE.Matrix4().makeRotationZ(a.th*.78))
+   .multiply(new THREE.Matrix4().makeTranslation(-a.up.x,-a.up.y,-a.up.z));
+  ['pauldron_'+f,'pauldron_fin_'+f,'pauldron_lame_'+f+'_0','pauldron_lame_'+f+'_1'].forEach(n=>{
+   if(P[n]){put(P[n],a.up,S,phalf);used[n]=1}});
   Object.keys(P).forEach(n=>{if(used[n])return;
    if(n.indexOf('hand_'+f)===0){S.hand.push(put(P[n],a.lo,E,new THREE.Matrix4().multiplyMatrices(a.hand,a.m4)));used[n]=1}
    else if((n.indexOf('elbow_lame_')===0||n.indexOf('vambrace_')===0||n.indexOf('couter_')===0)&&n.slice(-2)===('_'+f).slice(-2)){put(P[n],a.lo,E,a.m4);used[n]=1}
