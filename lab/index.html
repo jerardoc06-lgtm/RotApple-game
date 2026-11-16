@@ -960,7 +960,7 @@ function rigKnight(src){
  HQ=1;pl=new THREE.Group();ML=pl.userData.m=[];const m=new THREE.Group();pl.add(m);
  const U=pl.userData;U.ml=m;U.boots=[];U.knees=[];U.ankles=[];U.arm={};
  let minY=1e9;Object.keys(P).forEach(n=>{const b=bbx(n);if(b)minY=Math.min(minY,b.min.y)});
- const SC=KN_SC,mdl=new THREE.Group();mdl.scale.setScalar(SC);mdl.position.y=.69-SC*minY;m.add(mdl);U.mdl=mdl;
+ const SC=KN_SC,mdl=new THREE.Group();mdl.scale.setScalar(SC);mdl.position.y=.69-SC*minY;mdl.rotation.y=Math.PI;m.add(mdl);U.mdl=mdl;
  const put=(o,pivot,grp,bake)=>{if(bake)o.geometry.applyMatrix4(bake);
    o.position.set(-pivot.x,-pivot.y,-pivot.z);o.material=conv(o.material);grp.add(o);return o};
  const used={},o_keep=[];
