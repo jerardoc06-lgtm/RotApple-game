@@ -1268,8 +1268,10 @@ function attachBody(src){
     point them at the body's own head bone so the nod actually lands */
  U.head=B['head']||U.head;
  /* the hand was modelled with its face pointing along the body, so a hanging arm showed the
-    back of the hand forward. A quarter turn about the wrist puts the palm against the thigh
-    and the back of the hand out to the side, which is how a hand actually hangs */
+    back of the hand forward. A quarter turn about the wrist turns the back of the hand outward
+    and the palm in to the thigh - and, on this mesh, only this direction of turn puts the
+    thumb on the front edge of the hand where it belongs. The model's face is at -Z (the toes
+    point that way), so the thumb has to end up negative in Z */
  U.wr={r:B['wrist_R'],l:B['wrist_L']};
  /* each piece follows the bone of its own kind of limb: a calf belongs to the knee, never
     to the ankle it happens to sit near, and the side is whichever of the two is closer */
@@ -1353,8 +1355,8 @@ function playerPose(p,mv){
  /* the swing starts at the body: the hips turn one way, the shoulders the other, and the
     clavicles carry the arm forward, so the arm is being taken along rather than waving alone */
  if(U.wr){
-  if(U.wr.r)U.wr.r.rotation.y=1.5;
-  if(U.wr.l)U.wr.l.rotation.y=-1.5;
+  if(U.wr.r)U.wr.r.rotation.y=-1.5;
+  if(U.wr.l)U.wr.l.rotation.y=1.5;
  }
  if(U.tr){
   const tw=walking?sf:0;
