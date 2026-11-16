@@ -1261,6 +1261,8 @@ function attachBody(src){
  });
  Object.keys(pos).forEach(n=>{BWP[n]=pos[n]});
  U.armOut={l:0,r:0};                 /* the outward splay was for the plates, not for skin */
+ /* the trunk, so the walk can turn the body instead of swinging the arms off a rigid box */
+ U.tr={pelvis:B['pelvis'],s1:B['spine_01'],s2:B['spine_02'],clavR:B['clavicle_R'],clavL:B['clavicle_L']};
  /* each piece follows the bone of its own kind of limb: a calf belongs to the knee, never
     to the ankle it happens to sit near, and the side is whichever of the two is closer */
  const kindOf=nm=>{
@@ -1337,6 +1339,16 @@ function playerPose(p,mv){
   rx=-.02-sf*.42;  re=-.06-Math.max(0, wA)*.50;
   lx=-.02+sf*.42;  le=-.06-Math.max(0,-wA)*.50;
   rz=.15; lz=-.15;
+ }
+ /* the swing starts at the body: the hips turn one way, the shoulders the other, and the
+    clavicles carry the arm forward, so the arm is being taken along rather than waving alone */
+ if(U.tr){
+  const tw=walking?sf:0;
+  if(U.tr.pelvis)U.tr.pelvis.rotation.y=tw*.05;
+  if(U.tr.s1)U.tr.s1.rotation.y=-tw*.055;
+  if(U.tr.s2)U.tr.s2.rotation.y=-tw*.055;
+  if(U.tr.clavR)U.tr.clavR.rotation.y=-tw*.07;
+  if(U.tr.clavL)U.tr.clavL.rotation.y=tw*.07;
  }
  // ---- guard: shield up across the chest, body turned into it
  if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
