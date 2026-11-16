@@ -614,6 +614,10 @@ const ARM_SEG=[[/^(helm|visor|gorget)/,"head"],[/^(cuirass|plackart|fauld|belt)/
 const ARM_BONE={head:"head",chest:"chest",pelvis:"pelvis",clavicle:"clavicle_",shoulder:"shoulder_",
                 elbow:"elbow_",hip:"hip_",knee:"knee_",ankle:"ankle_"};
 const ARM_SIDED={clavicle:1,shoulder:1,elbow:1,hip:1,knee:1,ankle:1};
+/* the arm plates were authored around a wider arm than this body has, so they are hung by where
+   they belong on the limb - a fraction of the way down the bone - instead of by the authored
+   position, which left them standing off the arm in mid air */
+const ARM_ALONG={pauldron:.20, rerebrace:.45, couter:.02, vambrace:.50};
 function armourURL(f){return (location.pathname.indexOf('/lab/')>=0?'../assets/':'assets/')+f}
 function loadArmour(){
  if(typeof pl==="undefined"||!pl||!pl.userData||!pl.userData.B)return;
@@ -661,8 +665,23 @@ function dressArmour(a,root){
   const bone=B[bname],at=posOf(bname);
   if(!bone||!at)return;
   const m=new THREE.Mesh(g,o.material);
-  m.castShadow=true;m.frustumCulled=false;
+  m.castShadow=true;m.frustumCulled=false;m.name=o.name||"plate";
   m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
+  /* arm plates: ride down the limb it covers, measured on the bone chain rather than on the
+     pack's own, so the couter sits on the elbow and the vambrace wraps the forearm */
+  const along=ARM_ALONG[fam];
+  if(along!=null){
+   const side=/(_L)$/.test(bname)?1:-1;
+   let a0,a1;
+   if(fam==="pauldron"){a0=posOf("clavicle_"+bname.slice(-1));a1=posOf("shoulder_"+bname.slice(-1))}
+   else if(fam==="rerebrace"){a0=posOf("shoulder_"+bname.slice(-1));a1=posOf("elbow_"+bname.slice(-1))}
+   else{a0=posOf("elbow_"+bname.slice(-1));a1=posOf("wrist_"+bname.slice(-1))}
+   if(a0&&a1){
+    const t=new THREE.Vector3().lerpVectors(a0,a1,along);
+    if(fam==="pauldron")t.x+=side*(fam==="pauldron"?.03:0);
+    m.position.copy(t).sub(at);
+   }
+  }
   const h=new THREE.Group();
   h.add(m);bone.add(h);                        /* the bones already carry the model's scale */
   holders.push(h);
