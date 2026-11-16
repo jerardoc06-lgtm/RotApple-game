@@ -606,8 +606,8 @@ const ARM=[
   files:["boots.glb","armour_boots.glb","feet.glb"]}];
 /* which bone each kind of plate rides on; the sided families are matched to a side by where
    the plate actually sits, so nothing depends on guessing which is the right arm */
-const ARM_SEG=[[/^(helm|visor|gorget)/,"head","helm"],[/^(cuirass|plackart|fauld|belt)/,"chest","cuirass"],
- [/^tasset/,"pelvis","tasset"],[/^pauldron/,"clavicle","pauldron"],[/^(rerebrace|upperarm)/,"shoulder","rerebrace"],
+const ARM_SEG=[[/^(helm|visor|gorget)/,"head","helm"],[/^(cuirass|plackart|belt)/,"chest","cuirass"],
+ [/^(fauld|tasset)/,"pelvis","fauld"],[/^pauldron/,"clavicle","pauldron"],[/^(rerebrace|upperarm)/,"shoulder","rerebrace"],
  [/^(couter|elbow)/,"elbow","couter"],[/^(gauntlet|hand)/,"wrist","gauntlet"],[/^(vambrace|forearm)/,"elbow","vambrace"],
  [/^(cuisse|thigh)/,"hip","cuisse"],[/^(poleyn|knee)/,"knee","poleyn"],[/^(greave|shin|calf)/,"knee","greave"],
  [/^(sabaton|boot|foot|toe)/,"ankle","sabaton"]];
@@ -633,11 +633,11 @@ function loadArmour(){
    the group is scaled until its own box meets that part's box (with a little clearance, so it
    sits over the skin rather than inside it) and then centred on the part. Scaling the whole
    group about its own centre keeps rivets and straps on the plate they belong to. */
-const ARM_PART={helm:["skull"],cuirass:["torso"],tasset:["trunks","navel","glute"],
+const ARM_PART={helm:["skull"],cuirass:["torso"],fauld:["trunks","waistband","navel","glute"],tasset:["trunks","navel","glute"],
  pauldron:["delt"],rerebrace:["upperarm"],couter:["elbow"],vambrace:["forearm"],
  gauntlet:["palm","finger","thumb"],cuisse:["thigh"],poleyn:["knee"],
  greave:["calf","calfmuscle"],sabaton:["foot","toes","heel"]};
-const ARM_CLEAR={helm:1.06,cuirass:1.03,tasset:1.05,pauldron:1.08,rerebrace:1.07,couter:1.10,
+const ARM_CLEAR={helm:1.06,cuirass:1.03,fauld:1.06,tasset:1.05,pauldron:1.08,rerebrace:1.07,couter:1.10,
  vambrace:1.07,gauntlet:1.10,cuisse:1.07,poleyn:1.10,greave:1.06,sabaton:1.06};
 function dressArmour(a,root){
  const U=pl.userData,B=U.B,mdl=U.mdl;
@@ -726,7 +726,7 @@ function dressArmour(a,root){
       so the same plates are turned half around about his spine: the geometry, metal and wear
       are unchanged, and the suit closes behind him instead of leaving his back bare */
    const nm2=(it.name||"").toLowerCase();
-   if((kind==="cuirass"&&/^cuirass$/.test(nm2))||(kind==="tasset"&&/^tasset(_|$)/.test(nm2))){
+   if((kind==="cuirass"&&/^cuirass$/.test(nm2))||(/^(tasset|fauld)(_|$)/.test(nm2)&&kind!=="cuirass")){
     const bg=it.g.clone(),bm=new THREE.Mesh(bg,it.mat);
     bg.scale(-1,1,-1);                          /* a half turn, so the winding still faces out */
     bm.castShadow=true;bm.frustumCulled=false;bm.name=it.name+"_back";
