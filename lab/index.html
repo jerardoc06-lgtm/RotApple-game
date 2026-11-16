@@ -948,11 +948,15 @@ function rigKnight(src){
   const wri=new THREE.Vector3(va.getCenter(new THREE.Vector3()).x,va.min.y,va.getCenter(new THREE.Vector3()).z);
   J[q]={hip:hip,knee:knee,ank:ank,sho:sho,elb:elb,wri:wri};
  });
- [-1,1].forEach(q=>{const j=J[q],th=-q*(Math.PI/2-.10);
+ [-1,1].forEach(q=>{const j=J[q],th=-q*(Math.PI/2+.145);
   const m4=new THREE.Matrix4().makeTranslation(j.sho.x,j.sho.y,j.sho.z)
     .multiply(new THREE.Matrix4().makeRotationZ(th))
     .multiply(new THREE.Matrix4().makeTranslation(-j.sho.x,-j.sho.y,-j.sho.z));
-  ARM[q]={m4:m4,up:j.sho.clone(),lo:j.elb.clone().applyMatrix4(m4),wri:j.wri.clone().applyMatrix4(m4)};
+  const wri=j.wri.clone().applyMatrix4(m4);
+  const hm=new THREE.Matrix4().makeTranslation(wri.x,wri.y,wri.z)
+    .multiply(new THREE.Matrix4().makeRotationY(-q*Math.PI/2))
+    .multiply(new THREE.Matrix4().makeTranslation(-wri.x,-wri.y,-wri.z));
+  ARM[q]={m4:m4,hand:hm,up:j.sho.clone(),lo:j.elb.clone().applyMatrix4(m4),wri:wri};
  });
  const conv=m=>{const o=new THREE.MeshPhongMaterial({map:m.map||null,color:m.color?m.color.clone():new THREE.Color(0xffffff),shininess:26,specular:0x2a323c,emissive:0x262c34});
   if(o.map){o.map.encoding=THREE.sRGBEncoding;o.map.needsUpdate=true}return o};
@@ -979,8 +983,8 @@ function rigKnight(src){
   ['upper_mail_'+f,'rerebrace_'+f].forEach(n=>{if(P[n]){put(P[n],a.up,S,a.m4);used[n]=1}});
   ['pauldron_'+f,'pauldron_fin_'+f,'pauldron_lame_'+f+'_0','pauldron_lame_'+f+'_1'].forEach(n=>{if(P[n]){used[n]=1;o_keep.push(P[n])}});
   Object.keys(P).forEach(n=>{if(used[n])return;
-   if(n.indexOf('hand_'+f)===0){S.hand.push(put(P[n],a.lo,E,a.m4));used[n]=1}
-   else if((n.indexOf('elbow_lame_')===0||n.indexOf('vambrace_')===0)&&n.slice(-2)===('_'+f).slice(-2)){put(P[n],a.lo,E,a.m4);used[n]=1}
+   if(n.indexOf('hand_'+f)===0){S.hand.push(put(P[n],a.lo,E,new THREE.Matrix4().multiplyMatrices(a.hand,a.m4)));used[n]=1}
+   else if((n.indexOf('elbow_lame_')===0||n.indexOf('vambrace_')===0||n.indexOf('couter_')===0)&&n.slice(-2)===('_'+f).slice(-2)){put(P[n],a.lo,E,a.m4);used[n]=1}
   });
   if(q<0){
    const w=new THREE.Group();w.position.copy(a.wri).sub(a.up);w.scale.setScalar(1/SC);S.add(w);U.shield=w;
