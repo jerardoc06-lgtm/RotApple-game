@@ -23,7 +23,7 @@ const floor=new THREE.Mesh(new THREE.CircleGeometry(16,28),new THREE.MeshPhongMa
 floor.rotation.x=-Math.PI/2;scene.add(floor);
 
 let ang=0,spin=true,ready=false;
-new THREE.GLTFLoader().load('../knight_tpose.glb',gl=>{
+new THREE.GLTFLoader().load('../assets/knight_tpose.glb',gl=>{
   const m=gl.scene;let tris=0,parts=0;
   m.traverse(o=>{if(o.isMesh){parts++;
     const gc=o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count;

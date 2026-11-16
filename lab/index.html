@@ -1546,7 +1546,7 @@ function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
   invLight.visible=true;ren.render(scene,cam);invLight.visible=false;};})();
  const invLight=new THREE.PointLight(0xffe4c4,2.4,110,2);invLight.visible=false;scene.add(invLight);
  if(!pl)buildPlayer2();
- if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(new URLSearchParams(location.search).get('k'))||(location.pathname.indexOf('/lab/')>=0?'../knight_rig.glb':'knight_rig.glb');
+ if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(new URLSearchParams(location.search).get('k'))||(location.pathname.indexOf('/lab/')>=0?'../assets/knight_rig.glb':'assets/knight_rig.glb');
   new THREE.GLTFLoader().load(KU,g=>{try{rigKnight(g.scene)}catch(e){console.warn('knight rig failed',e)}},undefined,e=>console.warn('knight load failed',e))}
  camT.x=P.x;camT.z=P.y;
  const T=[[0x0a2624,"#1d2a1e","#34452e",0x6a8a7a,.6],[0x241a3a,"#241e30","#3a3248",0x8a70c0,.55],[0x0a1518,"#2a1d14","#3d2a1c",0x7a98a8,.5],[0x08161a,"#1b2f19","#2d4a26",0x8aa890,.62]][z];
