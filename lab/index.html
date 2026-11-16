@@ -1293,7 +1293,16 @@ function attachBody(src){
   it.o.position.set(-bp.x,-bp.y,-bp.z);
   B[bone].add(it.o);n++;
  });
- if(n){if(U.bodyG)U.bodyG.visible=false;(U.phParts||[]).forEach(o=>{o.visible=false})}
+ if(n){
+  if(U.bodyG)U.bodyG.visible=false;(U.phParts||[]).forEach(o=>{o.visible=false});
+  /* the model was seated for the armour, whose soles were thicker than his: drop it until the
+     lowest point of the body rests on the ground instead of hovering above it */
+  pl.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(U.m);
+  const gap=(bb.min.y-pl.position.y)-FOOT_Y;
+  if(Math.abs(gap)>.02)U.mdl.position.y-=gap;
+  pl.updateMatrixWorld(true);
+ }
  return n;
 }
 function playerPose(p,mv){
