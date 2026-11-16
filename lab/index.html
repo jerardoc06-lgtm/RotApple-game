@@ -1372,12 +1372,21 @@ function playerPose(p,mv){
  U.knees[0].rotation.x=kA;U.knees[1].rotation.x=kB;
  const hA=walking?legA:tuck*1.15, hB=walking?legB:tuck*.55;
  const ank=(h,k,e)=>-(h+k)*(walking?1:.55)+(walking?e:0);
+ const clampA=v=>v<-.62?-.62:v>.38?.38:v;      /* a real ankle only bends so far */
  const sl=bootSlope();
- U.ankles[0].rotation.x=ank(hA,kA,.34*Math.max(0,sf)-.15*Math.max(0,-sf))+sl[0];U.ankles[0].rotation.z=-sl[1];
- U.ankles[1].rotation.x=ank(hB,kB,.34*Math.max(0,-sf)-.15*Math.max(0,sf))+sl[0];U.ankles[1].rotation.z=-sl[1];
+ U.ankles[0].rotation.x=clampA(ank(hA,kA,.34*Math.max(0,sf)-.15*Math.max(0,-sf))+sl[0]);U.ankles[0].rotation.z=-sl[1];
+ U.ankles[1].rotation.x=clampA(ank(hB,kB,.34*Math.max(0,-sf)-.15*Math.max(0,sf))+sl[0]);U.ankles[1].rotation.z=-sl[1];
  const dip=(t)=>1.15*Math.cos(t)+2.1*Math.abs(Math.sin(t))-1.15;
- U.ankles[0].position.y=-PLAK+dip(hA+kA+U.ankles[0].rotation.x)*PLAK/3.3*PLDIP;
- U.ankles[1].position.y=-PLAK+dip(hB+kB+U.ankles[1].rotation.x)*PLAK/3.3*PLDIP;
+ const dA=dip(hA+kA+U.ankles[0].rotation.x),dB=dip(hB+kB+U.ankles[1].rotation.x);
+ if(NOARM){
+  /* a real shin does not stretch: keep its length and drop the body instead, or the foot
+     slides away from the calf at every stride */
+  U.ankles[0].position.y=-PLAK;U.ankles[1].position.y=-PLAK;
+  by-=Math.min(dA,dB)*PLAK/3.3*.55;
+ }else{
+  U.ankles[0].position.y=-PLAK+dA*PLAK/3.3*PLDIP;
+  U.ankles[1].position.y=-PLAK+dB*PLAK/3.3*PLDIP;
+ }
  m.rotation.set(bx,my,bz);m.position.set(0,by,0);
  if(U.head)U.head.rotation.x=walking?-.03-.028*Math.cos(ph*2):(p.act?-.10:0);
  U.robe.rotation.set(walking?.05:0,0,Math.sin(t*1.2)*.012);
