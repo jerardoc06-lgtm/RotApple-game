@@ -628,65 +628,112 @@ function loadArmour(){
   next();
  });
 }
-/* every plate in the pack is a separate piece already sitting in the body's own space, so each
-   one is baked into place and then hung from the bone it covers - the sabatons on the ankles,
-   the couter and vambrace on the elbows - and moves with that bone as he walks and swings */
+/* the pack is authored around a bulkier body than this one, so a plate hung on its bone still
+   floats off the skin. Each group of plates is therefore fitted onto the body part it covers:
+   the group is scaled until its own box meets that part's box (with a little clearance, so it
+   sits over the skin rather than inside it) and then centred on the part. Scaling the whole
+   group about its own centre keeps rivets and straps on the plate they belong to. */
+const ARM_PART={helm:["skull"],cuirass:["torso"],tasset:["trunks","navel","glute"],
+ pauldron:["delt"],rerebrace:["upperarm"],couter:["elbow"],vambrace:["forearm"],
+ gauntlet:["palm","finger","thumb"],cuisse:["thigh"],poleyn:["knee"],
+ greave:["calf","calfmuscle"],sabaton:["foot","toes","heel"]};
+const ARM_CLEAR={helm:1.06,cuirass:1.03,tasset:1.05,pauldron:1.08,rerebrace:1.07,couter:1.10,
+ vambrace:1.07,gauntlet:1.10,cuisse:1.07,poleyn:1.10,greave:1.06,sabaton:1.06};
 function dressArmour(a,root){
  const U=pl.userData,B=U.B,mdl=U.mdl;
  if(!B||!mdl)return 0;
- root.rotation.y=Math.PI;                     /* the pack faces the same way the body did */
+ /* the pack already faces the way this body does, so no half turn: doing it put the breastplate
+    on his back and left his chest bare */
+ root.rotation.y=0;
  root.updateMatrixWorld(true);
  const bonePos={};
  const posOf=n=>{
   if(!bonePos[n]){const v=new THREE.Vector3();if(!B[n])return null;B[n].getWorldPosition(v);bonePos[n]=mdl.worldToLocal(v)}
   return bonePos[n];
  };
- const holders=[];
+ const inv=mdl.matrixWorld.clone().invert();
+ /* the body part a plate of this kind covers, in the pack's own metres */
+ const partBox=(kind,sfx)=>{
+  const box=new THREE.Box3();
+  for(const n of (ARM_PART[kind]||[])){
+   const o=pl.getObjectByName("body_"+n+"_"+sfx)||pl.getObjectByName("body_"+n);
+   if(o)box.union(new THREE.Box3().setFromObject(o));
+  }
+  return box.isEmpty()?null:box.applyMatrix4(inv);
+ };
+ const items=[];
  root.traverse(o=>{
   if(!o.isMesh)return;
   const nm=(o.name||(o.parent&&o.parent.name)||"").toLowerCase();
   const seg=ARM_SEG.find(t=>t[0].test(nm));
-  if(!seg)return;
-  const fam=seg[1],kind=seg[2]||fam,g=o.geometry.clone();
+  const g=o.geometry.clone();
   g.applyMatrix4(o.matrixWorld);               /* bake the node's transform into the geometry */
   g.computeBoundingBox();
-  const c=g.boundingBox.getCenter(new THREE.Vector3());
-  g.translate(-c.x,-c.y,-c.z);                 /* the geometry now sits on its own origin, so the
-                                                  offset below places it once, not twice */
-  let bname=ARM_BONE[fam];
-  if(ARM_SIDED[fam]){
-   const pr=posOf(fam+"_R");if(!pr)return;
-   bname=fam+((c.x>=0)===(pr.x>=0)?"_R":"_L");
+  items.push({g:g,mat:o.material,name:o.name||"plate",kind:seg?seg[2]:null,fam:seg?seg[1]:null,
+   c:g.boundingBox.getCenter(new THREE.Vector3())});
+ });
+ if(!items.length)return 0;
+ /* a rivet or strap whose name names nothing goes with the nearest piece that does, rather than
+    being left hanging in the air on its own */
+ items.forEach(it=>{
+  if(it.kind)return;
+  let best=null,bd=1e9;
+  items.forEach(o=>{if(!o.kind)return;const d=o.c.distanceTo(it.c);if(d<bd){bd=d;best=o}});
+  if(best){it.kind=best.kind;it.fam=best.fam}
+ });
+ const groups={};
+ items.forEach(it=>{
+  if(!it.kind)return;
+  let bname=ARM_BONE[it.fam];
+  if(!bname)return;
+  if(ARM_SIDED[it.fam]){
+   const pr=posOf(it.fam+"_R");if(!pr)return;
+   bname=it.fam+((it.c.x>=0)===(pr.x>=0)?"_R":"_L");
   }
-  const bone=B[bname],at=posOf(bname);
+  if(!B[bname])return;
+  it.bone=bname;it.sfx=/_L$/.test(bname)?"-1":"1";
+  (groups[bname+"|"+it.kind]=groups[bname+"|"+it.kind]||[]).push(it);
+ });
+ const holders=[];
+ Object.keys(groups).forEach(k=>{
+  const list=groups[k],bone=B[list[0].bone],at=posOf(list[0].bone);
   if(!bone||!at)return;
-  const m=new THREE.Mesh(g,o.material);
-  m.castShadow=true;m.frustumCulled=false;m.name=o.name||"plate";
-  m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
-  /* the arm plates are placed on the body's own arm part for that plate, so the shell lands
-     where the arm actually is rather than where the pack assumed the arm to be */
-  const armPart={pauldron:"delt",rerebrace:"upperarm",couter:"elbow",vambrace:"forearm",gauntlet:"palm"}[kind];
-  if(armPart){
-   /* the body parts carry the side its bones do - _R bones and _1 parts are the same arm, _L and
-      _-1 the other - so the part comes from the plate's own bone. Looking it up by where the plate
-      ended up put every shell on the opposite arm, where it swung on a mirrored arc and read as if
-      the armour were playing a different animation from the body */
-   const sfx=/_L$/.test(bname)?"-1":"1";
-   const bo=pl.getObjectByName("body_"+armPart+"_"+sfx);
-   if(bo){const cw=new THREE.Box3().setFromObject(bo).getCenter(new THREE.Vector3());
-    m.position.copy(mdl.worldToLocal(cw)).sub(at);}
-   /* the rerebrace, couter and vambrace are open shells authored around a wider arm. Turned to
-      face the other way the opening falls behind the arm, so from the front it reads plated */
-   if(kind!=="pauldron"&&kind!=="gauntlet"){
-    /* turned a quarter toward the body's front, which is where these shells close: the four
-       quarter turns were compared side by side and this is the one that wraps the arm */
-    m.rotation.y=(sfx==="-1")?-Math.PI/2:Math.PI/2;
-    m.scale.set(.94,1,.94);
-   }
+  const gb=new THREE.Box3();list.forEach(it=>gb.union(it.g.boundingBox));
+  const gc=gb.getCenter(new THREE.Vector3()),gs=gb.getSize(new THREE.Vector3());
+  const kind=list[0].kind,tb=partBox(kind,list[0].sfx),clr=ARM_CLEAR[kind]||1.1;
+  const sc=new THREE.Vector3(1,1,1),nc=gc.clone();
+  if(tb){
+   const tc=tb.getCenter(new THREE.Vector3()),ts=tb.getSize(new THREE.Vector3());
+   /* a plate is a shell around the limb, not a box that fills it: it is fitted by the radius it
+      wraps, so it keeps its own proportions and clearance instead of being stretched to a box -
+      matched axis by axis the front of the cuirass sank into the chest and only its edges showed */
+   const rp=(gs.x+gs.z)/4,rb=(ts.x+ts.z)/4;
+   if(rp>.002&&rb>.002){const k=Math.min(1.7,Math.max(.55,rb*clr/rp));sc.set(k,k,k)}
+   /* and along the limb it is fitted to the length of that part, or a band authored for a
+      shorter leg stops above the knee and leaves a ring of bare skin between it and the next */
+   if(gs.y>.002&&ts.y>.002)sc.y=Math.min(1.5,Math.max(.7,ts.y*1.02/gs.y));
+   nc.copy(tc);
   }
-  const h=new THREE.Group();
-  h.add(m);bone.add(h);                        /* the bones already carry the model's scale */
-  holders.push(h);
+  list.forEach(it=>{
+   it.g.translate(-it.c.x,-it.c.y,-it.c.z);     /* centred, then scaled about its own centre */
+   it.g.scale(sc.x,sc.y,sc.z);
+   const mp=new THREE.Vector3(nc.x+(it.c.x-gc.x)*sc.x,nc.y+(it.c.y-gc.y)*sc.y,nc.z+(it.c.z-gc.z)*sc.z);
+   const m=new THREE.Mesh(it.g,it.mat);
+   m.castShadow=true;m.frustumCulled=false;m.name=it.name;
+   m.position.copy(mp).sub(at);
+   const h=new THREE.Group();h.add(m);bone.add(h);holders.push(h);
+   /* the pack's cuirass is a breastplate open at the back and its tassets hang at the front,
+      so the same plates are turned half around about his spine: the geometry, metal and wear
+      are unchanged, and the suit closes behind him instead of leaving his back bare */
+   const nm2=(it.name||"").toLowerCase();
+   if((kind==="cuirass"&&/^cuirass$/.test(nm2))||(kind==="tasset"&&/^tasset(_|$)/.test(nm2))){
+    const bg=it.g.clone(),bm=new THREE.Mesh(bg,it.mat);
+    bg.scale(-1,1,-1);                          /* a half turn, so the winding still faces out */
+    bm.castShadow=true;bm.frustumCulled=false;bm.name=it.name+"_back";
+    bm.position.set(2*nc.x-mp.x,mp.y,2*nc.z-mp.z).sub(at);
+    const bh=new THREE.Group();bh.add(bm);bone.add(bh);holders.push(bh);
+   }
+  });
  });
  if(!holders.length)return 0;
  U.gear=U.gear||{};U.gear[a.sl]=holders;
