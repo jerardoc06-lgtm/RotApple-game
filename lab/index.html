@@ -667,22 +667,18 @@ function dressArmour(a,root){
   const m=new THREE.Mesh(g,o.material);
   m.castShadow=true;m.frustumCulled=false;m.name=o.name||"plate";
   m.position.copy(c).sub(at);                  /* centre the plate on the joint it hangs from */
-  /* arm plates: ride down the limb it covers, measured on the bone chain rather than on the
-     pack's own, so the couter sits on the elbow and the vambrace wraps the forearm */
-  const along=ARM_ALONG[fam];
-  if(along!=null){
-   const side=/(_L)$/.test(bname)?1:-1;
-   let a0,a1;
-   if(fam==="pauldron"){a0=posOf("clavicle_"+bname.slice(-1));a1=posOf("shoulder_"+bname.slice(-1))}
-   else if(fam==="rerebrace"){a0=posOf("shoulder_"+bname.slice(-1));a1=posOf("elbow_"+bname.slice(-1))}
-   else{a0=posOf("elbow_"+bname.slice(-1));a1=posOf("wrist_"+bname.slice(-1))}
-   if(a0&&a1){
-    const t=new THREE.Vector3().lerpVectors(a0,a1,along);
-    /* each of these is a half shell, open on the side that faces the body: centred on the bone
-       it straddles the arm and the arm shows through the gap, so it is pushed outboard by
-       roughly half its own thickness to nest over the limb instead */
-    t.x+=side*(fam==="rerebrace"?.055:fam==="vambrace"?.045:fam==="couter"?.035:.012);
-    m.position.copy(t).sub(at);
+  /* arm plates: hung on the body's own arm parts rather than on a guessed point along the bone,
+     so each shell lands where the arm actually is, whatever the pack was authored around */
+  const armPart={pauldron:"delt",rerebrace:"upperarm",couter:"elbow",vambrace:"forearm"}[fam];
+  if(armPart){
+   const sfx=/_L$/.test(bname)?"1":"-1";
+   for(const n of ["body_"+armPart+"_"+sfx,"body_"+armPart+"_-1","body_"+armPart+"_1"]){
+    const o=pl.getObjectByName(n);
+    if(!o)continue;
+    const cw=new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3());
+    if((cw.x-pl.position.x>0)!==(sfx==="1"))continue;      /* the part on this plate's own side */
+    m.position.copy(mdl.worldToLocal(cw)).sub(at);
+    break;
    }
   }
   const h=new THREE.Group();
