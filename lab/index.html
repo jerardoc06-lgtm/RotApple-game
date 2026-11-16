@@ -1344,11 +1344,13 @@ function playerPose(p,mv){
     clavicles carry the arm forward, so the arm is being taken along rather than waving alone */
  if(U.tr){
   const tw=walking?sf:0;
-  if(U.tr.pelvis)U.tr.pelvis.rotation.y=tw*.05;
-  if(U.tr.s1)U.tr.s1.rotation.y=-tw*.055;
-  if(U.tr.s2)U.tr.s2.rotation.y=-tw*.055;
-  if(U.tr.clavR)U.tr.clavR.rotation.y=-tw*.07;
-  if(U.tr.clavL)U.tr.clavL.rotation.y=tw*.07;
+  if(U.tr.pelvis)U.tr.pelvis.rotation.y=tw*.06;
+  if(U.tr.s1)U.tr.s1.rotation.y=-tw*.07;
+  if(U.tr.s2)U.tr.s2.rotation.y=-tw*.07;
+  /* the clavicle leads the arm on the same axis it swings on; turning it sideways instead
+     would drag the hand across the belly */
+  if(U.tr.clavR)U.tr.clavR.rotation.x=-tw*.05;
+  if(U.tr.clavL)U.tr.clavL.rotation.x=tw*.05;
  }
  // ---- guard: shield up across the chest, body turned into it
  if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
