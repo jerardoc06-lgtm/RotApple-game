@@ -1262,7 +1262,8 @@ function attachBody(src){
  Object.keys(pos).forEach(n=>{BWP[n]=pos[n]});
  U.armOut={l:0,r:0};                 /* the outward splay was for the plates, not for skin */
  /* the trunk, so the walk can turn the body instead of swinging the arms off a rigid box */
- U.tr={pelvis:B['pelvis'],s1:B['spine_01'],s2:B['spine_02'],clavR:B['clavicle_R'],clavL:B['clavicle_L']};
+ U.tr={pelvis:B['pelvis'],s1:B['spine_01'],s2:B['spine_02'],clavR:B['clavicle_R'],clavL:B['clavicle_L'],
+       y2:B['spine_02']?B['spine_02'].position.y:0};
  /* the head bob and look-around were driving the armour's head group, which is hidden now:
     point them at the body's own head bone so the nod actually lands */
  U.head=B['head']||U.head;
@@ -1359,9 +1360,9 @@ function playerPose(p,mv){
   /* breathing carries on whether he is walking or standing: the chest lifts and the shoulders
      go with it, on its own slow clock so it never marches in time with the step */
   const br2=Math.sin(t*1.6);
-  if(U.tr.s2)U.tr.s2.rotation.x=-.018+br2*.010;
-  if(U.tr.clavR)U.tr.clavR.rotation.z=br2*.012;
-  if(U.tr.clavL)U.tr.clavL.rotation.z=-br2*.012;
+  if(U.tr.s2){U.tr.s2.rotation.x=-.018+br2*.018;U.tr.s2.position.y=U.tr.y2+br2*.006;}
+  if(U.tr.clavR)U.tr.clavR.rotation.z=br2*.018;
+  if(U.tr.clavL)U.tr.clavL.rotation.z=-br2*.018;
  }
  // ---- guard: shield up across the chest, body turned into it
  if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
