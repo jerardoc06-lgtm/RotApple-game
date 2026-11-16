@@ -690,9 +690,13 @@ function dressArmour(a,root){
      for(let i=0;i<pa.count;i+=step){sx+=pa.getX(i);sz+=pa.getZ(i);k++}
      const dx=sx/k,dz=sz/k;
      if(Math.abs(dx)+Math.abs(dz)>.004){
-      const want=(sfx==="1")?0:Math.PI;
+      /* turned to the outer-front of the arm, which is where a plate is seen from and where
+         it should close, leaving the opening at the back where it is hidden */
+      const want=(sfx==="1")?-0.7:Math.PI+0.7;
       m.rotation.y=want-Math.atan2(dz,dx);
      }
+     /* pulled in slightly so the shell sits on the arm rather than a little proud of it */
+     m.scale.set(.94,1,.94);
     }
    }
   }
