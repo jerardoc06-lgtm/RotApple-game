@@ -981,9 +981,9 @@ function rigKnight(src){
     .multiply(new THREE.Matrix4().makeRotationZ(th))
     .multiply(new THREE.Matrix4().makeTranslation(-j.sho.x,-j.sho.y,-j.sho.z));
   const wri=j.wri.clone().applyMatrix4(m4);
-  const hm=new THREE.Matrix4().makeTranslation(wri.x,wri.y,wri.z)
-    .multiply(new THREE.Matrix4().makeRotationY(-sx*Math.PI/2))
-    .multiply(new THREE.Matrix4().makeTranslation(-wri.x,-wri.y,-wri.z));
+  /* hands are modelled palm-down in the T pose, and hanging the arm already rolls the palm
+     inward, so the hand needs no twist of its own. */
+  const hm=new THREE.Matrix4();
   ARM[q]={m4:m4,th:th,hand:hm,up:j.sho.clone(),lo:j.elb.clone().applyMatrix4(m4),wri:wri};
   /* the bones of the arm have to hang with it, or the forearm pivots from the old elbow */
   if(useBones){const Rm=new THREE.Matrix4().makeRotationZ(th),bd=q>0?'R':'L';
@@ -1040,7 +1040,7 @@ function rigKnight(src){
    put(hi,j.hip,H,false);put(lo,j.knee,K,false);used[tm.name]=1;
   }
   ['cuisse_'+f].forEach(n=>{if(P[n]){grow(P[n],j.hip,1.10);put(P[n],j.hip,H,false);used[n]=1}});
-  ['knee_'+f,'knee_point_'+f].forEach(n=>{if(P[n]){grow(P[n],j.knee,1.22);put(P[n],j.knee,K,false);used[n]=1}});
+  ['knee_'+f,'knee_point_'+f].forEach(n=>{if(P[n]){grow(P[n],j.knee,1.45);put(P[n],j.knee,K,false);used[n]=1}});
   ['greave_'+f,'shin_'+f].forEach(n=>{if(P[n]){grow(P[n],j.ank,1.12);put(P[n],j.ank,A,false);used[n]=1}});
   if(P['sabaton_'+f]){put(P['sabaton_'+f],j.ank,A,false);used['sabaton_'+f]=1}
   PLAK=Math.max(.1,j.knee.y-j.ank.y);
@@ -1083,6 +1083,7 @@ function rigKnight(src){
    flk=part(fw,SP(1.15),0x6a2a2a,0,-1.3,1.1,0x2a0808);
   }
   U.arm[q<0?'l':'r']=S;
+  U.armOut=U.armOut||{};U.armOut[q<0?'l':'r']=(a.up.x<0?-1:1)*.17;
  });
  const gr=bbx('gorget'),hb=bbx('helm');
  if(gr&&hb){const np=new THREE.Vector3(gr.getCenter(new THREE.Vector3()).x,gr.max.y,gr.getCenter(new THREE.Vector3()).z);
@@ -1457,7 +1458,8 @@ function buildScene(z){COL=[];MAPW=[];MAPP=[];MAPX=[];BMc=null;
   if(U.neck)U.neck.rotation.y=-sf*.03*w;
   if(U.head)U.head.rotation.x=Math.sin(t*1.1)*.015;
   if(U.clav){U.clav.l&&(U.clav.l.rotation.z=Math.sin(t*1.6)*.012);U.clav.r&&(U.clav.r.rotation.z=-Math.sin(t*1.6)*.012)}
-  if(U.spine)U.spine.rotation.y=-sf*.03*w;};})();
+  if(U.spine)U.spine.rotation.y=-sf*.03*w;
+  if(U.armOut){U.arm.l.rotation.z+=U.armOut.l;U.arm.r.rotation.z+=U.armOut.r;}};})();
  if(!pl)buildPlayer2();
  if(!KN_LOADED&&!window.KN_TRIES){window.KN_TRIES=1;const KU=(new URLSearchParams(location.search).get('k'))||(location.pathname.indexOf('/lab/')>=0?'../knight_rig.glb':'knight_rig.glb');
   new THREE.GLTFLoader().load(KU,g=>{try{rigKnight(g.scene)}catch(e){console.warn('knight rig failed',e)}},undefined,e=>console.warn('knight load failed',e))}
