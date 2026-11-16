@@ -1217,32 +1217,83 @@ function attachBody(src){
  const meshes=[];src.updateMatrixWorld(true);src.traverse(o=>{if(o.isMesh)meshes.push(o)});
  if(!meshes.length)return 0;
  const Y=new THREE.Matrix4().makeRotationY(Math.PI),SCL=new THREE.Matrix4().makeScale(.93,1,.93);
- /* which bone a piece belongs to is decided by where it is, not what it is called:
-    the file's left and right do not have to agree with the armour's */
- const bones=Object.keys(BWP).filter(n=>BWP[n]);
- const nearest=(c)=>{let best=null,bd=1e9;
-  bones.forEach(n=>{const d=BWP[n].distanceTo(c);if(d<bd){bd=d;best=n}});return best};
- let n=0;
+ /* lay the pieces out in the armour's frame first, so everything shares one space */
+ const list=[],C={};
  meshes.forEach(o=>{
-  const nm=(o.name||'').toLowerCase();
-  o.geometry.applyMatrix4(Y);
-  /* narrow him slightly: the plates were modelled over a body and sit flush against one */
-  o.geometry.applyMatrix4(SCL);
+  o.geometry.applyMatrix4(Y);o.geometry.applyMatrix4(SCL);
+  /* rigid segments cannot bend, so each one is stretched a little along its own length:
+     the ends overlap at the joint and no seam opens when it folds */
+  const nm0=(o.name||"").toLowerCase();
+  if(/^(upperarm|forearm|forearm_mass|thigh|calf|calfmuscle|neck)(_|$)/.test(nm0)){
+   o.geometry.computeBoundingBox();const b0=o.geometry.boundingBox,s0=new THREE.Vector3();
+   b0.getSize(s0);const ax=s0.x>=s0.y&&s0.x>=s0.z?"x":s0.y>=s0.z?"y":"z";
+   const c0=b0.getCenter(new THREE.Vector3());
+   const m4=new THREE.Matrix4().makeTranslation(c0.x,c0.y,c0.z)
+     .multiply(new THREE.Matrix4().makeScale(ax==="x"?1.14:1,ax==="y"?1.14:1,ax==="z"?1.14:1))
+     .multiply(new THREE.Matrix4().makeTranslation(-c0.x,-c0.y,-c0.z));
+   o.geometry.applyMatrix4(m4);
+  }
   o.geometry.computeBoundingBox();
-  const c=o.geometry.boundingBox.getCenter(new THREE.Vector3());
-  const bone=nearest(c),bp=BWP[bone];
-  if(!bp)return;
-  const m=o.material||{};
-  o.material=new THREE.MeshPhongMaterial({map:m.map||null,
-   color:m.color?m.color.clone():new THREE.Color(0xa8825f),shininess:6,specular:0x201810});
-  if(o.material.map){o.material.map.encoding=THREE.sRGBEncoding;o.material.map.needsUpdate=true}
-  o.name='body_'+nm;
-  o.position.set(-bp.x,-bp.y,-bp.z);
-  B[bone].add(o);n++;
+  const bb=o.geometry.boundingBox,c=bb.getCenter(new THREE.Vector3()),nm=nm0;
+  C[nm]=c;list.push({o:o,c:c,nm:nm,top:bb.max.y});
  });
- if(n){/* retire the blocky stand-in */
-  if(U.bodyG)U.bodyG.visible=false;
-  (U.phParts||[]).forEach(o=>{o.visible=false});}
+ /* the body carries its own joint pieces: delt, elbow, palm, thigh, knee, ankle, toes.
+    the skeleton is rebuilt onto those instead of onto the armour's pivots. */
+ const tgt={},sideOf=n=>/_\-1(\D|$)/.test(n)?"L":/_1(\D|$)/.test(n)?"R":null;
+ Object.keys(C).forEach(nm=>{
+  const S=sideOf(nm);if(!S)return;const c=C[nm];
+  if(/^delt/.test(nm))tgt["shoulder_"+S]=c.clone();
+  else if(/^elbow/.test(nm))tgt["elbow_"+S]=c.clone();
+  else if(/^palm/.test(nm)){tgt["wrist_"+S]=c.clone();tgt["hand_"+S]=c.clone()}
+  else if(/^thigh/.test(nm)){const it=list.find(l=>l.nm===nm);tgt["hip_"+S]=new THREE.Vector3(c.x,it.top-.02,c.z)}
+  else if(/^knee/.test(nm))tgt["knee_"+S]=c.clone();
+  else if(/^ankle/.test(nm))tgt["ankle_"+S]=c.clone();
+  else if(/^toes/.test(nm))tgt["toe_"+S]=c.clone();
+ });
+ const depth=b=>{let d=0,p=B[b]&&B[b].parent;while(p&&B[p.name]){d++;p=p.parent}return d};
+ const order=Object.keys(BWP).sort((a,b)=>depth(a)-depth(b));
+ const pos={};
+ order.forEach(n=>{
+  const pp=B[n].parent,pn=pp&&B[pp.name]?pp.name:null;
+  const base=pn?pos[pn]:new THREE.Vector3();
+  pos[n]=tgt[n]?tgt[n].clone():base.clone().add(BWP[n].clone().sub(pn?BWP[pn]:new THREE.Vector3()));
+  B[n].position.copy(pos[n]).sub(base);
+ });
+ Object.keys(pos).forEach(n=>{BWP[n]=pos[n]});
+ U.armOut={l:0,r:0};                 /* the outward splay was for the plates, not for skin */
+ /* each piece follows the bone of its own kind of limb: a calf belongs to the knee, never
+    to the ankle it happens to sit near, and the side is whichever of the two is closer */
+ const kindOf=nm=>{
+  if(/^(skull|jaw|brow|ear|eye|nose|mouth|hair)/.test(nm))return["head",0];
+  if(/^neck/.test(nm))return["neck",0];
+  if(/^(delt|upperarm)/.test(nm))return["shoulder",1];
+  if(/^(elbow|forearm)/.test(nm))return["elbow",1];
+  if(/^(palm|finger|thumb)/.test(nm))return["wrist",1];
+  if(/^thigh/.test(nm))return["hip",1];
+  if(/^(knee|calf)/.test(nm))return["knee",1];
+  if(/^(ankle|heel|foot|toes)/.test(nm))return["ankle",1];
+  if(/^(navel|trunks|waistband|glute)/.test(nm))return["pelvis",0];
+  return["chest",0];
+ };
+ const pick=(c)=>{
+  const k=kindOf(c.nm),t=k[0];
+  if(!k[1])return t;
+  const R=BWP[t+"_R"],L=BWP[t+"_L"];
+  if(!R)return L?t+"_L":null;if(!L)return t+"_R";
+  return c.c.distanceTo(R)<=c.c.distanceTo(L)?t+"_R":t+"_L";
+ };
+ let n=0;
+ list.forEach(it=>{
+  const bone=pick(it),bp=bone?BWP[bone]:null;if(!bp)return;
+  const m=it.o.material||{};
+  it.o.material=new THREE.MeshPhongMaterial({map:m.map||null,
+   color:m.color?m.color.clone():new THREE.Color(0xa8825f),shininess:6,specular:0x201810});
+  if(it.o.material.map){it.o.material.map.encoding=THREE.sRGBEncoding;it.o.material.map.needsUpdate=true}
+  it.o.name="body_"+it.nm;
+  it.o.position.set(-bp.x,-bp.y,-bp.z);
+  B[bone].add(it.o);n++;
+ });
+ if(n){if(U.bodyG)U.bodyG.visible=false;(U.phParts||[]).forEach(o=>{o.visible=false})}
  return n;
 }
 function playerPose(p,mv){
