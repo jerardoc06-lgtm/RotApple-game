@@ -1308,15 +1308,13 @@ function playerPose(p,mv){
  const U=pl.userData,A=U.arm,t=G.t,m=U.ml,a=p.at||0;
  const CL=v=>v<0?0:v>1?1:v, E=v=>{v=CL(v);return v*v*(3-2*v)}, EO=v=>{v=CL(v);return 1-Math.pow(1-v,3)};
  const walking=mv&&!p.act, ph=t*7.6, sf=Math.sin(ph), cf=Math.cos(ph);
- /* bare arms swing far less than arms carrying a blade and a board */
- const SW=NOARM?.3:1;
  // ---- rest pose: sword arm hanging, shield arm set out from the body
  let lx=-.30,lz=-.15,le=-.80, rx=-.16,rz=.15,re=-.22, by=0,bx=0,bz=0,my=0,tuck=0,legA=0,legB=0;
  if(walking){
   legA=sf*.62; legB=-sf*.62;
   const wf1=Math.sin(ph-.55), wf2=Math.sin(ph-.82);
-  rx=-.16-sf*.46*SW; re=-.22-Math.max(0,wf2)*.78*SW;
-  lx=-.30+sf*.24*SW; le=-.80-Math.max(0,-wf1)*.26*SW;
+  rx=-.16-sf*.46; re=-.22-Math.max(0,wf2)*.78;
+  lx=-.30+sf*.24; le=-.80-Math.max(0,-wf1)*.26;
   my=sf*.10; bz=cf*.028;
   by=(Math.abs(cf)-1)*.15;
   bx=.05+Math.abs(sf)*.02;
@@ -1328,9 +1326,17 @@ function playerPose(p,mv){
  /* with nothing in the hands both arms hang alike, whatever the save thinks he is holding */
  if(!S.sh||NOARM){
   const br=Math.sin(t*1.5), lf=Math.sin(ph-.72);
-  if(walking){lx=-.16+sf*.46*SW; le=-.22-Math.max(0,lf)*.78*SW;}
+  if(walking){lx=-.16+sf*.46; le=-.22-Math.max(0,lf)*.78;}
   else{lx=-.16+br*.01; le=-.22-.02+br*.018;}
   lz=-.15;
+ }
+ /* empty hands swing: the shoulder travels about twenty degrees either way, the elbow folds
+    only on the half of the swing where the arm comes forward, and the two arms are opposed */
+ if(NOARM&&walking){
+  const wA=Math.sin(ph-.55);
+  rx=-.12-sf*.34;  re=-.16-Math.max(0, wA)*.45;
+  lx=-.12+sf*.34;  le=-.16-Math.max(0,-wA)*.45;
+  rz=.15; lz=-.15;
  }
  // ---- guard: shield up across the chest, body turned into it
  if(p.blk&&!p.act){lx=-.78;lz=.58;le=-1.35;rx=-.40;rz=.10;re=-.75;bx=.06;by=-.14;tuck=.18;}
